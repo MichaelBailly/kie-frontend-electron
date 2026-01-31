@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="waveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#e0e7ff;stop-opacity:1"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#bgGrad)"/>
+  
+  <!-- Outer ring -->
+  <circle cx="256" cy="256" r="240" fill="none" stroke="#4f46e5" stroke-width="8"/>
+  
+  <!-- Sound wave bars - representing AI-generated music -->
+  <g fill="url(#waveGrad)">
+    <!-- Left bars -->
+    <rect x="96" y="220" width="28" height="72" rx="14"/>
+    <rect x="140" y="180" width="28" height="152" rx="14"/>
+    <rect x="184" y="140" width="28" height="232" rx="14"/>
+    
+    <!-- Center bars (taller) -->
+    <rect x="228" y="100" width="28" height="312" rx="14"/>
+    <rect x="272" y="120" width="28" height="272" rx="14"/>
+    
+    <!-- Right bars -->
+    <rect x="316" y="150" width="28" height="212" rx="14"/>
+    <rect x="360" y="190" width="28" height="132" rx="14"/>
+    <rect x="404" y="230" width="28" height="52" rx="14"/>
+  </g>
+  
+  <!-- AI sparkle accent -->
+  <g fill="#fbbf24">
+    <circle cx="380" cy="130" r="12"/>
+    <circle cx="405" cy="155" r="6"/>
+    <circle cx="355" cy="145" r="4"/>
+  </g>
+</svg>

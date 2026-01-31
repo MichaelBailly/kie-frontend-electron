@@ -1,0 +1,98 @@
+{
+	"name": "kie-frontend-electron",
+	"version": "1.0.0",
+	"description": "KIE Music - Electron App for interacting with kie.ai APIs",
+	"main": "electron/main.js",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"dev:electron": "npm run build && electron .",
+		"build": "vite build",
+		"build:electron": "npm run build && electron-builder",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"format": "prettier --write .",
+		"lint": "prettier --check . && eslint .",
+		"test:unit": "vitest",
+		"test": "npm run test:unit -- --run",
+		"electron": "electron .",
+		"postinstall": "electron-builder install-app-deps"
+	},
+	"dependencies": {
+		"better-sqlite3": "^11.7.0",
+		"d3": "^7.9.0"
+	},
+	"devDependencies": {
+		"@electron/rebuild": "^4.0.3",
+		"@eslint/compat": "^1.4.0",
+		"@eslint/js": "^9.39.1",
+		"@sveltejs/adapter-node": "^5.4.0",
+		"@sveltejs/kit": "^2.49.1",
+		"@sveltejs/vite-plugin-svelte": "^6.2.1",
+		"@tailwindcss/forms": "^0.5.10",
+		"@tailwindcss/typography": "^0.5.19",
+		"@tailwindcss/vite": "^4.1.17",
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/d3": "^7.4.3",
+		"@types/node": "^24",
+		"electron": "^36.3.1",
+		"electron-builder": "^26.0.12",
+		"eslint": "^9.39.1",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.13.1",
+		"globals": "^16.5.0",
+		"prettier": "^3.7.4",
+		"prettier-plugin-svelte": "^3.4.0",
+		"prettier-plugin-tailwindcss": "^0.7.2",
+		"svelte": "^5.45.6",
+		"svelte-check": "^4.3.4",
+		"tailwindcss": "^4.1.17",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8.48.1",
+		"vite": "^7.2.6",
+		"vite-plugin-devtools-json": "^1.0.0",
+		"vitest": "^4.0.15"
+	},
+	"build": {
+		"appId": "com.kie.music",
+		"productName": "KIE Music",
+		"directories": {
+			"output": "dist-electron",
+			"buildResources": "build-resources"
+		},
+		"files": [
+			"build/**/*",
+			"electron/**/*",
+			"node_modules/**/*",
+			"package.json"
+		],
+		"extraResources": [
+			{
+				"from": "build",
+				"to": "app/build"
+			}
+		],
+		"icon": "build-resources/icon",
+		"linux": {
+			"target": ["AppImage", "deb"],
+			"category": "Audio",
+			"icon": "build-resources/icon.png"
+		},
+		"mac": {
+			"target": ["dmg", "zip"],
+			"category": "public.app-category.music",
+			"icon": "build-resources/icon.png"
+		},
+		"win": {
+			"target": ["nsis", "portable"],
+			"icon": "build-resources/icon.ico"
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true
+		}
+	}
+}
