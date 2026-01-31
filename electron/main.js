@@ -61,6 +61,16 @@ async function startServer() {
 	process.env.DATABASE_PATH = dbPath;
 	process.env.ELECTRON_RESOURCES_PATH = process.resourcesPath || path.join(__dirname, '..');
 
+	// For production, set up NODE_PATH to find unpacked native modules
+	if (!isDev) {
+		const unpackedPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules');
+		if (!process.env.NODE_PATH) {
+			process.env.NODE_PATH = unpackedPath;
+		} else {
+			process.env.NODE_PATH = `${unpackedPath}${path.delimiter}${process.env.NODE_PATH}`;
+		}
+	}
+
 	// Import the SvelteKit handler
 	const handlerPath = getResourcePath('build', 'handler.js');
 	console.log('Loading handler from:', handlerPath);

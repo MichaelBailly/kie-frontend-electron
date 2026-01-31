@@ -69,6 +69,12 @@
 			"node_modules/**/*",
 			"package.json"
 		],
+		"asarUnpack": [
+			"node_modules/better-sqlite3/**/*",
+			"node_modules/bindings/**/*",
+			"node_modules/prebuild-install/**/*",
+			"node_modules/file-uri-to-path/**/*"
+		],
 		"extraResources": [
 			{
 				"from": "build",
@@ -86,7 +92,6 @@
 		},
 		"mac": {
 			"target": [
-				"dmg",
 				"zip"
 			],
 			"category": "public.app-category.music",

@@ -1,6 +1,7 @@
 import type BetterSqlite3 from 'better-sqlite3';
 import { dev } from '$app/environment';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 
 // Lazy-load the database to avoid loading native module during build
@@ -21,7 +22,18 @@ function getDb(): BetterSqlite3.Database {
 	if (_db) return _db;
 
 	// Use createRequire to load native module in ESM context
-	const require = createRequire(import.meta.url);
+	// In production Electron, resolve from app.asar.unpacked
+	let modulePath = import.meta.url;
+	if (process.env.ELECTRON_RESOURCES_PATH && !dev) {
+		const unpackedModules = path.join(
+			process.env.ELECTRON_RESOURCES_PATH,
+			'app.asar.unpacked',
+			'node_modules'
+		);
+		modulePath = pathToFileURL(path.join(unpackedModules, 'better-sqlite3', 'package.json')).href;
+	}
+
+	const require = createRequire(modulePath);
 	const Database = require('better-sqlite3');
 	const dbPath = getDatabasePath();
 	console.log('Database path:', dbPath);
