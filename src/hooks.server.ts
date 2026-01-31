@@ -13,5 +13,36 @@ const incompleteStemSeparations = getPendingStemSeparations();
 recoverIncompleteStemSeparations(incompleteStemSeparations);
 
 export const handle: Handle = async ({ event, resolve }) => {
-	return resolve(event);
+	const response = await resolve(event);
+
+	// Add security headers
+	// Content Security Policy for Electron desktop app
+	const csp = [
+		"default-src 'self'",
+		// Allow inline styles for Svelte/Tailwind and unsafe-eval for dev
+		"style-src 'self' 'unsafe-inline'",
+		// Allow scripts from self, inline for Svelte hydration
+		"script-src 'self' 'unsafe-inline'",
+		// Allow images from self and data URIs (for inline images) and KIE API
+		"img-src 'self' data: blob: https://cdn.kie.ai https://*.kie.ai",
+		// Allow audio/video from self and KIE API CDN
+		"media-src 'self' blob: https://cdn.kie.ai https://*.kie.ai",
+		// Allow connections to self (localhost) and KIE API
+		"connect-src 'self' https://api.kie.ai https://cdn.kie.ai https://*.kie.ai",
+		// Allow fonts from self
+		"font-src 'self'",
+		// Prevent framing
+		"frame-ancestors 'none'",
+		// Form submissions only to self
+		"form-action 'self'",
+		// Base URI restriction
+		"base-uri 'self'"
+	].join('; ');
+
+	response.headers.set('Content-Security-Policy', csp);
+	response.headers.set('X-Content-Type-Options', 'nosniff');
+	response.headers.set('X-Frame-Options', 'DENY');
+	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+	return response;
 };

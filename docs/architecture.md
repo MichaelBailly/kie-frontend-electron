@@ -101,9 +101,47 @@ This approach provides full SvelteKit functionality including:
 
 ## Security
 
-- API keys stored in local SQLite (not exposed to renderer)
-- Preload script limits exposed APIs via contextBridge
-- No external network access except KIE API
+The application follows Electron security best practices:
+
+### Electron Security Settings
+
+| Setting | Value | Purpose |
+|---------|-------|---------|
+| `nodeIntegration` | `false` | Prevents XSS from accessing Node.js |
+| `contextIsolation` | `true` | Isolates preload from renderer context |
+| `sandbox` | `true` (default) | Limits renderer process capabilities |
+
+### Content Security Policy
+
+HTTP responses include a strict CSP header:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline';
+img-src 'self' data: blob: https://cdn.kie.ai;
+media-src 'self' blob: https://cdn.kie.ai;
+connect-src 'self' https://api.kie.ai https://cdn.kie.ai;
+frame-ancestors 'none';
+```
+
+### Additional Security Headers
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### IPC Security
+
+- Preload script exposes only specific, validated channels
+- Raw `ipcRenderer` is never exposed to the renderer
+- Channel allowlists prevent arbitrary IPC calls
+
+### Network Security
+
+- Server binds only to `127.0.0.1` (localhost)
+- Dynamic port allocation avoids conflicts
+- API keys stored server-side in SQLite, never exposed to renderer
 
 ## See Also
 

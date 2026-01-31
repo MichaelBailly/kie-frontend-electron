@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
+import net from 'node:net';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,9 +10,9 @@ const __dirname = path.dirname(__filename);
 // Keep a global reference of the window object
 let mainWindow = null;
 let server = null;
+let serverPort = null;
 
 const isDev = !app.isPackaged;
-const SERVER_PORT = 3000;
 
 function getResourcePath(...paths) {
 	if (isDev) {
@@ -20,7 +21,33 @@ function getResourcePath(...paths) {
 	return path.join(process.resourcesPath, 'app', ...paths);
 }
 
+// Find an available port dynamically
+function findAvailablePort(startPort = 3000) {
+	return new Promise((resolve, reject) => {
+		const server = net.createServer();
+		server.unref();
+		server.on('error', (err) => {
+			if (err.code === 'EADDRINUSE') {
+				// Port is in use, try next one
+				resolve(findAvailablePort(startPort + 1));
+			} else {
+				reject(err);
+			}
+		});
+		server.listen(startPort, '127.0.0.1', () => {
+			const port = server.address().port;
+			server.close(() => {
+				resolve(port);
+			});
+		});
+	});
+}
+
 async function startServer() {
+	// Find an available port
+	serverPort = await findAvailablePort(3000);
+	console.log('Using port:', serverPort);
+
 	const dbPath = isDev
 		? path.join(__dirname, '..', 'kie-music.db')
 		: path.join(app.getPath('userData'), 'kie-music.db');
@@ -28,7 +55,7 @@ async function startServer() {
 	console.log('Database path:', dbPath);
 
 	// Set environment variables before importing the handler
-	process.env.PORT = SERVER_PORT.toString();
+	process.env.PORT = serverPort.toString();
 	process.env.HOST = '127.0.0.1';
 	process.env.NODE_ENV = isDev ? 'development' : 'production';
 	process.env.DATABASE_PATH = dbPath;
@@ -48,8 +75,8 @@ async function startServer() {
 			reject(err);
 		});
 
-		server.listen(SERVER_PORT, '127.0.0.1', () => {
-			console.log(`Server listening on http://127.0.0.1:${SERVER_PORT}`);
+		server.listen(serverPort, '127.0.0.1', () => {
+			console.log(`Server listening on http://127.0.0.1:${serverPort}`);
 			resolve();
 		});
 	});
@@ -85,7 +112,7 @@ function createWindow() {
 	});
 
 	// Load the app from the local server
-	const serverUrl = `http://127.0.0.1:${SERVER_PORT}`;
+	const serverUrl = `http://127.0.0.1:${serverPort}`;
 	console.log('Loading URL:', serverUrl);
 	mainWindow.loadURL(serverUrl);
 

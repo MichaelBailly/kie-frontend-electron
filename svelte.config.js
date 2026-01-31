@@ -10,7 +10,7 @@ const config = {
 	kit: {
 		adapter: adapter({
 			out: 'build',
-			precompress: false,
+			precompress: true, // Enable gzip/brotli compression for better performance
 			envPrefix: ''
 		})
 	}
