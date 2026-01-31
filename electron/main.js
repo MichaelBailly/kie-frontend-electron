@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, Notification } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
@@ -134,6 +134,30 @@ function createWindow() {
 		mainWindow = null;
 	});
 }
+
+// IPC Handlers
+ipcMain.on('show-notification', (event, { title, options }) => {
+	if (Notification.isSupported()) {
+		const notification = new Notification({
+			title,
+			body: options?.body || '',
+			icon: options?.icon || path.join(__dirname, '..', 'build-resources', 'icon.png'),
+			silent: options?.silent || false
+		});
+
+		notification.show();
+
+		// Focus window when notification is clicked
+		notification.on('click', () => {
+			if (mainWindow) {
+				if (mainWindow.isMinimized()) {
+					mainWindow.restore();
+				}
+				mainWindow.focus();
+			}
+		});
+	}
+});
 
 // App lifecycle
 app.whenReady().then(async () => {

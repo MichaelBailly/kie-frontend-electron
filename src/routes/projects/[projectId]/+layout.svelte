@@ -120,6 +120,31 @@
 		};
 	}
 
+	function showCompletionNotification(generation: Generation) {
+		const title = '🎵 Song Generation Complete!';
+		const body = generation.title
+			? `"${generation.title}"`
+			: generation.style
+				? `Style: ${generation.style}`
+				: 'Your song is ready to listen';
+
+		// Try Electron API first, fall back to Web Notifications API
+		if (browser && (window as any).electronAPI?.showNotification) {
+			(window as any).electronAPI.showNotification(title, { body });
+		} else if (browser && 'Notification' in window) {
+			// Request permission if needed
+			if (Notification.permission === 'granted') {
+				new Notification(title, { body });
+			} else if (Notification.permission !== 'denied') {
+				Notification.requestPermission().then((permission) => {
+					if (permission === 'granted') {
+						new Notification(title, { body });
+					}
+				});
+			}
+		}
+	}
+
 	function updateLocalGeneration(generationId: number, data: Partial<Generation>) {
 		console.log('SSE update for generation', generationId, data);
 
@@ -142,6 +167,11 @@
 			const updatedGen = projects.flatMap((p) => p.generations).find((g) => g.id === generationId);
 
 			if (updatedGen) {
+				// Show desktop notification when generation is complete
+				if (data.status === 'success') {
+					showCompletionNotification(updatedGen);
+				}
+
 				// Notify audio store if track 1 URLs changed
 				if (updatedGen.track1_audio_id && (data.track1_audio_url || data.track1_stream_url)) {
 					audioStore.updateTrackUrls(updatedGen.track1_audio_id, {
@@ -255,18 +285,18 @@
 					{/if}
 					<button
 						onclick={(e) => closeTab(project.id, e)}
-							aria-label="Close tab"
-							class="ml-1 shrink-0 rounded-full p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-						>
-							<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M6 18L18 6M6 6l12 12"
-								/>
-							</svg>
-						</button>
+						aria-label="Close tab"
+						class="ml-1 shrink-0 rounded-full p-0.5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+					>
+						<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
 					{#if project.id === activeProjectId}
 						<div
 							class="absolute right-0 bottom-0 left-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"

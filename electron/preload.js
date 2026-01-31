@@ -25,5 +25,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 		if (validChannels.includes(channel)) {
 			return ipcRenderer.invoke(channel, data);
 		}
+	},
+	// Notification API
+	showNotification: (title, options) => {
+		ipcRenderer.send('show-notification', { title, options });
 	}
 });
