@@ -1,6 +1,16 @@
+import { getApiKey } from './db.server';
 import { KIE_API_KEY } from './constants.server';
 
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+
+// Get API key from database first, fallback to environment variable
+function getEffectiveApiKey(): string {
+	const dbKey = getApiKey();
+	if (dbKey && dbKey.length > 0) {
+		return dbKey;
+	}
+	return KIE_API_KEY;
+}
 
 export interface GenerateMusicRequest {
 	prompt: string;
@@ -76,7 +86,7 @@ export async function generateMusic(request: GenerateMusicRequest): Promise<Gene
 	const response = await fetch(`${KIE_API_BASE}/generate`, {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${KIE_API_KEY}`,
+			Authorization: `Bearer ${getEffectiveApiKey()}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(request)
@@ -93,7 +103,7 @@ export async function extendMusic(request: ExtendMusicRequest): Promise<Generate
 	const response = await fetch(`${KIE_API_BASE}/generate/extend`, {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${KIE_API_KEY}`,
+			Authorization: `Bearer ${getEffectiveApiKey()}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(request)
@@ -110,7 +120,7 @@ export async function getMusicDetails(taskId: string): Promise<MusicDetailsRespo
 	const response = await fetch(`${KIE_API_BASE}/generate/record-info?taskId=${taskId}`, {
 		method: 'GET',
 		headers: {
-			Authorization: `Bearer ${KIE_API_KEY}`
+			Authorization: `Bearer ${getEffectiveApiKey()}`
 		}
 	});
 
@@ -201,7 +211,7 @@ export async function separateVocals(
 	const response = await fetch(`${KIE_API_BASE}/vocal-removal/generate`, {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${KIE_API_KEY}`,
+			Authorization: `Bearer ${getEffectiveApiKey()}`,
 			'Content-Type': 'application/json'
 		},
 		body: JSON.stringify(request)
@@ -220,7 +230,7 @@ export async function getStemSeparationDetails(
 	const response = await fetch(`${KIE_API_BASE}/vocal-removal/record-info?taskId=${taskId}`, {
 		method: 'GET',
 		headers: {
-			Authorization: `Bearer ${KIE_API_KEY}`
+			Authorization: `Bearer ${getEffectiveApiKey()}`
 		}
 	});
 

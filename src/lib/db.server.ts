@@ -107,6 +107,13 @@ function getDb(): BetterSqlite3.Database {
 
 		CREATE INDEX IF NOT EXISTS idx_stem_separations_generation_audio ON stem_separations(generation_id, audio_id);
 		CREATE INDEX IF NOT EXISTS idx_stem_separations_task_id ON stem_separations(task_id);
+
+		CREATE TABLE IF NOT EXISTS settings (
+			key TEXT PRIMARY KEY,
+			value TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
 	`);
 
 	// Migration: Add is_open column to existing projects table
@@ -656,6 +663,52 @@ export function getPendingStemSeparations(): StemSeparation[] {
 		"SELECT * FROM stem_separations WHERE status IN ('pending', 'processing')"
 	);
 	return stmt.all() as StemSeparation[];
+}
+
+// Settings operations
+export interface Setting {
+	key: string;
+	value: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export function getSetting(key: string): string | null {
+	const db = getDb();
+	const stmt = db.prepare('SELECT value FROM settings WHERE key = ?');
+	const result = stmt.get(key) as { value: string } | undefined;
+	return result?.value ?? null;
+}
+
+export function setSetting(key: string, value: string): void {
+	const db = getDb();
+	const stmt = db.prepare(`
+		INSERT INTO settings (key, value, updated_at) 
+		VALUES (?, ?, CURRENT_TIMESTAMP)
+		ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+	`);
+	stmt.run(key, value);
+}
+
+export function deleteSetting(key: string): void {
+	const db = getDb();
+	const stmt = db.prepare('DELETE FROM settings WHERE key = ?');
+	stmt.run(key);
+}
+
+export function getAllSettings(): Setting[] {
+	const db = getDb();
+	const stmt = db.prepare('SELECT * FROM settings ORDER BY key');
+	return stmt.all() as Setting[];
+}
+
+// Specific settings helpers
+export function getApiKey(): string | null {
+	return getSetting('kie_api_key');
+}
+
+export function setApiKey(apiKey: string): void {
+	setSetting('kie_api_key', apiKey);
 }
 
 // Export a getter for the db instance (for default export compatibility)
