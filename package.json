@@ -22,12 +22,12 @@
 		"postinstall": "electron-builder install-app-deps"
 	},
 	"dependencies": {
-		"better-sqlite3": "^11.7.0",
+		"better-sqlite3": "^12.6.2",
 		"d3": "^7.9.0"
 	},
 	"devDependencies": {
 		"@electron/rebuild": "^4.0.3",
-		"@eslint/compat": "^1.4.0",
+		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.39.1",
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.49.1",
@@ -37,13 +37,13 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/d3": "^7.4.3",
-		"@types/node": "^24",
-		"electron": "^36.3.1",
+		"@types/node": "^25.1.0",
+		"electron": "^40.1.0",
 		"electron-builder": "^26.0.12",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",
-		"globals": "^16.5.0",
+		"globals": "^17.2.0",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.2",
@@ -77,17 +77,26 @@
 		],
 		"icon": "build-resources/icon",
 		"linux": {
-			"target": ["AppImage", "deb"],
+			"target": [
+				"AppImage",
+				"deb"
+			],
 			"category": "Audio",
 			"icon": "build-resources/icon.png"
 		},
 		"mac": {
-			"target": ["dmg", "zip"],
+			"target": [
+				"dmg",
+				"zip"
+			],
 			"category": "public.app-category.music",
 			"icon": "build-resources/icon.png"
 		},
 		"win": {
-			"target": ["nsis", "portable"],
+			"target": [
+				"nsis",
+				"portable"
+			],
 			"icon": "build-resources/icon.ico"
 		},
 		"nsis": {
