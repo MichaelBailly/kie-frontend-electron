@@ -2,6 +2,7 @@
 	"name": "kie-frontend-electron",
 	"version": "1.0.0",
 	"description": "KIE Music - Electron App for interacting with kie.ai APIs",
+	"author": "Mister Track <track@music.music>",
 	"main": "electron/main.js",
 	"private": true,
 	"type": "module",

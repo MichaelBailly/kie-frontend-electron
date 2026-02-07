@@ -23,12 +23,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 		"style-src 'self' 'unsafe-inline'",
 		// Allow scripts from self, inline for Svelte hydration
 		"script-src 'self' 'unsafe-inline'",
-		// Allow images from self and data URIs (for inline images) and KIE API
-		"img-src 'self' data: blob: https://cdn.kie.ai https://*.kie.ai",
-		// Allow audio/video from self and KIE API CDN
-		"media-src 'self' blob: https://cdn.kie.ai https://*.kie.ai",
-		// Allow connections to self (localhost) and KIE API
-		"connect-src 'self' https://api.kie.ai https://cdn.kie.ai https://*.kie.ai",
+		// Allow images from any HTTPS source (API returns various CDN domains)
+		"img-src 'self' data: blob: https:",
+		// Allow audio/video from any HTTPS source
+		"media-src 'self' blob: https:",
+		// Keep connect-src more restrictive - only known API domains
+		"connect-src 'self' https://api.kie.ai https://cdn.kie.ai https://*.kie.ai https://*.aiquickdraw.com",
 		// Allow fonts from self
 		"font-src 'self'",
 		// Prevent framing
