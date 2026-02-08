@@ -19,11 +19,14 @@ KIE Music provides a streamlined interface to the [KIE.ai](https://kie.ai) API, 
 # Install dependencies
 npm install
 
-# Run in development mode
+# Run SvelteKit dev server (browser at http://localhost:5173)
 npm run dev
 
-# Run as Electron app
-npm run build && npm run electron
+# Run as Electron app (production build + Electron shell)
+npm run dev:electron
+
+# Preview the production build in a plain Node.js server (no Electron)
+npm run preview
 ```
 
 Configure your KIE API key in **Settings** (gear icon) or via the `KIE_API_KEY` environment variable.

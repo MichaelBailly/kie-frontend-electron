@@ -7,11 +7,13 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"dev:electron": "npm run build && electron .",
+		"rebuild:node": "npm rebuild better-sqlite3",
+		"rebuild:electron": "electron-rebuild --only better-sqlite3",
+		"dev": "npm run rebuild:node && vite dev",
+		"dev:electron": "npm run build && npm run rebuild:electron && electron .",
 		"build": "vite build",
-		"build:electron": "npm run build && electron-builder",
-		"preview": "vite preview",
+		"build:electron": "npm run build && npm run rebuild:electron && electron-builder",
+		"preview": "npm run build && npm run rebuild:node && node build",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -19,8 +21,7 @@
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"electron": "electron .",
-		"postinstall": "electron-builder install-app-deps"
+		"postinstall": "npm run rebuild:electron"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.6.2",
