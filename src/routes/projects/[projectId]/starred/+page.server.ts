@@ -9,6 +9,7 @@ export interface StarredVariation {
 		audio_id: string;
 		starred: number;
 		comment: string | null;
+		labels: string[];
 		created_at: string;
 		updated_at: string;
 	};
@@ -34,8 +35,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	const starredVariations: StarredVariation[] = [];
 
 	for (const ann of annotations) {
-		const generation = activeProject.generations.find((g: Generation) => g.id === ann.generation_id)
-			?? getGeneration(ann.generation_id);
+		const generation =
+			activeProject.generations.find((g: Generation) => g.id === ann.generation_id) ??
+			getGeneration(ann.generation_id);
 
 		if (!generation) continue;
 

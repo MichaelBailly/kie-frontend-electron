@@ -141,6 +141,29 @@ function getDb(): BetterSqlite3.Database {
 
 		CREATE INDEX IF NOT EXISTS idx_variation_annotations_generation_audio ON variation_annotations(generation_id, audio_id);
 		CREATE INDEX IF NOT EXISTS idx_variation_annotations_starred ON variation_annotations(starred);
+
+		CREATE TABLE IF NOT EXISTS labels (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL UNIQUE,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			last_used_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_labels_last_used ON labels(last_used_at);
+
+		CREATE TABLE IF NOT EXISTS variation_label_links (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			annotation_id INTEGER NOT NULL,
+			label_id INTEGER NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (annotation_id) REFERENCES variation_annotations(id) ON DELETE CASCADE,
+			FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE,
+			UNIQUE(annotation_id, label_id)
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_variation_label_links_annotation ON variation_label_links(annotation_id);
+		CREATE INDEX IF NOT EXISTS idx_variation_label_links_label ON variation_label_links(label_id);
 	`);
 
 	// Migration: Add is_open column to existing projects table
@@ -699,27 +722,113 @@ export interface VariationAnnotation {
 	audio_id: string;
 	starred: number;
 	comment: string | null;
+	labels: string[];
 	created_at: string;
 	updated_at: string;
+}
+
+export interface Label {
+	id: number;
+	name: string;
+	created_at: string;
+	updated_at: string;
+	last_used_at: string;
+}
+
+function normalizeLabel(label: string): string {
+	return label.trim().toLowerCase();
+}
+
+function getAnnotationRow(
+	generationId: number,
+	audioId: string
+): Omit<VariationAnnotation, 'labels'> | undefined {
+	const db = getDb();
+	const stmt = db.prepare(
+		'SELECT * FROM variation_annotations WHERE generation_id = ? AND audio_id = ?'
+	);
+	return stmt.get(generationId, audioId) as Omit<VariationAnnotation, 'labels'> | undefined;
+}
+
+function ensureAnnotationRow(
+	generationId: number,
+	audioId: string
+): Omit<VariationAnnotation, 'labels'> {
+	const existing = getAnnotationRow(generationId, audioId);
+	if (existing) return existing;
+
+	const db = getDb();
+	const stmt = db.prepare(
+		'INSERT INTO variation_annotations (generation_id, audio_id) VALUES (?, ?)'
+	);
+	stmt.run(generationId, audioId);
+	return getAnnotationRow(generationId, audioId)!;
+}
+
+function getLabelsForAnnotationIds(annotationIds: number[]): Map<number, string[]> {
+	const labelsByAnnotation = new Map<number, string[]>();
+	if (annotationIds.length === 0) return labelsByAnnotation;
+
+	const db = getDb();
+	const placeholders = annotationIds.map(() => '?').join(', ');
+	const stmt = db.prepare(
+		`SELECT vll.annotation_id as annotation_id, l.name as name
+		 FROM variation_label_links vll
+		 JOIN labels l ON l.id = vll.label_id
+		 WHERE vll.annotation_id IN (${placeholders})
+		 ORDER BY l.name ASC`
+	);
+	const rows = stmt.all(...annotationIds) as { annotation_id: number; name: string }[];
+
+	for (const row of rows) {
+		const existing = labelsByAnnotation.get(row.annotation_id) ?? [];
+		existing.push(row.name);
+		labelsByAnnotation.set(row.annotation_id, existing);
+	}
+
+	return labelsByAnnotation;
+}
+
+function attachLabelsToAnnotations(
+	annotations: Omit<VariationAnnotation, 'labels'>[]
+): VariationAnnotation[] {
+	const labelsByAnnotation = getLabelsForAnnotationIds(annotations.map((a) => a.id));
+	return annotations.map((annotation) => ({
+		...annotation,
+		labels: labelsByAnnotation.get(annotation.id) ?? []
+	}));
+}
+
+export function getLabelSuggestions(query: string, limit: number = 8): string[] {
+	const db = getDb();
+	const normalized = normalizeLabel(query);
+	if (!normalized) {
+		const stmt = db.prepare(
+			'SELECT name FROM labels ORDER BY last_used_at DESC, updated_at DESC LIMIT ?'
+		);
+		return (stmt.all(limit) as { name: string }[]).map((row) => row.name);
+	}
+
+	const stmt = db.prepare(
+		'SELECT name FROM labels WHERE name LIKE ? ORDER BY last_used_at DESC, updated_at DESC LIMIT ?'
+	);
+	return (stmt.all(`${normalized}%`, limit) as { name: string }[]).map((row) => row.name);
 }
 
 export function getAnnotation(
 	generationId: number,
 	audioId: string
 ): VariationAnnotation | undefined {
-	const db = getDb();
-	const stmt = db.prepare(
-		'SELECT * FROM variation_annotations WHERE generation_id = ? AND audio_id = ?'
-	);
-	return stmt.get(generationId, audioId) as VariationAnnotation | undefined;
+	const row = getAnnotationRow(generationId, audioId);
+	if (!row) return undefined;
+	return attachLabelsToAnnotations([row])[0];
 }
 
 export function getAnnotationsForGeneration(generationId: number): VariationAnnotation[] {
 	const db = getDb();
-	const stmt = db.prepare(
-		'SELECT * FROM variation_annotations WHERE generation_id = ?'
-	);
-	return stmt.all(generationId) as VariationAnnotation[];
+	const stmt = db.prepare('SELECT * FROM variation_annotations WHERE generation_id = ?');
+	const rows = stmt.all(generationId) as Omit<VariationAnnotation, 'labels'>[];
+	return attachLabelsToAnnotations(rows);
 }
 
 export function getAnnotationsByProject(projectId: number): VariationAnnotation[] {
@@ -730,7 +839,8 @@ export function getAnnotationsByProject(projectId: number): VariationAnnotation[
 		WHERE g.project_id = ?
 		ORDER BY va.updated_at DESC
 	`);
-	return stmt.all(projectId) as VariationAnnotation[];
+	const rows = stmt.all(projectId) as Omit<VariationAnnotation, 'labels'>[];
+	return attachLabelsToAnnotations(rows);
 }
 
 export function getStarredAnnotationsByProject(projectId: number): VariationAnnotation[] {
@@ -741,12 +851,13 @@ export function getStarredAnnotationsByProject(projectId: number): VariationAnno
 		WHERE g.project_id = ? AND (va.starred = 1 OR va.comment IS NOT NULL AND va.comment != '')
 		ORDER BY va.updated_at DESC
 	`);
-	return stmt.all(projectId) as VariationAnnotation[];
+	const rows = stmt.all(projectId) as Omit<VariationAnnotation, 'labels'>[];
+	return attachLabelsToAnnotations(rows);
 }
 
 export function toggleStar(generationId: number, audioId: string): VariationAnnotation {
 	const db = getDb();
-	const existing = getAnnotation(generationId, audioId);
+	const existing = getAnnotationRow(generationId, audioId);
 
 	if (existing) {
 		const newStarred = existing.starred ? 0 : 1;
@@ -773,7 +884,7 @@ export function updateComment(
 	comment: string
 ): VariationAnnotation {
 	const db = getDb();
-	const existing = getAnnotation(generationId, audioId);
+	const existing = getAnnotationRow(generationId, audioId);
 
 	if (existing) {
 		const stmt = db.prepare(`
@@ -789,6 +900,49 @@ export function updateComment(
 		`);
 		stmt.run(generationId, audioId, comment || null);
 	}
+
+	return getAnnotation(generationId, audioId)!;
+}
+
+export function setAnnotationLabels(
+	generationId: number,
+	audioId: string,
+	labels: string[]
+): VariationAnnotation {
+	const db = getDb();
+	const annotation = ensureAnnotationRow(generationId, audioId);
+	const normalizedLabels = Array.from(
+		new Set(labels.map((label) => normalizeLabel(label)).filter((label) => label.length > 0))
+	);
+
+	const transaction = db.transaction(() => {
+		const deleteStmt = db.prepare('DELETE FROM variation_label_links WHERE annotation_id = ?');
+		deleteStmt.run(annotation.id);
+
+		const selectLabelStmt = db.prepare('SELECT id FROM labels WHERE name = ?');
+		const insertLabelStmt = db.prepare(
+			'INSERT INTO labels (name, last_used_at) VALUES (?, CURRENT_TIMESTAMP)'
+		);
+		const touchLabelStmt = db.prepare(
+			'UPDATE labels SET last_used_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+		);
+		const insertLinkStmt = db.prepare(
+			'INSERT INTO variation_label_links (annotation_id, label_id) VALUES (?, ?)'
+		);
+
+		for (const label of normalizedLabels) {
+			let labelId = (selectLabelStmt.get(label) as { id: number } | undefined)?.id;
+			if (!labelId) {
+				const result = insertLabelStmt.run(label);
+				labelId = Number(result.lastInsertRowid);
+			} else {
+				touchLabelStmt.run(labelId);
+			}
+			insertLinkStmt.run(annotation.id, labelId);
+		}
+	});
+
+	transaction();
 
 	return getAnnotation(generationId, audioId)!;
 }

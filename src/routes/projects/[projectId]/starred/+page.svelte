@@ -3,6 +3,7 @@
 	import type { StarredVariation } from './+page.server';
 	import type { VariationAnnotation } from '$lib/types';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
+	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import { getContext } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -305,11 +306,12 @@
 				{#each variations as variation (variation.annotation.id)}
 					{@const isPlaying = audioStore.isTrackPlaying(variation.song.id)}
 					{@const isCurrentTrack = audioStore.isCurrentTrack(variation.song.id)}
-					{@const liveStarred =
-						annotationsContext?.isStarred(
+					{@const liveAnnotation =
+						annotationsContext?.get(
 							variation.annotation.generation_id,
 							variation.annotation.audio_id
-						) ?? variation.annotation.starred === 1}
+						) ?? variation.annotation}
+					{@const liveStarred = liveAnnotation.starred === 1}
 					<div
 						class="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 {isCurrentTrack
 							? 'border-indigo-300 ring-2 ring-indigo-500/30 dark:border-indigo-600'
@@ -438,11 +440,18 @@
 									{variation.generation.style}
 								</p>
 
+								<LabelPicker
+									labels={liveAnnotation.labels ?? []}
+									generationId={variation.annotation.generation_id}
+									audioId={variation.annotation.audio_id}
+									placeholder="Add a label"
+								/>
+
 								<!-- Comment / Note -->
-								{#if variation.annotation.comment}
+								{#if liveAnnotation.comment}
 									<div class="mt-2 rounded-lg bg-amber-50/60 px-3 py-2 dark:bg-amber-900/10">
 										<p class="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-											{variation.annotation.comment}
+											{liveAnnotation.comment}
 										</p>
 									</div>
 								{/if}

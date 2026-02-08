@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import {
 	getAnnotation,
 	getGeneration,
+	setAnnotationLabels,
 	toggleStar,
 	updateComment
 } from '$lib/db.server';
@@ -22,7 +23,15 @@ export const GET: RequestHandler = async ({ params, url }) => {
 	}
 
 	const annotation = getAnnotation(generationId, audioId);
-	return json(annotation ?? { generation_id: generationId, audio_id: audioId, starred: 0, comment: null });
+	return json(
+		annotation ?? {
+			generation_id: generationId,
+			audio_id: audioId,
+			starred: 0,
+			comment: null,
+			labels: []
+		}
+	);
 };
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
@@ -30,8 +39,9 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 	const body = await request.json();
 	const { audioId, action, comment } = body as {
 		audioId: string;
-		action?: 'toggle_star';
+		action?: 'toggle_star' | 'set_labels';
 		comment?: string;
+		labels?: string[];
 	};
 
 	if (!audioId) {
@@ -52,6 +62,19 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 
 	if (action === 'toggle_star') {
 		annotation = toggleStar(generationId, audioId);
+	} else if (action === 'set_labels') {
+		if (!Array.isArray(body.labels)) {
+			throw error(400, 'labels must be an array');
+		}
+		for (const label of body.labels) {
+			if (typeof label !== 'string') {
+				throw error(400, 'labels must be strings');
+			}
+			if (label.trim().length > 128) {
+				throw error(400, 'labels must be 128 characters or less');
+			}
+		}
+		annotation = setAnnotationLabels(generationId, audioId, body.labels);
 	} else if (comment !== undefined) {
 		annotation = updateComment(generationId, audioId, comment);
 	} else {

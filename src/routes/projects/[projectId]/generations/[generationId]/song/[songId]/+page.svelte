@@ -3,8 +3,14 @@
 	import Waveform from '$lib/components/Waveform.svelte';
 	import ExtendSongForm from '$lib/components/ExtendSongForm.svelte';
 	import StemPlayer from '$lib/components/StemPlayer.svelte';
+	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import { getContext } from 'svelte';
-	import type { Generation, StemSeparation, StemSeparationType, VariationAnnotation } from '$lib/types';
+	import type {
+		Generation,
+		StemSeparation,
+		StemSeparationType,
+		VariationAnnotation
+	} from '$lib/types';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { goto } from '$app/navigation';
 
@@ -106,13 +112,20 @@
 		starred = data.annotation?.starred === 1;
 		comment = data.annotation?.comment ?? '';
 		commentDraft = data.annotation?.comment ?? '';
-		notesExpanded = !!(data.annotation?.comment);
+		notesExpanded = !!data.annotation?.comment;
 	});
 
 	// Listen for SSE annotation updates
-	const annotationsContext = getContext<{
-		get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
-	} | undefined>('annotations');
+	const annotationsContext = getContext<
+		| {
+				get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
+		  }
+		| undefined
+	>('annotations');
+
+	let liveLabels = $derived(
+		annotationsContext?.get(generation.id, song.id)?.labels ?? data.annotation?.labels ?? []
+	);
 
 	$effect(() => {
 		if (annotationsContext) {
@@ -378,6 +391,14 @@
 		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
 			{song.title}
 		</h1>
+		<div class="mt-3 max-w-2xl">
+			<LabelPicker
+				labels={liveLabels}
+				generationId={generation.id}
+				audioId={song.id}
+				placeholder="Add a label to this variation"
+			/>
+		</div>
 	</div>
 
 	<!-- Audio player and Waveform - PRIMARY FOCUS -->
@@ -461,7 +482,12 @@
 							: 'bg-gray-100 text-gray-400 hover:bg-amber-50 hover:text-amber-400 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-amber-400'}"
 						title={starred ? 'Remove from starred' : 'Star this variation'}
 					>
-						<svg class="h-5 w-5 {starAnimClass}" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							class="h-5 w-5 {starAnimClass}"
+							fill={starred ? 'currentColor' : 'none'}
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -970,7 +996,9 @@
 				</div>
 			</button>
 			{#if notesExpanded}
-				<div class="border-t border-amber-200/50 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10">
+				<div
+					class="border-t border-amber-200/50 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10"
+				>
 					<textarea
 						bind:value={commentDraft}
 						oninput={handleCommentInput}
@@ -981,10 +1009,12 @@
 						class="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/20"
 					></textarea>
 					<div class="mt-1.5 flex items-center justify-between">
-						<p class="text-xs text-gray-400 dark:text-gray-500">
-							Auto-saves as you type
-						</p>
-						<span class="text-xs {commentCharCount > 450 ? 'text-amber-500' : 'text-gray-400'} dark:text-gray-500">
+						<p class="text-xs text-gray-400 dark:text-gray-500">Auto-saves as you type</p>
+						<span
+							class="text-xs {commentCharCount > 450
+								? 'text-amber-500'
+								: 'text-gray-400'} dark:text-gray-500"
+						>
 							{commentCharCount}/500
 						</span>
 					</div>

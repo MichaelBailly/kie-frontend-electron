@@ -2,6 +2,7 @@
 	import type { Generation, VariationAnnotation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
+	import LabelPicker from './LabelPicker.svelte';
 	import { getContext } from 'svelte';
 
 	let {
@@ -11,20 +12,34 @@
 	}: { generation: Generation; parentGeneration?: any; parentSong?: any } = $props();
 
 	// Get annotations from context
-	const annotationsContext = getContext<{
-		get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
-		isStarred: (generationId: number, audioId: string) => boolean;
-	} | undefined>('annotations');
+	const annotationsContext = getContext<
+		| {
+				get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
+				isStarred: (generationId: number, audioId: string) => boolean;
+		  }
+		| undefined
+	>('annotations');
 
 	let track1Starred = $derived(
 		generation.track1_audio_id
-			? annotationsContext?.isStarred(generation.id, generation.track1_audio_id) ?? false
+			? (annotationsContext?.isStarred(generation.id, generation.track1_audio_id) ?? false)
 			: false
 	);
 	let track2Starred = $derived(
 		generation.track2_audio_id
-			? annotationsContext?.isStarred(generation.id, generation.track2_audio_id) ?? false
+			? (annotationsContext?.isStarred(generation.id, generation.track2_audio_id) ?? false)
 			: false
+	);
+
+	let track1Labels = $derived(
+		generation.track1_audio_id
+			? (annotationsContext?.get(generation.id, generation.track1_audio_id)?.labels ?? [])
+			: []
+	);
+	let track2Labels = $derived(
+		generation.track2_audio_id
+			? (annotationsContext?.get(generation.id, generation.track2_audio_id)?.labels ?? [])
+			: []
 	);
 
 	let track1StarAnimClass = $state('');
@@ -166,8 +181,18 @@
 											: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 										title={track1Starred ? 'Unstar variation' : 'Star variation'}
 									>
-										<svg class="h-4 w-4 {track1StarAnimClass}" fill={track1Starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+										<svg
+											class="h-4 w-4 {track1StarAnimClass}"
+											fill={track1Starred ? 'currentColor' : 'none'}
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+											/>
 										</svg>
 									</button>
 								{/if}
@@ -189,6 +214,14 @@
 								</a>
 							{/if}
 						</div>
+						{#if generation.track1_audio_id}
+							<LabelPicker
+								labels={track1Labels}
+								generationId={generation.id}
+								audioId={generation.track1_audio_id}
+								placeholder="Add a label to this variation"
+							/>
+						{/if}
 						{#if generation.track1_stream_url || generation.track1_audio_url}
 							<AudioPlayer
 								src={generation.track1_audio_url || generation.track1_stream_url || ''}
@@ -214,8 +247,18 @@
 												: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 											title={track2Starred ? 'Unstar variation' : 'Star variation'}
 										>
-											<svg class="h-4 w-4 {track2StarAnimClass}" fill={track2Starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+											<svg
+												class="h-4 w-4 {track2StarAnimClass}"
+												fill={track2Starred ? 'currentColor' : 'none'}
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+												/>
 											</svg>
 										</button>
 									{/if}
@@ -237,6 +280,14 @@
 									</a>
 								{/if}
 							</div>
+							{#if generation.track2_audio_id}
+								<LabelPicker
+									labels={track2Labels}
+									generationId={generation.id}
+									audioId={generation.track2_audio_id}
+									placeholder="Add a label to this variation"
+								/>
+							{/if}
 							<AudioPlayer
 								src={generation.track2_audio_url || generation.track2_stream_url || ''}
 								title="{generation.title} (V2)"

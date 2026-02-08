@@ -70,6 +70,7 @@ export interface VariationAnnotation {
 	audio_id: string;
 	starred: number;
 	comment: string | null;
+	labels: string[];
 	created_at: string;
 	updated_at: string;
 }
