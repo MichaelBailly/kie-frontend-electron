@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
-	import type { Project, Generation, SSEMessage, StemSeparation } from '$lib/types';
+	import type { Project, Generation, SSEMessage, StemSeparation, VariationAnnotation } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { onMount, onDestroy, setContext } from 'svelte';
 	import { browser } from '$app/environment';
@@ -31,6 +31,20 @@
 	// State for stem separation updates
 	let stemSeparationUpdates = $state<Map<number, Partial<StemSeparation>>>(new Map());
 
+	// State for annotation updates (star/comment)
+	let annotationsMap = $state<Map<string, VariationAnnotation>>(new Map());
+
+	// Initialize annotations from server data
+	$effect(() => {
+		if (data.annotations) {
+			const map = new Map<string, VariationAnnotation>();
+			for (const ann of data.annotations) {
+				map.set(`${ann.generation_id}:${ann.audio_id}`, ann);
+			}
+			annotationsMap = map;
+		}
+	});
+
 	// Share live activeProject and stem separation updates via context
 	setContext('activeProject', {
 		get current() {
@@ -45,6 +59,26 @@
 		set: (id: number, data: Partial<StemSeparation>) => {
 			stemSeparationUpdates.set(id, data);
 			stemSeparationUpdates = new Map(stemSeparationUpdates);
+		}
+	});
+
+	// Share annotations via context for child components
+	setContext('annotations', {
+		get map() {
+			return annotationsMap;
+		},
+		get: (generationId: number, audioId: string): VariationAnnotation | undefined => {
+			return annotationsMap.get(`${generationId}:${audioId}`);
+		},
+		isStarred: (generationId: number, audioId: string): boolean => {
+			const ann = annotationsMap.get(`${generationId}:${audioId}`);
+			return ann?.starred === 1;
+		},
+		hasAnyStarred: (generationId: number): boolean => {
+			for (const [key, ann] of annotationsMap) {
+				if (key.startsWith(`${generationId}:`) && ann.starred === 1) return true;
+			}
+			return false;
 		}
 	});
 
@@ -100,6 +134,17 @@
 							message.data as Partial<StemSeparation>
 						);
 						stemSeparationUpdates = new Map(stemSeparationUpdates);
+					}
+					return;
+				}
+
+				// Handle annotation updates (star/comment)
+				if (message.type === 'annotation_update') {
+					const ann = message.data as VariationAnnotation;
+					if ('audioId' in message && message.audioId) {
+						const key = `${message.generationId}:${message.audioId}`;
+						annotationsMap.set(key, ann);
+						annotationsMap = new Map(annotationsMap);
 					}
 					return;
 				}
@@ -339,7 +384,7 @@
 	<div class="flex flex-1 overflow-hidden">
 		<!-- Sidebar with generations list -->
 		<div class="w-80 shrink-0">
-			<Sidebar project={activeProject} {generations} {selectedGenerationId} />
+			<Sidebar project={activeProject} {generations} {selectedGenerationId} {annotationsMap} />
 		</div>
 
 		<!-- Generation form / details -->

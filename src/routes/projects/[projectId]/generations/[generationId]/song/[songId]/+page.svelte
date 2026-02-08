@@ -4,7 +4,7 @@
 	import ExtendSongForm from '$lib/components/ExtendSongForm.svelte';
 	import StemPlayer from '$lib/components/StemPlayer.svelte';
 	import { getContext } from 'svelte';
-	import type { Generation, StemSeparation, StemSeparationType } from '$lib/types';
+	import type { Generation, StemSeparation, StemSeparationType, VariationAnnotation } from '$lib/types';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { goto } from '$app/navigation';
 
@@ -90,6 +90,87 @@
 	let lyricsCopied = $state(false);
 	let styleCopied = $state(false);
 	let showExtendForm = $state(false);
+
+	// Annotation (star/comment) state
+	let starred = $state(false);
+	let comment = $state('');
+	let commentDraft = $state('');
+	let notesExpanded = $state(false);
+	let starAnimClass = $state('');
+	let commentSaving = $state(false);
+	let commentSaved = $state(false);
+	let commentCharCount = $derived(commentDraft.length);
+
+	// Initialize and reset annotation state when navigating to a different song
+	$effect(() => {
+		starred = data.annotation?.starred === 1;
+		comment = data.annotation?.comment ?? '';
+		commentDraft = data.annotation?.comment ?? '';
+		notesExpanded = !!(data.annotation?.comment);
+	});
+
+	// Listen for SSE annotation updates
+	const annotationsContext = getContext<{
+		get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
+	} | undefined>('annotations');
+
+	$effect(() => {
+		if (annotationsContext) {
+			const liveAnnotation = annotationsContext.get(generation.id, song.id);
+			if (liveAnnotation) {
+				starred = liveAnnotation.starred === 1;
+				comment = liveAnnotation.comment ?? '';
+				if (commentDraft === (data.annotation?.comment ?? '')) {
+					// Only update draft if user hasn't started editing
+					commentDraft = liveAnnotation.comment ?? '';
+				}
+			}
+		}
+	});
+
+	async function handleToggleStar() {
+		const wasStarred = starred;
+		starred = !starred;
+		starAnimClass = starred ? 'star-burst' : 'star-unstar';
+		setTimeout(() => (starAnimClass = ''), 600);
+
+		try {
+			await fetch(`/api/generations/${generation.id}/annotations`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ audioId: song.id, action: 'toggle_star' })
+			});
+		} catch {
+			starred = wasStarred;
+		}
+	}
+
+	let commentDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function handleCommentInput() {
+		if (commentDebounceTimer) clearTimeout(commentDebounceTimer);
+		commentDebounceTimer = setTimeout(() => saveComment(), 800);
+	}
+
+	async function saveComment() {
+		if (commentDraft === comment) return;
+		commentSaving = true;
+
+		try {
+			await fetch(`/api/generations/${generation.id}/annotations`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ audioId: song.id, comment: commentDraft })
+			});
+			comment = commentDraft;
+			commentSaved = true;
+			setTimeout(() => (commentSaved = false), 2000);
+		} catch {
+			console.error('Failed to save comment');
+		} finally {
+			commentSaving = false;
+		}
+	}
 
 	function handleWaveformSeek(time: number) {
 		if (isCurrentTrack) {
@@ -371,6 +452,24 @@
 							</svg>
 						</a>
 					{/if}
+
+					<!-- Star / Favorite Button -->
+					<button
+						onclick={handleToggleStar}
+						class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all duration-200 {starred
+							? 'bg-amber-100 text-amber-500 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-900'
+							: 'bg-gray-100 text-gray-400 hover:bg-amber-50 hover:text-amber-400 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-amber-400'}"
+						title={starred ? 'Remove from starred' : 'Star this variation'}
+					>
+						<svg class="h-5 w-5 {starAnimClass}" fill={starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+							/>
+						</svg>
+					</button>
 
 					<!-- Extend Song Button -->
 					<button
@@ -819,6 +918,79 @@
 				{/if}
 			</div>
 		{/if}
+
+		<!-- Notes / Comment Section -->
+		<div
+			class="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm transition-all dark:border-amber-800/50 dark:bg-gray-800"
+		>
+			<button
+				onclick={() => (notesExpanded = !notesExpanded)}
+				class="flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors hover:bg-amber-50/50 dark:hover:bg-amber-900/10"
+			>
+				<div class="flex items-center gap-3">
+					<svg
+						class="h-5 w-5 text-amber-500 dark:text-amber-400"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+						/>
+					</svg>
+					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Notes</h2>
+					{#if comment && !notesExpanded}
+						<span class="ml-1 max-w-xs truncate text-sm text-gray-400 dark:text-gray-500">
+							— {comment}
+						</span>
+					{/if}
+				</div>
+				<div class="flex items-center gap-2">
+					{#if commentSaving}
+						<span class="text-xs text-gray-400">Saving...</span>
+					{:else if commentSaved}
+						<span class="text-xs text-green-500">Saved ✓</span>
+					{/if}
+					<svg
+						class="h-5 w-5 text-gray-400 transition-transform {notesExpanded ? 'rotate-180' : ''}"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M19 9l-7 7-7-7"
+						/>
+					</svg>
+				</div>
+			</button>
+			{#if notesExpanded}
+				<div class="border-t border-amber-200/50 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10">
+					<textarea
+						bind:value={commentDraft}
+						oninput={handleCommentInput}
+						onblur={saveComment}
+						placeholder="Add notes about this variation — what you like, what to change, ideas for next steps..."
+						maxlength="500"
+						rows="3"
+						class="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/20"
+					></textarea>
+					<div class="mt-1.5 flex items-center justify-between">
+						<p class="text-xs text-gray-400 dark:text-gray-500">
+							Auto-saves as you type
+						</p>
+						<span class="text-xs {commentCharCount > 450 ? 'text-amber-500' : 'text-gray-400'} dark:text-gray-500">
+							{commentCharCount}/500
+						</span>
+					</div>
+				</div>
+			{/if}
+		</div>
 
 		<!-- Cover Image Section -->
 		{#if song.imageUrl}

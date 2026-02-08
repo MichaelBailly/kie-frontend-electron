@@ -1,5 +1,5 @@
 import type { LayoutServerLoad } from './$types';
-import { getOpenProjects, getGenerationsByProject, createProject, getProject, setProjectOpen } from '$lib/db.server';
+import { getOpenProjects, getGenerationsByProject, createProject, getProject, setProjectOpen, getAnnotationsByProject } from '$lib/db.server';
 import { error } from '@sveltejs/kit';
 
 export const load: LayoutServerLoad = async ({ params }) => {
@@ -38,8 +38,12 @@ export const load: LayoutServerLoad = async ({ params }) => {
 		throw error(404, 'Project not found');
 	}
 
+	// Load all annotations for the active project
+	const annotations = getAnnotationsByProject(projectId);
+
 	return {
 		projects: projectsWithGenerations,
-		activeProject
+		activeProject,
+		annotations
 	};
 };

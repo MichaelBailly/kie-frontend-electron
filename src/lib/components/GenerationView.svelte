@@ -1,13 +1,57 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, VariationAnnotation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
+	import { getContext } from 'svelte';
 
 	let {
 		generation,
 		parentGeneration = null,
 		parentSong = null
 	}: { generation: Generation; parentGeneration?: any; parentSong?: any } = $props();
+
+	// Get annotations from context
+	const annotationsContext = getContext<{
+		get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
+		isStarred: (generationId: number, audioId: string) => boolean;
+	} | undefined>('annotations');
+
+	let track1Starred = $derived(
+		generation.track1_audio_id
+			? annotationsContext?.isStarred(generation.id, generation.track1_audio_id) ?? false
+			: false
+	);
+	let track2Starred = $derived(
+		generation.track2_audio_id
+			? annotationsContext?.isStarred(generation.id, generation.track2_audio_id) ?? false
+			: false
+	);
+
+	let track1StarAnimClass = $state('');
+	let track2StarAnimClass = $state('');
+
+	async function toggleTrackStar(trackNum: 1 | 2) {
+		const audioId = trackNum === 1 ? generation.track1_audio_id : generation.track2_audio_id;
+		if (!audioId) return;
+
+		if (trackNum === 1) {
+			track1StarAnimClass = !track1Starred ? 'star-burst' : 'star-unstar';
+			setTimeout(() => (track1StarAnimClass = ''), 600);
+		} else {
+			track2StarAnimClass = !track2Starred ? 'star-burst' : 'star-unstar';
+			setTimeout(() => (track2StarAnimClass = ''), 600);
+		}
+
+		try {
+			await fetch(`/api/generations/${generation.id}/annotations`, {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ audioId, action: 'toggle_star' })
+			});
+		} catch {
+			console.error('Failed to toggle star');
+		}
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -112,7 +156,22 @@
 				<div class="space-y-3">
 					<div>
 						<div class="mb-2 flex items-center justify-between">
-							<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 1</p>
+							<div class="flex items-center gap-2">
+								<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 1</p>
+								{#if generation.track1_audio_id}
+									<button
+										onclick={() => toggleTrackStar(1)}
+										class="cursor-pointer rounded p-0.5 transition-colors {track1Starred
+											? 'text-amber-500 hover:text-amber-600'
+											: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
+										title={track1Starred ? 'Unstar variation' : 'Star variation'}
+									>
+										<svg class="h-4 w-4 {track1StarAnimClass}" fill={track1Starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+										</svg>
+									</button>
+								{/if}
+							</div>
 							{#if generation.track1_audio_id}
 								<a
 									href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track1_audio_id}"
@@ -145,7 +204,22 @@
 					{#if generation.track2_stream_url || generation.track2_audio_url}
 						<div>
 							<div class="mb-2 flex items-center justify-between">
-								<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 2</p>
+								<div class="flex items-center gap-2">
+									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 2</p>
+									{#if generation.track2_audio_id}
+										<button
+											onclick={() => toggleTrackStar(2)}
+											class="cursor-pointer rounded p-0.5 transition-colors {track2Starred
+												? 'text-amber-500 hover:text-amber-600'
+												: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
+											title={track2Starred ? 'Unstar variation' : 'Star variation'}
+										>
+											<svg class="h-4 w-4 {track2StarAnimClass}" fill={track2Starred ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+											</svg>
+										</button>
+									{/if}
+								</div>
 								{#if generation.track2_audio_id}
 									<a
 										href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track2_audio_id}"

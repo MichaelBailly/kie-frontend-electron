@@ -2,7 +2,11 @@
 	import type { Generation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 
-	let { generation, selected = false }: { generation: Generation; selected?: boolean } = $props();
+	let {
+		generation,
+		selected = false,
+		hasStarred = false
+	}: { generation: Generation; selected?: boolean; hasStarred?: boolean } = $props();
 
 	function formatDate(dateStr: string): string {
 		const date = new Date(dateStr);
@@ -21,26 +25,35 @@
 		: 'dark:hover:bg-gray-750 border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'}"
 >
 	<div class="flex items-start gap-3">
-		{#if generation.track1_image_url}
-			<img
-				src={generation.track1_image_url}
-				alt={generation.title}
-				class="h-12 w-12 shrink-0 rounded-md object-cover"
-			/>
-		{:else}
-			<div
-				class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-purple-600"
-			>
-				<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-					/>
-				</svg>
-			</div>
-		{/if}
+		<div class="relative shrink-0">
+			{#if generation.track1_image_url}
+				<img
+					src={generation.track1_image_url}
+					alt={generation.title}
+					class="h-12 w-12 rounded-md object-cover"
+				/>
+			{:else}
+				<div
+					class="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-purple-600"
+				>
+					<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+						/>
+					</svg>
+				</div>
+			{/if}
+			{#if hasStarred}
+				<div class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 shadow-sm">
+					<svg class="h-2.5 w-2.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+						<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+					</svg>
+				</div>
+			{/if}
+		</div>
 		<div class="min-w-0 flex-1">
 			<h4 class="truncate font-medium text-gray-900 dark:text-gray-100">
 				{generation.title}

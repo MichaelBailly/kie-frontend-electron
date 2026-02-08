@@ -1,16 +1,19 @@
 <script lang="ts">
-	import type { Project, Generation } from '$lib/types';
+	import type { Project, Generation, VariationAnnotation } from '$lib/types';
 	import GenerationCard from './GenerationCard.svelte';
 	import { invalidateAll } from '$app/navigation';
+	import { page } from '$app/state';
 
 	let {
 		project,
 		generations,
-		selectedGenerationId
+		selectedGenerationId,
+		annotationsMap = new Map()
 	}: {
 		project: Project;
 		generations: Generation[];
 		selectedGenerationId: number | null;
+		annotationsMap?: Map<string, VariationAnnotation>;
 	} = $props();
 
 	let isEditing = $state(false);
@@ -64,6 +67,22 @@
 			cancelEditing();
 		}
 	}
+
+	function hasAnyStarred(gen: Generation): boolean {
+		if (gen.track1_audio_id && annotationsMap.get(`${gen.id}:${gen.track1_audio_id}`)?.starred === 1) return true;
+		if (gen.track2_audio_id && annotationsMap.get(`${gen.id}:${gen.track2_audio_id}`)?.starred === 1) return true;
+		return false;
+	}
+
+	let starredCount = $derived.by(() => {
+		let count = 0;
+		for (const ann of annotationsMap.values()) {
+			if (ann.starred === 1) count++;
+		}
+		return count;
+	});
+
+	let isOnStarredPage = $derived(page.url.pathname.includes('/starred'));
 </script>
 
 <div
@@ -103,8 +122,23 @@
 				</button>
 			</div>
 		{/if}
-		<p class="text-sm text-gray-500 dark:text-gray-400">
-			{generations.length} generation{generations.length !== 1 ? 's' : ''}
+		<p class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+			<span>{generations.length} generation{generations.length !== 1 ? 's' : ''}</span>
+			{#if starredCount > 0}
+				<span class="text-gray-300 dark:text-gray-600">·</span>
+				<a
+					href="/projects/{project.id}/starred"
+					class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors {isOnStarredPage
+						? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
+						: 'text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:text-amber-400 dark:hover:bg-amber-900/30'}"
+					title="View starred variations"
+				>
+					<svg class="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+						<path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+					</svg>
+					{starredCount} starred
+				</a>
+			{/if}
 		</p>
 	</div>
 
@@ -125,7 +159,7 @@
 	<div class="flex-1 space-y-2 overflow-y-auto p-3">
 		{#each generations as generation (generation.id)}
 			<a href="/projects/{project.id}/generations/{generation.id}">
-				<GenerationCard {generation} selected={selectedGenerationId === generation.id} />
+				<GenerationCard {generation} selected={selectedGenerationId === generation.id} hasStarred={hasAnyStarred(generation)} />
 			</a>
 		{/each}
 

@@ -3,7 +3,8 @@ import { error } from '@sveltejs/kit';
 import {
 	getExtendedGenerations,
 	getGeneration as getGenerationById,
-	getStemSeparationsForSong
+	getStemSeparationsForSong,
+	getAnnotation
 } from '$lib/db.server';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
@@ -58,6 +59,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	// Get stem separations for this song
 	const stemSeparations = getStemSeparationsForSong(generationId, songId);
 
+	// Get annotation (star/comment) for this song
+	const annotation = getAnnotation(generationId, songId) ?? null;
+
 	// Get parent generation if this is an extended song
 	let parentGeneration = null;
 	let parentSong = null;
@@ -85,6 +89,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		activeProject,
 		extendedGenerations,
 		stemSeparations,
+		annotation,
 		parentGeneration,
 		parentSong,
 		continueAt: generation.continue_at

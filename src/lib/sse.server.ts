@@ -1,4 +1,4 @@
-import type { Generation, StemSeparation } from '$lib/types';
+import type { Generation, StemSeparation, VariationAnnotation } from '$lib/types';
 
 // Store connected clients
 const clients = new Map<string, ReadableStreamDefaultController<Uint8Array>>();
@@ -41,6 +41,30 @@ export function notifyStemSeparationClients(
 	data: Partial<StemSeparation>
 ) {
 	const message = JSON.stringify({ type, stemSeparationId, generationId, audioId, data });
+	const encoder = new TextEncoder();
+	const eventData = encoder.encode(`data: ${message}\n\n`);
+
+	for (const [clientId, controller] of clients.entries()) {
+		try {
+			controller.enqueue(eventData);
+		} catch {
+			// Client disconnected, clean up
+			clients.delete(clientId);
+		}
+	}
+}
+
+export function notifyAnnotationClients(
+	generationId: number,
+	audioId: string,
+	data: Partial<VariationAnnotation>
+) {
+	const message = JSON.stringify({
+		type: 'annotation_update',
+		generationId,
+		audioId,
+		data
+	});
 	const encoder = new TextEncoder();
 	const eventData = encoder.encode(`data: ${message}\n\n`);
 

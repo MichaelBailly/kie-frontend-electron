@@ -64,6 +64,16 @@ export interface StemSeparation {
 	updated_at: string;
 }
 
+export interface VariationAnnotation {
+	id: number;
+	generation_id: number;
+	audio_id: string;
+	starred: number;
+	comment: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface SSEMessage {
 	type:
 		| 'generation_update'
@@ -71,10 +81,12 @@ export interface SSEMessage {
 		| 'generation_error'
 		| 'stem_separation_update'
 		| 'stem_separation_complete'
-		| 'stem_separation_error';
+		| 'stem_separation_error'
+		| 'annotation_update';
 	generationId: number;
-	data: Partial<Generation> | Partial<StemSeparation>;
+	data: Partial<Generation> | Partial<StemSeparation> | Partial<VariationAnnotation>;
 	stemSeparationId?: number;
+	audioId?: string;
 }
 
 export type GenerationStatus =

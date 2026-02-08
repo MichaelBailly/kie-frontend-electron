@@ -126,6 +126,21 @@ function getDb(): BetterSqlite3.Database {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		);
+
+		CREATE TABLE IF NOT EXISTS variation_annotations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			generation_id INTEGER NOT NULL,
+			audio_id TEXT NOT NULL,
+			starred INTEGER NOT NULL DEFAULT 0,
+			comment TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (generation_id) REFERENCES generations(id) ON DELETE CASCADE,
+			UNIQUE(generation_id, audio_id)
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_variation_annotations_generation_audio ON variation_annotations(generation_id, audio_id);
+		CREATE INDEX IF NOT EXISTS idx_variation_annotations_starred ON variation_annotations(starred);
 	`);
 
 	// Migration: Add is_open column to existing projects table
@@ -675,6 +690,107 @@ export function getPendingStemSeparations(): StemSeparation[] {
 		"SELECT * FROM stem_separations WHERE status IN ('pending', 'processing')"
 	);
 	return stmt.all() as StemSeparation[];
+}
+
+// Variation Annotation types and operations
+export interface VariationAnnotation {
+	id: number;
+	generation_id: number;
+	audio_id: string;
+	starred: number;
+	comment: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
+export function getAnnotation(
+	generationId: number,
+	audioId: string
+): VariationAnnotation | undefined {
+	const db = getDb();
+	const stmt = db.prepare(
+		'SELECT * FROM variation_annotations WHERE generation_id = ? AND audio_id = ?'
+	);
+	return stmt.get(generationId, audioId) as VariationAnnotation | undefined;
+}
+
+export function getAnnotationsForGeneration(generationId: number): VariationAnnotation[] {
+	const db = getDb();
+	const stmt = db.prepare(
+		'SELECT * FROM variation_annotations WHERE generation_id = ?'
+	);
+	return stmt.all(generationId) as VariationAnnotation[];
+}
+
+export function getAnnotationsByProject(projectId: number): VariationAnnotation[] {
+	const db = getDb();
+	const stmt = db.prepare(`
+		SELECT va.* FROM variation_annotations va
+		JOIN generations g ON va.generation_id = g.id
+		WHERE g.project_id = ?
+		ORDER BY va.updated_at DESC
+	`);
+	return stmt.all(projectId) as VariationAnnotation[];
+}
+
+export function getStarredAnnotationsByProject(projectId: number): VariationAnnotation[] {
+	const db = getDb();
+	const stmt = db.prepare(`
+		SELECT va.* FROM variation_annotations va
+		JOIN generations g ON va.generation_id = g.id
+		WHERE g.project_id = ? AND (va.starred = 1 OR va.comment IS NOT NULL AND va.comment != '')
+		ORDER BY va.updated_at DESC
+	`);
+	return stmt.all(projectId) as VariationAnnotation[];
+}
+
+export function toggleStar(generationId: number, audioId: string): VariationAnnotation {
+	const db = getDb();
+	const existing = getAnnotation(generationId, audioId);
+
+	if (existing) {
+		const newStarred = existing.starred ? 0 : 1;
+		const stmt = db.prepare(`
+			UPDATE variation_annotations
+			SET starred = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE generation_id = ? AND audio_id = ?
+		`);
+		stmt.run(newStarred, generationId, audioId);
+	} else {
+		const stmt = db.prepare(`
+			INSERT INTO variation_annotations (generation_id, audio_id, starred)
+			VALUES (?, ?, 1)
+		`);
+		stmt.run(generationId, audioId);
+	}
+
+	return getAnnotation(generationId, audioId)!;
+}
+
+export function updateComment(
+	generationId: number,
+	audioId: string,
+	comment: string
+): VariationAnnotation {
+	const db = getDb();
+	const existing = getAnnotation(generationId, audioId);
+
+	if (existing) {
+		const stmt = db.prepare(`
+			UPDATE variation_annotations
+			SET comment = ?, updated_at = CURRENT_TIMESTAMP
+			WHERE generation_id = ? AND audio_id = ?
+		`);
+		stmt.run(comment || null, generationId, audioId);
+	} else {
+		const stmt = db.prepare(`
+			INSERT INTO variation_annotations (generation_id, audio_id, comment)
+			VALUES (?, ?, ?)
+		`);
+		stmt.run(generationId, audioId, comment || null);
+	}
+
+	return getAnnotation(generationId, audioId)!;
 }
 
 // Settings operations
