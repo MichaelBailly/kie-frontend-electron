@@ -24,8 +24,12 @@
 	let isPlaying = $derived(audioStore.isTrackPlaying(trackId));
 	let currentTime = $derived(isCurrentTrack ? audioStore.currentTime : 0);
 	let audioDuration = $derived(isCurrentTrack ? audioStore.duration : duration);
+	let totalDuration = $derived(audioDuration || duration || 0);
 	let volume = $derived(audioStore.volume);
 	let isMuted = $derived(audioStore.isMuted);
+	let progressBar: HTMLDivElement | undefined = $state();
+	let hoverTime = $state<number | null>(null);
+	let hoverPercent = $state(0);
 
 	function handlePlayPause() {
 		if (isCurrentTrack) {
@@ -51,6 +55,38 @@
 		if (isCurrentTrack) {
 			audioStore.seek(parseFloat(target.value));
 		}
+	}
+
+	function getTimeFromMouseEvent(e: MouseEvent) {
+		if (!progressBar || totalDuration === 0) return null;
+		const rect = progressBar.getBoundingClientRect();
+		const clampedX = Math.min(Math.max(e.clientX - rect.left, 0), rect.width);
+		const ratio = rect.width > 0 ? clampedX / rect.width : 0;
+		return {
+			time: ratio * totalDuration,
+			percent: ratio * 100
+		};
+	}
+
+	function handleProgressMove(e: MouseEvent) {
+		const result = getTimeFromMouseEvent(e);
+		if (!result) {
+			hoverTime = null;
+			return;
+		}
+		hoverTime = result.time;
+		hoverPercent = result.percent;
+	}
+
+	function handleProgressLeave() {
+		hoverTime = null;
+	}
+
+	function handleProgressClick(e: MouseEvent) {
+		if (!isCurrentTrack) return;
+		const result = getTimeFromMouseEvent(e);
+		if (!result) return;
+		audioStore.seek(result.time);
 	}
 
 	function handleVolumeChange(e: Event) {
@@ -114,16 +150,32 @@
 				<span class="w-10 text-xs text-gray-500 dark:text-gray-400">
 					{formatTime(currentTime)}
 				</span>
-				<input
-					type="range"
-					min="0"
-					max={audioDuration || 100}
-					value={currentTime}
-					oninput={handleSeek}
-					class="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-gray-200 accent-indigo-600 dark:bg-gray-700"
-				/>
+				<div
+					bind:this={progressBar}
+					class="relative flex-1"
+					onmousemove={handleProgressMove}
+					onmouseleave={handleProgressLeave}
+					onclick={handleProgressClick}
+				>
+					{#if hoverTime !== null}
+						<div
+							class="pointer-events-none absolute -top-6 -translate-x-1/2 rounded bg-gray-900 px-2 py-0.5 text-xs text-white"
+							style={`left: ${hoverPercent}%`}
+						>
+							{formatTime(hoverTime)}
+						</div>
+					{/if}
+					<input
+						type="range"
+						min="0"
+						max={totalDuration || 100}
+						value={currentTime}
+						oninput={handleSeek}
+						class="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-indigo-600 dark:bg-gray-700"
+					/>
+				</div>
 				<span class="w-10 text-xs text-gray-500 dark:text-gray-400">
-					{formatTime(audioDuration)}
+					{formatTime(totalDuration)}
 				</span>
 			</div>
 
