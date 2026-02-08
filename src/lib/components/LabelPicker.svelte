@@ -218,7 +218,7 @@
 	});
 </script>
 
-<div class="mt-2">
+<div>
 	<div class="relative">
 		<div class="flex flex-wrap items-center gap-2">
 			{#each currentLabels as label (label)}

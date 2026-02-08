@@ -174,7 +174,7 @@
 							{#if generation.track1_audio_id}
 								<a
 									href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track1_audio_id}"
-									class="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+									class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 								>
 									Variation 1
 								</a>
@@ -184,7 +184,7 @@
 							{#if generation.track1_audio_id}
 								<button
 									onclick={() => toggleTrackStar(1)}
-									class="cursor-pointer rounded p-0.5 transition-colors {track1Starred
+									class="flex-shrink-0 cursor-pointer rounded p-0.5 transition-colors {track1Starred
 										? 'text-amber-500 hover:text-amber-600'
 										: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 									title={track1Starred ? 'Unstar variation' : 'Star variation'}
@@ -229,7 +229,7 @@
 								{#if generation.track2_audio_id}
 									<a
 										href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track2_audio_id}"
-										class="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+										class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 									>
 										Variation 2
 									</a>
@@ -239,7 +239,7 @@
 								{#if generation.track2_audio_id}
 									<button
 										onclick={() => toggleTrackStar(2)}
-										class="cursor-pointer rounded p-0.5 transition-colors {track2Starred
+										class="flex-shrink-0 cursor-pointer rounded p-0.5 transition-colors {track2Starred
 											? 'text-amber-500 hover:text-amber-600'
 											: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 										title={track2Starred ? 'Unstar variation' : 'Star variation'}
