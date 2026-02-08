@@ -82,13 +82,6 @@
 		hoverTime = null;
 	}
 
-	function handleProgressClick(e: MouseEvent) {
-		if (!isCurrentTrack) return;
-		const result = getTimeFromMouseEvent(e);
-		if (!result) return;
-		audioStore.seek(result.time);
-	}
-
 	function handleVolumeChange(e: Event) {
 		const target = e.target as HTMLInputElement;
 		audioStore.setVolume(parseFloat(target.value));
@@ -150,13 +143,7 @@
 				<span class="w-10 text-xs text-gray-500 dark:text-gray-400">
 					{formatTime(currentTime)}
 				</span>
-				<div
-					bind:this={progressBar}
-					class="relative flex-1"
-					onmousemove={handleProgressMove}
-					onmouseleave={handleProgressLeave}
-					onclick={handleProgressClick}
-				>
+				<div bind:this={progressBar} class="relative flex-1">
 					{#if hoverTime !== null}
 						<div
 							class="pointer-events-none absolute -top-6 -translate-x-1/2 rounded bg-gray-900 px-2 py-0.5 text-xs text-white"
@@ -171,6 +158,8 @@
 						max={totalDuration || 100}
 						value={currentTime}
 						oninput={handleSeek}
+						onmousemove={handleProgressMove}
+						onmouseleave={handleProgressLeave}
 						class="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-gray-200 accent-indigo-600 dark:bg-gray-700"
 					/>
 				</div>
