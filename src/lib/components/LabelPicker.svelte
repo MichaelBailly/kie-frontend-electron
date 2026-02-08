@@ -44,6 +44,104 @@
 		});
 	}
 
+	const colors = [
+		{
+			border: 'border-rose-300 dark:border-rose-700',
+			text: 'text-rose-700 dark:text-rose-200',
+			bg: 'bg-rose-50 dark:bg-rose-950/40'
+		},
+		{
+			border: 'border-orange-300 dark:border-orange-700',
+			text: 'text-orange-700 dark:text-orange-200',
+			bg: 'bg-orange-50 dark:bg-orange-950/40'
+		},
+		{
+			border: 'border-amber-300 dark:border-amber-700',
+			text: 'text-amber-700 dark:text-amber-200',
+			bg: 'bg-amber-50 dark:bg-amber-950/40'
+		},
+		{
+			border: 'border-yellow-300 dark:border-yellow-700',
+			text: 'text-yellow-700 dark:text-yellow-200',
+			bg: 'bg-yellow-50 dark:bg-yellow-950/40'
+		},
+		{
+			border: 'border-lime-300 dark:border-lime-700',
+			text: 'text-lime-700 dark:text-lime-200',
+			bg: 'bg-lime-50 dark:bg-lime-950/40'
+		},
+		{
+			border: 'border-green-300 dark:border-green-700',
+			text: 'text-green-700 dark:text-green-200',
+			bg: 'bg-green-50 dark:bg-green-950/40'
+		},
+		{
+			border: 'border-emerald-300 dark:border-emerald-700',
+			text: 'text-emerald-700 dark:text-emerald-200',
+			bg: 'bg-emerald-50 dark:bg-emerald-950/40'
+		},
+		{
+			border: 'border-teal-300 dark:border-teal-700',
+			text: 'text-teal-700 dark:text-teal-200',
+			bg: 'bg-teal-50 dark:bg-teal-950/40'
+		},
+		{
+			border: 'border-cyan-300 dark:border-cyan-700',
+			text: 'text-cyan-700 dark:text-cyan-200',
+			bg: 'bg-cyan-50 dark:bg-cyan-950/40'
+		},
+		{
+			border: 'border-sky-300 dark:border-sky-700',
+			text: 'text-sky-700 dark:text-sky-200',
+			bg: 'bg-sky-50 dark:bg-sky-950/40'
+		},
+		{
+			border: 'border-blue-300 dark:border-blue-700',
+			text: 'text-blue-700 dark:text-blue-200',
+			bg: 'bg-blue-50 dark:bg-blue-950/40'
+		},
+		{
+			border: 'border-indigo-300 dark:border-indigo-700',
+			text: 'text-indigo-700 dark:text-indigo-200',
+			bg: 'bg-indigo-50 dark:bg-indigo-950/40'
+		},
+		{
+			border: 'border-violet-300 dark:border-violet-700',
+			text: 'text-violet-700 dark:text-violet-200',
+			bg: 'bg-violet-50 dark:bg-violet-950/40'
+		},
+		{
+			border: 'border-purple-300 dark:border-purple-700',
+			text: 'text-purple-700 dark:text-purple-200',
+			bg: 'bg-purple-50 dark:bg-purple-950/40'
+		},
+		{
+			border: 'border-fuchsia-300 dark:border-fuchsia-700',
+			text: 'text-fuchsia-700 dark:text-fuchsia-200',
+			bg: 'bg-fuchsia-50 dark:bg-fuchsia-950/40'
+		},
+		{
+			border: 'border-pink-300 dark:border-pink-700',
+			text: 'text-pink-700 dark:text-pink-200',
+			bg: 'bg-pink-50 dark:bg-pink-950/40'
+		}
+	];
+
+	function hashLabel(label: string): number {
+		const normalized = normalizeLabel(label);
+		let hash = 0;
+		for (let i = 0; i < normalized.length; i++) {
+			hash = (hash << 5) - hash + normalized.charCodeAt(i);
+			hash = hash & hash;
+		}
+		return Math.abs(hash);
+	}
+
+	function getLabelColor(label: string) {
+		const hash = hashLabel(label);
+		return colors[hash % colors.length];
+	}
+
 	function updateLabels(nextLabels: string[]) {
 		const previous = currentLabels;
 		currentLabels = nextLabels;
@@ -222,13 +320,14 @@
 	<div class="relative">
 		<div class="flex flex-wrap items-center gap-2">
 			{#each currentLabels as label (label)}
+				{@const colorScheme = getLabelColor(label)}
 				<span
-					class="inline-flex items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 shadow-sm shadow-indigo-500/5 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-200"
+					class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium shadow-sm {colorScheme.border} {colorScheme.bg} {colorScheme.text}"
 				>
 					{formatLabel(label)}
 					<button
 						onclick={() => removeLabel(label)}
-						class="cursor-pointer rounded-full p-0.5 text-indigo-400 transition-colors hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-100"
+						class="cursor-pointer rounded-full p-0.5 transition-colors hover:opacity-70"
 						title="Remove label"
 					>
 						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
