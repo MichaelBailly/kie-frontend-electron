@@ -32,9 +32,8 @@ export function useFakeTimers(): () => void {
  * `setTimeout` + `await` chains resolve correctly.
  */
 export async function advanceTimersAndFlush(ms: number): Promise<void> {
-	vi.advanceTimersByTime(ms);
-	// Flush microtasks (resolved promises)
-	await vi.runAllTicksAsync();
+	// advanceTimersByTimeAsync advances timers AND flushes microtasks
+	await vi.advanceTimersByTimeAsync(ms);
 }
 
 // ============================================================================

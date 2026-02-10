@@ -214,3 +214,53 @@ afterAll(() => closeTestDb());
 - `vi.mock` with async factory + `await import()` is fully supported in Vitest — the factory awaits properly during module resolution.
 - The `db-setup.ts` helper is NOT added to the `test-utils/index.ts` barrel to avoid forcing all test imports to load better-sqlite3 (a native module).
 - Pre-existing svelte-check errors (39 in `test-utils.spec.ts`, 1 in `helpers.ts`) exist from Task 4.1 — not introduced by this task.
+
+### Task 4.3: Add API route integration tests (2026-02-09)
+
+**What was done:**
+- Created 7 test files under `src/routes/api/` with 76 integration tests covering all API routes
+- Tests use mock factories from `$lib/test-utils` (createDbMock, createKieApiMock, createSseMock, createPollingMock)
+- Tests call route handler functions (GET, POST, PATCH, DELETE) directly with mock `RequestEvent` objects via `createRequestEvent()`
+- Both happy paths and error cases are covered: validation errors (400), not found (404), invalid IDs, missing fields, KIE API errors, async task lifecycle
+
+**Testing strategy:**
+- Route handlers are imported via `await import('./+server')` (dynamic import within `vi.mock` scope)
+- DB mock provides functional in-memory stores for projects/settings + `vi.fn()` spies for assertions
+- KIE API mock returns default `{ code: 200 }` responses; tests override with `mockResolvedValue()` for error cases
+- SSE and polling mocks are no-op spies used to verify correct event dispatching
+- Async task lifecycle (startGenerationTask/startStemSeparationTask) fires via `.catch(console.error)` in routes, so `flushPromises()` is needed before asserting on mock calls
+
+**Key pattern for API route tests:**
+```typescript
+vi.mock('$lib/db.server', () => createDbMock());
+vi.mock('$lib/kie-api.server', () => createKieApiMock());
+vi.mock('$lib/sse.server', () => createSseMock());
+vi.mock('$lib/polling.server', () => createPollingMock());
+
+let db: DbMock;
+beforeEach(async () => {
+  db = (await import('$lib/db.server')) as unknown as DbMock;
+  db.__reset();
+});
+
+it('test', async () => {
+  db.__setProjects([createProject({ id: 1 })]);
+  const { POST } = await import('./+server');
+  const event = createRequestEvent({ body: {...}, params: {...} });
+  const response = await POST(event as never);
+  const data = await response.json();
+  expect(data.id).toBe(1);
+});
+```
+
+**Learnings:**
+- SvelteKit's `error()` throws an object with `{ status: number, body: { message: string } }` shape — use `rejects.toMatchObject({ status: 400, body: { message: '...' } })` for assertions
+- `event as never` cast is needed because `createRequestEvent()` returns a minimal mock object, not a full `RequestEvent` type — the route handlers work fine with the subset of properties
+- `mockClear()` (used in `__reset()`) resets call counts but NOT mock implementations. When a test overrides `mockResolvedValue()`, subsequent tests in the same `describe` block inherit that override. Fix by explicitly setting the mock return value in tests that depend on the default
+- `flushPromises()` resolves one microtask tick — sufficient for `.catch(console.error)` chains but may need `await flushPromises()` multiple times for longer chains
+- API route tests don't need `createRequire` or better-sqlite3 — they test the HTTP layer with mocked dependencies, not actual SQL
+- SSE route test can verify headers and stream creation, but reading the stream content requires a `ReadableStreamDefaultReader` which adds complexity — testing `addClient` call is sufficient
+- All pre-existing svelte-check errors (39+1) remain in `test-utils.spec.ts` and `helpers.ts` from Task 4.1 — not in the new API route test files
+- Fixed pre-existing svelte-check errors (40 total) in test-utils from Task 4.1:
+  - `helpers.ts`: `vi.runAllTicksAsync()` doesn't exist in Vitest 4.x — replaced with `vi.advanceTimersByTimeAsync(0)` which advances timers AND flushes microtasks
+  - `mocks.ts`: `ReturnType<typeof vi.fn>` resolves to `Mock<Procedure | Constructable>` — a union type that TypeScript considers non-callable. Fixed by introducing `MockFn = Mock<(...args: any[]) => any>` type alias (constrains to plain function signature) and replacing all interface/cast usages

@@ -205,7 +205,25 @@ Key design decisions:
 
 Total: 116 new tests across 5 test files.
 
-#### Task 4.3: Add API route integration tests
+#### Task 4.3: Add API route integration tests ✅
+
+**Status:** Completed  
+**Changes:** Created integration tests for 7 API route groups using mock factories from `test-utils`. Tests exercise both happy paths and error cases (validation, 404s, parameter parsing) by calling the route handler functions directly with mock request events.
+
+- `src/routes/api/projects/projects.spec.ts` — 13 tests: GET list, POST create (with/without name), GET/PATCH projects/[id] (success, 404, 400 for invalid id, name/is_open updates)
+- `src/routes/api/generations/generations.spec.ts` — 19 tests: POST create (success, missing fields, missing project, KIE API error, polling start), POST extend (success, missing fields, invalid continueAt, missing project/parent, extendMusic call), GET/DELETE generations/[id] (success, 404, 400)
+- `src/routes/api/generations/annotations.spec.ts` — 15 tests: GET annotation (existing, default, missing audioId, missing generation, invalid id), PATCH toggle_star (SSE broadcast), PATCH set_labels (success, non-array, non-string, too long), PATCH comment, validation (missing audioId, invalid audioId, no action, missing generation)
+- `src/routes/api/settings/settings.spec.ts` — 7 tests: GET (no key, masked key, short key masking), PUT (set, clear empty, clear null, no-op when not provided)
+- `src/routes/api/stem-separation/stem-separation.spec.ts` — 11 tests: POST create (success, API call args, polling start, existing non-error returns existing, existing error creates new, missing fields, invalid type, missing generation, no task_id, API error, split_stem type)
+- `src/routes/api/labels/labels.spec.ts` — 7 tests: GET suggestions (default limit, custom limit, empty query, limit too low/high/NaN, query too long)
+- `src/routes/api/sse/sse.spec.ts` — 4 tests: GET SSE stream (headers, ReadableStream body, addClient call, controller)
+
+Total: 76 new tests across 7 test files.
+
+Also fixed 40 pre-existing svelte-check errors from Task 4.1:
+- `helpers.ts`: Replaced non-existent `vi.runAllTicksAsync()` with `vi.advanceTimersByTimeAsync()`
+- `mocks.ts`: Replaced `ReturnType<typeof vi.fn>` (non-callable union type) with `MockFn = Mock<(...args: any[]) => any>` type alias in all mock interfaces
+
 #### Task 4.4: Add polling logic tests
 
 ---

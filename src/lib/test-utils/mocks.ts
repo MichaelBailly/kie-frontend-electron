@@ -17,7 +17,7 @@
  * The objects also contain `__reset` / `__set*` helpers for test setup.
  */
 
-import { vi } from 'vitest';
+import { vi, type Mock } from 'vitest';
 import type {
 	Project,
 	Generation,
@@ -25,6 +25,12 @@ import type {
 	VariationAnnotation,
 	Setting
 } from '$lib/types';
+
+// Callable mock function type. `ReturnType<typeof vi.fn>` resolves to
+// `Mock<Procedure | Constructable>` which TypeScript considers non-callable.
+// This alias constrains to a plain function signature.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type MockFn = Mock<(...args: any[]) => any>;
 
 // ============================================================================
 // Database mock
@@ -40,62 +46,62 @@ import type {
  */
 export interface DbMock {
 	// Settings
-	getSetting: ReturnType<typeof vi.fn>;
-	setSetting: ReturnType<typeof vi.fn>;
-	deleteSetting: ReturnType<typeof vi.fn>;
-	getAllSettings: ReturnType<typeof vi.fn>;
-	getApiKey: ReturnType<typeof vi.fn>;
-	setApiKey: ReturnType<typeof vi.fn>;
+	getSetting: MockFn;
+	setSetting: MockFn;
+	deleteSetting: MockFn;
+	getAllSettings: MockFn;
+	getApiKey: MockFn;
+	setApiKey: MockFn;
 
 	// Projects
-	createProject: ReturnType<typeof vi.fn>;
-	getProject: ReturnType<typeof vi.fn>;
-	getAllProjects: ReturnType<typeof vi.fn>;
-	getOpenProjects: ReturnType<typeof vi.fn>;
-	setProjectOpen: ReturnType<typeof vi.fn>;
-	updateProjectName: ReturnType<typeof vi.fn>;
-	deleteProject: ReturnType<typeof vi.fn>;
+	createProject: MockFn;
+	getProject: MockFn;
+	getAllProjects: MockFn;
+	getOpenProjects: MockFn;
+	setProjectOpen: MockFn;
+	updateProjectName: MockFn;
+	deleteProject: MockFn;
 
 	// Generations
-	createGeneration: ReturnType<typeof vi.fn>;
-	createExtendGeneration: ReturnType<typeof vi.fn>;
-	getExtendedGenerations: ReturnType<typeof vi.fn>;
-	getGeneration: ReturnType<typeof vi.fn>;
-	getGenerationByTaskId: ReturnType<typeof vi.fn>;
-	getGenerationsByProject: ReturnType<typeof vi.fn>;
-	getLatestGenerationByProject: ReturnType<typeof vi.fn>;
-	updateGenerationTaskId: ReturnType<typeof vi.fn>;
-	updateGenerationStatus: ReturnType<typeof vi.fn>;
-	updateGenerationTracks: ReturnType<typeof vi.fn>;
-	completeGeneration: ReturnType<typeof vi.fn>;
-	deleteGeneration: ReturnType<typeof vi.fn>;
-	getPendingGenerations: ReturnType<typeof vi.fn>;
-	createImportedGeneration: ReturnType<typeof vi.fn>;
+	createGeneration: MockFn;
+	createExtendGeneration: MockFn;
+	getExtendedGenerations: MockFn;
+	getGeneration: MockFn;
+	getGenerationByTaskId: MockFn;
+	getGenerationsByProject: MockFn;
+	getLatestGenerationByProject: MockFn;
+	updateGenerationTaskId: MockFn;
+	updateGenerationStatus: MockFn;
+	updateGenerationTracks: MockFn;
+	completeGeneration: MockFn;
+	deleteGeneration: MockFn;
+	getPendingGenerations: MockFn;
+	createImportedGeneration: MockFn;
 
 	// Stem separations
-	createStemSeparation: ReturnType<typeof vi.fn>;
-	getStemSeparation: ReturnType<typeof vi.fn>;
-	getStemSeparationByTaskId: ReturnType<typeof vi.fn>;
-	getStemSeparationsForSong: ReturnType<typeof vi.fn>;
-	getStemSeparationByType: ReturnType<typeof vi.fn>;
-	updateStemSeparationTaskId: ReturnType<typeof vi.fn>;
-	updateStemSeparationStatus: ReturnType<typeof vi.fn>;
-	completeStemSeparation: ReturnType<typeof vi.fn>;
-	getPendingStemSeparations: ReturnType<typeof vi.fn>;
+	createStemSeparation: MockFn;
+	getStemSeparation: MockFn;
+	getStemSeparationByTaskId: MockFn;
+	getStemSeparationsForSong: MockFn;
+	getStemSeparationByType: MockFn;
+	updateStemSeparationTaskId: MockFn;
+	updateStemSeparationStatus: MockFn;
+	completeStemSeparation: MockFn;
+	getPendingStemSeparations: MockFn;
 
 	// Annotations
-	getLabelSuggestions: ReturnType<typeof vi.fn>;
-	getAnnotation: ReturnType<typeof vi.fn>;
-	getAnnotationsForGeneration: ReturnType<typeof vi.fn>;
-	getAnnotationsByProject: ReturnType<typeof vi.fn>;
-	getStarredAnnotationsByProject: ReturnType<typeof vi.fn>;
-	toggleStar: ReturnType<typeof vi.fn>;
-	updateComment: ReturnType<typeof vi.fn>;
-	setAnnotationLabels: ReturnType<typeof vi.fn>;
+	getLabelSuggestions: MockFn;
+	getAnnotation: MockFn;
+	getAnnotationsForGeneration: MockFn;
+	getAnnotationsByProject: MockFn;
+	getStarredAnnotationsByProject: MockFn;
+	toggleStar: MockFn;
+	updateComment: MockFn;
+	setAnnotationLabels: MockFn;
 
 	// Database core
-	getDb: ReturnType<typeof vi.fn>;
-	prepareStmt: ReturnType<typeof vi.fn>;
+	getDb: MockFn;
+	prepareStmt: MockFn;
 
 	// Test helpers
 	__reset: () => void;
@@ -319,7 +325,7 @@ export function createDbMock(): DbMock {
 			// Reset all vi.fn() call counts
 			for (const [, value] of Object.entries(mock)) {
 				if (typeof value === 'function' && 'mockClear' in value) {
-					(value as ReturnType<typeof vi.fn>).mockClear();
+					(value as MockFn).mockClear();
 				}
 			}
 		},
@@ -351,16 +357,16 @@ export function createDbMock(): DbMock {
  * Type for the KIE API mock module.
  */
 export interface KieApiMock {
-	generateMusic: ReturnType<typeof vi.fn>;
-	extendMusic: ReturnType<typeof vi.fn>;
-	getMusicDetails: ReturnType<typeof vi.fn>;
-	separateVocals: ReturnType<typeof vi.fn>;
-	getStemSeparationDetails: ReturnType<typeof vi.fn>;
-	isErrorStatus: ReturnType<typeof vi.fn>;
-	isCompleteStatus: ReturnType<typeof vi.fn>;
-	isInProgressStatus: ReturnType<typeof vi.fn>;
-	isStemSeparationErrorStatus: ReturnType<typeof vi.fn>;
-	isStemSeparationCompleteStatus: ReturnType<typeof vi.fn>;
+	generateMusic: MockFn;
+	extendMusic: MockFn;
+	getMusicDetails: MockFn;
+	separateVocals: MockFn;
+	getStemSeparationDetails: MockFn;
+	isErrorStatus: MockFn;
+	isCompleteStatus: MockFn;
+	isInProgressStatus: MockFn;
+	isStemSeparationErrorStatus: MockFn;
+	isStemSeparationCompleteStatus: MockFn;
 	__reset: () => void;
 }
 
@@ -443,7 +449,7 @@ export function createKieApiMock(): KieApiMock {
 		__reset() {
 			for (const [, value] of Object.entries(mock)) {
 				if (typeof value === 'function' && 'mockClear' in value) {
-					(value as ReturnType<typeof vi.fn>).mockClear();
+					(value as MockFn).mockClear();
 				}
 			}
 		}
@@ -460,11 +466,11 @@ export function createKieApiMock(): KieApiMock {
  * Type for the SSE mock module.
  */
 export interface SseMock {
-	addClient: ReturnType<typeof vi.fn>;
-	removeClient: ReturnType<typeof vi.fn>;
-	notifyClients: ReturnType<typeof vi.fn>;
-	notifyStemSeparationClients: ReturnType<typeof vi.fn>;
-	notifyAnnotationClients: ReturnType<typeof vi.fn>;
+	addClient: MockFn;
+	removeClient: MockFn;
+	notifyClients: MockFn;
+	notifyStemSeparationClients: MockFn;
+	notifyAnnotationClients: MockFn;
 	__reset: () => void;
 }
 
@@ -484,7 +490,7 @@ export function createSseMock(): SseMock {
 		__reset() {
 			for (const [, value] of Object.entries(mock)) {
 				if (typeof value === 'function' && 'mockClear' in value) {
-					(value as ReturnType<typeof vi.fn>).mockClear();
+					(value as MockFn).mockClear();
 				}
 			}
 		}
@@ -501,10 +507,10 @@ export function createSseMock(): SseMock {
  * Type for the polling mock module.
  */
 export interface PollingMock {
-	pollForResults: ReturnType<typeof vi.fn>;
-	pollForStemSeparationResults: ReturnType<typeof vi.fn>;
-	recoverIncompleteGenerations: ReturnType<typeof vi.fn>;
-	recoverIncompleteStemSeparations: ReturnType<typeof vi.fn>;
+	pollForResults: MockFn;
+	pollForStemSeparationResults: MockFn;
+	recoverIncompleteGenerations: MockFn;
+	recoverIncompleteStemSeparations: MockFn;
 	__reset: () => void;
 }
 
@@ -523,7 +529,7 @@ export function createPollingMock(): PollingMock {
 		__reset() {
 			for (const [, value] of Object.entries(mock)) {
 				if (typeof value === 'function' && 'mockClear' in value) {
-					(value as ReturnType<typeof vi.fn>).mockClear();
+					(value as MockFn).mockClear();
 				}
 			}
 		}
