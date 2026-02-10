@@ -75,6 +75,21 @@ export interface VariationAnnotation {
 	updated_at: string;
 }
 
+export interface Label {
+	id: number;
+	name: string;
+	created_at: string;
+	updated_at: string;
+	last_used_at: string;
+}
+
+export interface Setting {
+	key: string;
+	value: string;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface SSEMessage {
 	type:
 		| 'generation_update'

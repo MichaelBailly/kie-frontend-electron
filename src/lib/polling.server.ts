@@ -1,11 +1,10 @@
+import type { Generation, StemSeparation } from '$lib/types';
 import {
 	updateGenerationStatus,
 	updateGenerationTracks,
 	completeGeneration,
-	type Generation,
 	updateStemSeparationStatus,
-	completeStemSeparation,
-	type StemSeparation
+	completeStemSeparation
 } from '$lib/db.server';
 import {
 	getMusicDetails,

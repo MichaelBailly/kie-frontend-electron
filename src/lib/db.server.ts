@@ -3,6 +3,18 @@ import { dev } from '$app/environment';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import type {
+	Project,
+	Generation,
+	StemSeparationType,
+	StemSeparation,
+	VariationAnnotation,
+	Label,
+	Setting
+} from '$lib/types';
+
+// Re-export types so existing importers don't break
+export type { Project, Generation, StemSeparationType, StemSeparation, VariationAnnotation, Label, Setting };
 
 // Lazy-load the database to avoid loading native module during build
 let _db: BetterSqlite3.Database | null = null;
@@ -176,41 +188,6 @@ function getDb(): BetterSqlite3.Database {
 	}
 
 	return _db;
-}
-
-export interface Project {
-	id: number;
-	name: string;
-	is_open: boolean;
-	created_at: string;
-	updated_at: string;
-}
-
-export interface Generation {
-	id: number;
-	project_id: number;
-	task_id: string | null;
-	title: string;
-	style: string;
-	lyrics: string;
-	status: string;
-	error_message: string | null;
-	track1_stream_url: string | null;
-	track1_audio_url: string | null;
-	track1_image_url: string | null;
-	track1_duration: number | null;
-	track2_stream_url: string | null;
-	track2_audio_url: string | null;
-	track2_image_url: string | null;
-	track2_duration: number | null;
-	track1_audio_id: string | null;
-	track2_audio_id: string | null;
-	response_data: string | null;
-	extends_generation_id: number | null;
-	extends_audio_id: string | null;
-	continue_at: number | null;
-	created_at: string;
-	updated_at: string;
 }
 
 // Project operations
@@ -540,36 +517,7 @@ export function createImportedGeneration(
 	return generation;
 }
 
-// Stem Separation types and operations
-export type StemSeparationType = 'separate_vocal' | 'split_stem';
-
-export interface StemSeparation {
-	id: number;
-	generation_id: number;
-	audio_id: string;
-	task_id: string | null;
-	type: StemSeparationType;
-	status: string;
-	error_message: string | null;
-	vocal_url: string | null;
-	instrumental_url: string | null;
-	backing_vocals_url: string | null;
-	drums_url: string | null;
-	bass_url: string | null;
-	guitar_url: string | null;
-	keyboard_url: string | null;
-	piano_url: string | null;
-	percussion_url: string | null;
-	strings_url: string | null;
-	synth_url: string | null;
-	fx_url: string | null;
-	brass_url: string | null;
-	woodwinds_url: string | null;
-	response_data: string | null;
-	created_at: string;
-	updated_at: string;
-}
-
+// Stem Separation operations
 export function createStemSeparation(
 	generationId: number,
 	audioId: string,
@@ -715,26 +663,7 @@ export function getPendingStemSeparations(): StemSeparation[] {
 	return stmt.all() as StemSeparation[];
 }
 
-// Variation Annotation types and operations
-export interface VariationAnnotation {
-	id: number;
-	generation_id: number;
-	audio_id: string;
-	starred: number;
-	comment: string | null;
-	labels: string[];
-	created_at: string;
-	updated_at: string;
-}
-
-export interface Label {
-	id: number;
-	name: string;
-	created_at: string;
-	updated_at: string;
-	last_used_at: string;
-}
-
+// Variation Annotation operations
 function normalizeLabel(label: string): string {
 	return label.trim().toLowerCase();
 }
@@ -948,13 +877,6 @@ export function setAnnotationLabels(
 }
 
 // Settings operations
-export interface Setting {
-	key: string;
-	value: string;
-	created_at: string;
-	updated_at: string;
-}
-
 export function getSetting(key: string): string | null {
 	const db = getDb();
 	const stmt = db.prepare('SELECT value FROM settings WHERE key = ?');

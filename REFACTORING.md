@@ -54,7 +54,17 @@ Initial analysis identified 10 major refactoring opportunities across different 
 - `+layout.svelte` (root): Typed `children` as `Snippet` instead of `any`
 - `+layout.svelte` (project): Typed `window.electronAPI` with proper interface instead of `(window as any)`
 
-#### Task 1.2: Eliminate type duplication
+#### Task 1.2: Eliminate type duplication ✅
+
+**Status:** Completed  
+**Changes:** Moved all type/interface definitions from `db.server.ts` to `types.ts` (the canonical location) and added re-exports in `db.server.ts` for backward compatibility:
+- `Project`, `Generation` — entity interfaces
+- `StemSeparationType`, `StemSeparation` — stem separation types
+- `VariationAnnotation`, `Label` — annotation types
+- `Setting` — settings interface
+- Updated `polling.server.ts` to import types from `$lib/types` instead of `$lib/db.server`
+- All client-side files already imported from `$lib/types`
+
 #### Task 1.3: Create API validation helpers
 
 ---

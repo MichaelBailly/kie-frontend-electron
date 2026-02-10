@@ -16,6 +16,19 @@
 - For Electron's `window.electronAPI`, use intersection type: `(window as Window & { electronAPI?: {...} })`
 - For test mocks with custom methods like `__resetMock`, create a proper interface extending the mock module type
 
+### Task 1.2: Eliminate type duplication (2026-02-09)
+
+**What was done:**
+- Moved `Project`, `Generation`, `StemSeparationType`, `StemSeparation`, `VariationAnnotation`, `Label`, `Setting` from `db.server.ts` to `types.ts`
+- Added re-exports in `db.server.ts` (`export type { ... }`) so existing server-side importers don't break
+- Updated `polling.server.ts` to import types from `$lib/types` directly
+- All client-side components already imported from `$lib/types` (no changes needed)
+
+**Learnings:**
+- Re-exporting types from the original module (`export type { X }`) is a clean migration strategy — no downstream breakage
+- `types.ts` is a non-`.server.ts` file, so its types are accessible from both server and client code
+- Server-side files can gradually migrate their type imports to `$lib/types` while re-exports maintain compatibility
+
 ## Project Notes
 
 - `npm run check` = `svelte-kit sync && svelte-check --tsconfig ./tsconfig.json`
