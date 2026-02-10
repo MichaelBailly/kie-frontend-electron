@@ -103,3 +103,23 @@
 - better-sqlite3 `prepare()` parses and compiles SQL each time — caching avoids this overhead on hot paths
 - The `Map` cache approach is simpler than module-level `const stmt = ...` declarations because statements can only be prepared after the DB is initialized (lazy loading)
 - Keeping `getDb()` accessible is still necessary for transactions and dynamic SQL — don't try to hide it completely
+
+### Task 3.1: Extract shared async operation handler (2026-02-09)
+
+**What was done:**
+- Identified that 3 API routes (`generations`, `generations/extend`, `stem-separation`) each had a private async function (`startGeneration`, `startExtendGeneration`, `startStemSeparation`) following the exact same lifecycle pattern: try/catch → call KIE API → check `response.code !== 200` → update DB status → notify SSE clients → start polling
+- Created `runKieApiTask<T>()` — a private generic helper in `api-helpers.server.ts` that encapsulates the core try/catch + API response code check pattern with `onError`/`onSuccess` callbacks
+- Created `startGenerationTask(generationId, apiCall)` — wraps `runKieApiTask` with generation-specific DB updates, SSE notifications, and polling
+- Created `startStemSeparationTask(separationId, generationId, audioId, apiCall)` — wraps `runKieApiTask` with stem-separation-specific DB updates, SSE notifications, and polling
+- Refactored all 3 routes to use these helpers, passing the KIE API call as a closure. Each route dropped ~30-40 lines of boilerplate
+- Updated `api-helpers.server.ts` module docstring to reflect both validation and async task runner responsibilities
+
+**Routes NOT changed (correctly scoped out):**
+- `api/import/+server.ts` — completely different pattern (synchronous fetch + validation + DB insert, no polling/SSE)
+- Other CRUD routes (labels, settings, projects, annotations) — no async task lifecycle
+
+**Learnings:**
+- The closure pattern `startGenerationTask(id, () => generateMusic({...}))` keeps route-specific API parameters in the route file while moving lifecycle orchestration to the helper
+- Both `GenerateMusicResponse` and `StemSeparationResponse` share the same `{ code, msg, data: { taskId } }` shape, enabling a shared `KieTaskResponse` interface constraint
+- `runKieApiTask` is private (not exported) — it's an implementation detail; consumers use the domain-specific `startGenerationTask` / `startStemSeparationTask` wrappers
+- The refactoring also cleaned up imports: routes no longer need `updateGenerationStatus`, `notifyClients`, `pollForResults`, etc. — all encapsulated in the helpers

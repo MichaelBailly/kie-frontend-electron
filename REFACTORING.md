@@ -121,7 +121,20 @@ Refactored files:
 
 **Goal:** Eliminate duplicated patterns across API routes
 
-#### Task 3.1: Extract shared async operation handler
+#### Task 3.1: Extract shared async operation handler ✅
+
+**Status:** Completed  
+**Changes:** Extracted the duplicated async KIE API task lifecycle (try/catch → API call → error/success handling → DB updates → SSE notifications → polling) into shared helpers in `api-helpers.server.ts`:
+
+- `runKieApiTask(options)` — private generic helper that handles the core pattern: call API → check `response.code !== 200` → route to `onError` or `onSuccess` callbacks → catch exceptions
+- `startGenerationTask(generationId, apiCall)` — generation-specific wrapper used by both generate and extend routes. Handles: `updateGenerationStatus` / `updateGenerationTaskId` / `notifyClients` / `pollForResults`
+- `startStemSeparationTask(separationId, generationId, audioId, apiCall)` — stem separation-specific wrapper. Handles: `updateStemSeparationStatus` / `updateStemSeparationTaskId` / `notifyStemSeparationClients` / `pollForStemSeparationResults`
+
+Refactored files:
+- `api/generations/+server.ts` — removed 30-line `startGeneration()` function, replaced with `startGenerationTask()` call (62→33 lines)
+- `api/generations/extend/+server.ts` — removed 40-line `startExtendGeneration()` function, replaced with `startGenerationTask()` call (99→53 lines)
+- `api/stem-separation/+server.ts` — removed 40-line `startStemSeparation()` function, replaced with `startStemSeparationTask()` call (88→53 lines)
+- Removed direct imports of `updateGenerationStatus`, `updateGenerationTaskId`, `updateStemSeparationStatus`, `updateStemSeparationTaskId`, `notifyClients`, `notifyStemSeparationClients`, `pollForResults`, `pollForStemSeparationResults`, `getErrorMessage` from route files — all encapsulated in the helpers
 #### Task 3.2: Unify polling logic
 
 ---
