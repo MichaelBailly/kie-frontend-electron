@@ -38,7 +38,6 @@
 	// For preview playback
 	let isCurrentTrack = $derived(audioStore.isCurrentTrack(song.id));
 	let isPlaying = $derived(audioStore.isTrackPlaying(song.id));
-	let currentTime = $derived(isCurrentTrack ? audioStore.currentTime : 0);
 	let duration = $derived(song.duration || 0);
 
 	function formatTime(seconds: number): string {

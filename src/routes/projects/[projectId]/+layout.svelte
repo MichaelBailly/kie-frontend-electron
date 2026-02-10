@@ -1,14 +1,18 @@
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { LayoutData } from './$types';
+	import type { Snippet } from 'svelte';
 	import type { Project, Generation, SSEMessage, StemSeparation, VariationAnnotation } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { onMount, onDestroy, setContext } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { audioStore } from '$lib/stores/audio.svelte';
 
-	let { data, children }: { data: LayoutData; children: any } = $props();
+	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	// State
 	let projects = $state<(Project & { generations: Generation[] })[]>([]);
@@ -29,19 +33,18 @@
 	let generations = $derived(activeProject?.generations || []);
 
 	// State for stem separation updates
-	let stemSeparationUpdates = $state<Map<number, Partial<StemSeparation>>>(new Map());
+	let stemSeparationUpdates = new SvelteMap<number, Partial<StemSeparation>>();
 
 	// State for annotation updates (star/comment)
-	let annotationsMap = $state<Map<string, VariationAnnotation>>(new Map());
+	let annotationsMap = new SvelteMap<string, VariationAnnotation>();
 
 	// Initialize annotations from server data
 	$effect(() => {
 		if (data.annotations) {
-			const map = new Map<string, VariationAnnotation>();
+			annotationsMap.clear();
 			for (const ann of data.annotations) {
-				map.set(`${ann.generation_id}:${ann.audio_id}`, ann);
+				annotationsMap.set(`${ann.generation_id}:${ann.audio_id}`, ann);
 			}
-			annotationsMap = map;
 		}
 	});
 
@@ -58,7 +61,6 @@
 		},
 		set: (id: number, data: Partial<StemSeparation>) => {
 			stemSeparationUpdates.set(id, data);
-			stemSeparationUpdates = new Map(stemSeparationUpdates);
 		}
 	});
 
@@ -88,14 +90,6 @@
 		const match = page.url.pathname.match(/\/projects\/\d+\/generations\/(\d+)/);
 		return match ? parseInt(match[1]) : null;
 	});
-
-	// Helper to get project URL - navigates to last generation if exists
-	function getProjectUrl(project: Project & { generations: Generation[] }): string {
-		if (project.generations.length > 0) {
-			return `/projects/${project.id}/generations/${project.generations[0].id}`;
-		}
-		return `/projects/${project.id}`;
-	}
 
 	// SSE connection for real-time updates
 	onMount(() => {
@@ -133,7 +127,6 @@
 							message.stemSeparationId,
 							message.data as Partial<StemSeparation>
 						);
-						stemSeparationUpdates = new Map(stemSeparationUpdates);
 					}
 					return;
 				}
@@ -144,7 +137,6 @@
 					if ('audioId' in message && message.audioId) {
 						const key = `${message.generationId}:${message.audioId}`;
 						annotationsMap.set(key, ann);
-						annotationsMap = new Map(annotationsMap);
 					}
 					return;
 				}
@@ -174,8 +166,9 @@
 				: 'Your song is ready to listen';
 
 		// Try Electron API first, fall back to Web Notifications API
-		if (browser && (window as any).electronAPI?.showNotification) {
-			(window as any).electronAPI.showNotification(title, { body });
+		const electronAPI = (window as Window & { electronAPI?: { showNotification: (title: string, options: NotificationOptions) => void } }).electronAPI;
+		if (browser && electronAPI?.showNotification) {
+			electronAPI.showNotification(title, { body });
 		} else if (browser && 'Notification' in window) {
 			// Request permission if needed
 			if (Notification.permission === 'granted') {
@@ -267,7 +260,11 @@
 			const newProject = await response.json();
 			projects = [...projects, { ...newProject, generations: [] }];
 			// Navigate to new project
-			await goto(`/projects/${newProject.id}`);
+			await goto(
+				resolve('/projects/[projectId]', {
+					projectId: String(newProject.id)
+				})
+			);
 		}
 	}
 
@@ -290,10 +287,14 @@
 		if (projectId === activeProjectId) {
 			const nextProject = projects[projectIndex] || projects[projectIndex - 1] || projects[0];
 			if (nextProject) {
-				await goto(`/projects/${nextProject.id}`);
+				await goto(
+					resolve('/projects/[projectId]', {
+						projectId: String(nextProject.id)
+					})
+				);
 			} else {
 				// No more open tabs, go to project management
-				await goto('/');
+				await goto(resolve('/'));
 			}
 		}
 	}
@@ -307,7 +308,14 @@
 		<div class="flex flex-1 items-center overflow-x-auto" role="tablist">
 			{#each projects as project (project.id)}
 				<a
-					href={getProjectUrl(project)}
+					href={project.generations.length > 0
+						? resolve('/projects/[projectId]/generations/[generationId]', {
+								projectId: String(project.id),
+								generationId: String(project.generations[0].id)
+							})
+						: resolve('/projects/[projectId]', {
+								projectId: String(project.id)
+							})}
 					class="group relative flex max-w-[200px] min-w-0 shrink-0 items-center gap-2 border-r border-gray-200 px-4 py-3 text-sm font-medium transition-colors dark:border-gray-700 {project.id ===
 					activeProjectId
 						? 'bg-gray-100 text-indigo-600 dark:bg-gray-800 dark:text-indigo-400'
@@ -353,7 +361,7 @@
 
 		<!-- Projects link -->
 		<a
-			href="/"
+			href={resolve('/')}
 			class="flex h-full shrink-0 items-center gap-1.5 border-l border-gray-200 px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
 			title="View all projects"
 		>

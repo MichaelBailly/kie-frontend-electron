@@ -5,6 +5,8 @@
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import { getContext } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -57,15 +59,13 @@
 	);
 
 	// Star animation tracking per variation
-	let starAnimations = $state<Map<string, string>>(new Map());
+	let starAnimations = new SvelteMap<string, string>();
 
 	async function handleToggleStar(generationId: number, audioId: string) {
 		const wasStarred = annotationsContext?.isStarred(generationId, audioId) ?? false;
 		starAnimations.set(audioId, wasStarred ? 'star-unstar' : 'star-burst');
-		starAnimations = new Map(starAnimations);
 		setTimeout(() => {
 			starAnimations.delete(audioId);
-			starAnimations = new Map(starAnimations);
 		}, 600);
 
 		try {
@@ -380,8 +380,9 @@
 								<div class="flex items-start justify-between gap-2">
 									<div class="min-w-0 flex-1">
 										<a
-											href="/projects/{variation.generation.project_id}/generations/{variation
-												.generation.id}/song/{variation.song.id}"
+											href={resolve(
+												`/projects/${variation.generation.project_id}/generations/${variation.generation.id}/song/${variation.song.id}`
+											)}
 											class="block truncate text-base font-semibold text-gray-900 transition-colors hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-400"
 										>
 											{variation.generation.title}

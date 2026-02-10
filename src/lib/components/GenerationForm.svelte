@@ -1,6 +1,4 @@
 <script lang="ts">
-	import AudioPlayer from './AudioPlayer.svelte';
-
 	let {
 		title = $bindable(''),
 		style = $bindable(''),

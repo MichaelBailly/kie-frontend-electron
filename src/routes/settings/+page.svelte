@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -15,7 +15,6 @@
 	// Derived state
 	let hasExistingKey = $derived(data.hasApiKey);
 	let maskedKey = $derived(data.maskedApiKey);
-	let canSave = $derived(apiKey.trim().length > 0 || hasExistingKey);
 
 	// Clear messages after delay
 	$effect(() => {
@@ -122,7 +121,7 @@
 		<div class="mx-auto max-w-3xl px-6 py-8">
 			<div class="flex items-center gap-4">
 				<a
-					href="/"
+					href={resolve('/')}
 					class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-gray-400 transition-all hover:bg-white/10 hover:text-white"
 					aria-label="Back to projects"
 				>
@@ -153,7 +152,7 @@
 					<div>
 						<h2 class="text-xl font-semibold text-white">KIE API Key</h2>
 						<p class="mt-1 text-sm text-gray-400">
-							Your API key is required to generate music. Get one from{' '}
+							Your API key is required to generate music. Get one from
 							<a
 								href="https://kie.ai"
 								target="_blank"

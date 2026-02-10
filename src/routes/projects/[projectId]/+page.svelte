@@ -3,6 +3,8 @@
 	import GenerationForm from '$lib/components/GenerationForm.svelte';
 	import { goto, invalidateAll } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
+	import { SvelteMap } from 'svelte/reactivity';
 	import type { VariationAnnotation } from '$lib/types';
 
 	let { data }: { data: LayoutData } = $props();
@@ -82,7 +84,7 @@
 			// Refresh data to get the latest generation
 			await invalidateAll();
 			// Navigate to the new generation
-			await goto(`/projects/${data.activeProject.id}/generations/${newGeneration.id}`);
+			await goto(resolve(`/projects/${data.activeProject.id}/generations/${newGeneration.id}`));
 		}
 	}
 
@@ -92,7 +94,7 @@
 
 	function formatLabel(label: string): string {
 		const normalized = normalizeLabel(label);
-		return normalized.replace(/(^|[\s\/-])([a-z0-9])/g, (_match, sep, char) => {
+		return normalized.replace(/(^|[\s/-])([a-z0-9])/g, (_match, sep, char) => {
 			return `${sep}${char.toUpperCase()}`;
 		});
 	}
@@ -117,7 +119,7 @@
 
 	let labelEntries = $derived.by(() => {
 		const annotations = (data.annotations ?? []) as VariationAnnotation[];
-		const map = new Map<string, LabelEntry>();
+		const map = new SvelteMap<string, LabelEntry>();
 		const generations = data.activeProject.generations ?? [];
 
 		for (const annotation of annotations) {
@@ -277,8 +279,9 @@
 					<div class="space-y-3">
 						{#each activeLabelEntry.variations as variation (variation.audioId)}
 							<a
-								href="/projects/{data.activeProject
-									.id}/generations/{variation.generationId}/song/{variation.audioId}"
+								href={resolve(
+									`/projects/${data.activeProject.id}/generations/${variation.generationId}/song/${variation.audioId}`
+								)}
 								class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-indigo-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
 							>
 								<div class="h-14 w-14 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">

@@ -169,7 +169,7 @@
 
 	<!-- Stems grid -->
 	<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-		{#each stems as stem}
+		{#each stems as stem (stem.name)}
 			<div
 				class="flex items-center gap-3 rounded-lg border p-3 transition-colors {playingStems[
 					stem.name
@@ -204,7 +204,8 @@
 					</div>
 				</div>
 				<a
-					href={stem.url}
+					href={stem.url ?? ''}
+					rel="external"
 					download="{stem.name.toLowerCase().replace(/\s+/g, '_')}.mp3"
 					class="shrink-0 rounded p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-600 dark:hover:text-gray-200"
 					title="Download {stem.name}"

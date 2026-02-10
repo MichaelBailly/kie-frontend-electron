@@ -3,6 +3,7 @@
 	import GenerationCard from './GenerationCard.svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 
 	let {
 		project,
@@ -19,11 +20,6 @@
 	let isEditing = $state(false);
 	let editedName = $state('');
 	let inputElement: HTMLInputElement | undefined = $state();
-
-	// Reset edited name when project changes
-	$effect(() => {
-		editedName = project.name;
-	});
 
 	function startEditing() {
 		isEditing = true;
@@ -127,7 +123,7 @@
 			{#if starredCount > 0}
 				<span class="text-gray-300 dark:text-gray-600">·</span>
 				<a
-					href="/projects/{project.id}/starred"
+					href={resolve(`/projects/${project.id}/starred`)}
 					class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium transition-colors {isOnStarredPage
 						? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
 						: 'text-amber-500 hover:bg-amber-50 hover:text-amber-600 dark:text-amber-400 dark:hover:bg-amber-900/30'}"
@@ -145,7 +141,7 @@
 	<!-- New generation button -->
 	<div class="p-3">
 		<a
-			href="/projects/{project.id}"
+			href={resolve(`/projects/${project.id}`)}
 			class="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 transition-colors hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-600 dark:border-gray-600 dark:text-gray-400 dark:hover:border-indigo-500 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400"
 		>
 			<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +154,7 @@
 	<!-- Generation list -->
 	<div class="flex-1 space-y-2 overflow-y-auto p-3">
 		{#each generations as generation (generation.id)}
-			<a href="/projects/{project.id}/generations/{generation.id}">
+			<a href={resolve(`/projects/${project.id}/generations/${generation.id}`)}>
 				<GenerationCard {generation} selected={selectedGenerationId === generation.id} hasStarred={hasAnyStarred(generation)} />
 			</a>
 		{/each}

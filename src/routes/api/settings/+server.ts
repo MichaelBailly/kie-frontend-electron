@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getApiKey, setApiKey, getSetting, setSetting } from '$lib/db.server';
+import { getApiKey, setApiKey, setSetting } from '$lib/db.server';
 
 export const GET: RequestHandler = async () => {
 	const apiKey = getApiKey();

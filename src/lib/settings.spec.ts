@@ -1,4 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+type DbMockModule = typeof import('$lib/db.server') & {
+	__resetMock: () => void;
+	__setMockSettings: (settings: Record<string, string>) => void;
+};
 
 // Mock the database module
 vi.mock('$lib/db.server', () => {
@@ -36,8 +41,8 @@ vi.mock('$lib/db.server', () => {
 
 describe('Settings Database Operations', () => {
 	beforeEach(async () => {
-		const db = await import('$lib/db.server');
-		(db as any).__resetMock();
+		const db = (await import('$lib/db.server')) as DbMockModule;
+		db.__resetMock();
 	});
 
 	it('should return null when no API key is set', async () => {
@@ -116,8 +121,8 @@ describe('Settings API Validation', () => {
 
 describe('Settings State Management', () => {
 	it('should track hasApiKey state correctly', async () => {
-		const db = await import('$lib/db.server');
-		(db as any).__resetMock();
+		const db = (await import('$lib/db.server')) as DbMockModule;
+		db.__resetMock();
 
 		// Initially no key
 		expect(!!db.getApiKey()).toBe(false);

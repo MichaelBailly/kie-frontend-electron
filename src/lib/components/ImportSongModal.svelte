@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let {
 		isOpen = $bindable(false),
@@ -44,6 +45,13 @@
 		}
 	}
 
+	function handleBackdropKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			onClose();
+		}
+	}
+
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 
@@ -76,7 +84,7 @@
 			// Success! Navigate to the new project
 			onClose();
 			await invalidateAll();
-			await goto(`/projects/${data.project.id}/generations/${data.generation.id}`);
+			await goto(resolve(`/projects/${data.project.id}/generations/${data.generation.id}`));
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
 		} finally {
@@ -89,22 +97,18 @@
 
 {#if isOpen}
 	<!-- Backdrop -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
 		onclick={handleBackdropClick}
+		onkeydown={handleBackdropKeydown}
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby="import-modal-title"
-		tabindex="-1"
+		tabindex="0"
 	>
 		<!-- Modal -->
-		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			class="relative mx-4 w-full max-w-md rounded-xl bg-white shadow-2xl dark:bg-gray-800"
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
 			role="document"
 		>
 			<!-- Header -->

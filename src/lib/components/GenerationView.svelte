@@ -4,12 +4,17 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import LabelPicker from './LabelPicker.svelte';
 	import { getContext } from 'svelte';
+	import { resolve } from '$app/paths';
 
 	let {
 		generation,
 		parentGeneration = null,
 		parentSong = null
-	}: { generation: Generation; parentGeneration?: any; parentSong?: any } = $props();
+	}: {
+		generation: Generation;
+		parentGeneration?: { id: number } | null;
+		parentSong?: { id: string; title: string } | null;
+	} = $props();
 
 	// Get annotations from context
 	const annotationsContext = getContext<
@@ -77,7 +82,9 @@
 		</h2>
 		{#if parentGeneration && parentSong}
 			<a
-				href="/projects/{generation.project_id}/generations/{parentGeneration.id}/song/{parentSong.id}"
+				href={resolve(
+					`/projects/${generation.project_id}/generations/${parentGeneration.id}/song/${parentSong.id}`
+				)}
 				class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-800/40"
 			>
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -173,7 +180,9 @@
 						<div class="mb-2 flex items-center gap-2">
 							{#if generation.track1_audio_id}
 								<a
-									href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track1_audio_id}"
+									href={resolve(
+										`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track1_audio_id}`
+									)}
 									class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 								>
 									Variation 1
@@ -228,7 +237,9 @@
 							<div class="mb-2 flex items-center gap-2">
 								{#if generation.track2_audio_id}
 									<a
-										href="/projects/{generation.project_id}/generations/{generation.id}/song/{generation.track2_audio_id}"
+										href={resolve(
+											`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track2_audio_id}`
+										)}
 										class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 									>
 										Variation 2

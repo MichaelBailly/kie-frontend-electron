@@ -13,6 +13,7 @@
 	} from '$lib/types';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let { data }: { data: PageData } = $props();
 
@@ -271,7 +272,12 @@
 			const newGeneration = await response.json();
 			showExtendForm = false;
 			// Navigate to the new generation page
-			goto(`/projects/${generation.project_id}/generations/${newGeneration.id}`);
+			goto(
+				resolve('/projects/[projectId]/generations/[generationId]', {
+					projectId: String(generation.project_id),
+					generationId: String(newGeneration.id)
+				})
+			);
 		} else {
 			console.error('Failed to create extend generation');
 		}
@@ -338,7 +344,10 @@
 	<!-- Header with back navigation -->
 	<div class="mb-6">
 		<a
-			href="/projects/{data.generation.project_id}/generations/{data.generation.id}"
+			href={resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(data.generation.project_id),
+				generationId: String(data.generation.id)
+			})}
 			class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
 		>
 			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,8 +379,14 @@
 				<span class="text-sm text-purple-700 dark:text-purple-300">
 					Extended from
 					<a
-						href="/projects/{data.parentGeneration.project_id}/generations/{data.parentGeneration
-							.id}/song/{data.parentSong.id}"
+						href={resolve(
+							'/projects/[projectId]/generations/[generationId]/song/[songId]',
+							{
+								projectId: String(data.parentGeneration.project_id),
+								generationId: String(data.parentGeneration.id),
+								songId: String(data.parentSong.id)
+							}
+						)}
 						class="font-medium underline hover:text-purple-900 dark:hover:text-purple-100"
 					>
 						{data.parentSong.title}
@@ -459,6 +474,7 @@
 					{#if song.audioUrl}
 						<a
 							href={song.audioUrl}
+							rel="external"
 							download="{song.title}.mp3"
 							class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
 							title="Download track"
@@ -729,9 +745,12 @@
 				Extended Versions ({data.extendedGenerations.length})
 			</h3>
 			<div class="space-y-2">
-				{#each data.extendedGenerations as extGen}
-					<a
-						href="/projects/{extGen.project_id}/generations/{extGen.id}"
+				{#each data.extendedGenerations as extGen (extGen.id)}
+						<a
+						href={resolve('/projects/[projectId]/generations/[generationId]', {
+							projectId: String(extGen.project_id),
+							generationId: String(extGen.id)
+						})}
 						class="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm transition-colors hover:bg-green-100 dark:bg-green-900/40 dark:hover:bg-green-800/50"
 					>
 						<div

@@ -7,7 +7,6 @@
 		height = 100,
 		color = '#6366f1',
 		backgroundColor = '#e5e7eb',
-		progressColor = '#818cf8',
 		currentTime = 0,
 		duration = 0,
 		onSeek
@@ -16,7 +15,6 @@
 		height?: number;
 		color?: string;
 		backgroundColor?: string;
-		progressColor?: string;
 		currentTime?: number;
 		duration?: number;
 		onSeek?: (time: number) => void;

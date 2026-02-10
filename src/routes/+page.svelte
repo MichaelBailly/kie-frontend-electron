@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import type { Project } from '$lib/types';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import ImportSongModal from '$lib/components/ImportSongModal.svelte';
 
 	type ProjectWithStats = Project & {
@@ -15,17 +16,12 @@
 	let { data }: { data: PageData } = $props();
 
 	// Local state - use $effect to sync with data changes
-	let projects = $state<ProjectWithStats[]>([]);
+	let projects = $derived(data.projects);
 	let filterText = $state('');
 	let sortField = $state<'name' | 'updated_at'>('updated_at');
 	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let showImportModal = $state(false);
 	let isCreating = $state(false);
-
-	// Sync projects when data changes
-	$effect(() => {
-		projects = data.projects;
-	});
 
 	// Filtered and sorted projects
 	let filteredProjects = $derived.by(() => {
@@ -58,7 +54,7 @@
 			if (response.ok) {
 				const newProject = await response.json();
 				// Navigate to the new project (this will open it in tabs)
-				await goto(`/projects/${newProject.id}`);
+				await goto(resolve(`/projects/${newProject.id}`));
 			}
 		} finally {
 			isCreating = false;
@@ -74,9 +70,9 @@
 		});
 
 		if (project.lastGenerationId) {
-			await goto(`/projects/${project.id}/generations/${project.lastGenerationId}`);
+			await goto(resolve(`/projects/${project.id}/generations/${project.lastGenerationId}`));
 		} else {
-			await goto(`/projects/${project.id}`);
+			await goto(resolve(`/projects/${project.id}`));
 		}
 	}
 
@@ -139,7 +135,7 @@
 				</div>
 				<div class="flex gap-3">
 					<a
-						href="/settings"
+						href={resolve('/settings')}
 						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30"
 						aria-label="Settings"
 					>
@@ -180,7 +176,7 @@
 	<!-- Main content -->
 	<main class="mx-auto max-w-6xl px-6 py-8">
 		<!-- API Key Warning -->
-		{#if !(data as any).hasApiKey}
+		{#if !data.hasApiKey}
 			<div class="mb-8 flex items-center gap-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-5 py-4">
 				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
 					<svg class="h-5 w-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +188,7 @@
 					<p class="text-sm text-amber-400/80">Configure your KIE API key to start generating music.</p>
 				</div>
 				<a
-					href="/settings"
+					href={resolve('/settings')}
 					class="flex items-center gap-2 rounded-lg bg-amber-500/20 px-4 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-500/30"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

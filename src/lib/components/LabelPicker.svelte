@@ -39,7 +39,7 @@
 
 	function formatLabel(label: string): string {
 		const normalized = normalizeLabel(label);
-		return normalized.replace(/(^|[\s\/-])([a-z0-9])/g, (_match, sep, char) => {
+		return normalized.replace(/(^|[\s/-])([a-z0-9])/g, (_match, sep, char) => {
 			return `${sep}${char.toUpperCase()}`;
 		});
 	}
