@@ -261,7 +261,16 @@ describe('Annotations repository', () => {
 
 		it('respects the limit parameter', () => {
 			setAnnotationLabels(generationId, audioId1, [
-				'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'
+				'a',
+				'b',
+				'c',
+				'd',
+				'e',
+				'f',
+				'g',
+				'h',
+				'i',
+				'j'
 			]);
 			const suggestions = getLabelSuggestions('', 3);
 			expect(suggestions).toHaveLength(3);
@@ -269,7 +278,16 @@ describe('Annotations repository', () => {
 
 		it('defaults to limit of 8', () => {
 			setAnnotationLabels(generationId, audioId1, [
-				'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'
+				'a',
+				'b',
+				'c',
+				'd',
+				'e',
+				'f',
+				'g',
+				'h',
+				'i',
+				'j'
 			]);
 			const suggestions = getLabelSuggestions('');
 			expect(suggestions).toHaveLength(8);

@@ -94,17 +94,13 @@ async function runPollLoop<TDetails extends { code: number; msg: string }>(
 			}
 
 			if (status && config.isError(status)) {
-				console.log(
-					`${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`
-				);
+				console.log(`${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`);
 				config.onError(config.getStatusErrorMessage(details) || status);
 				return;
 			}
 
 			if (status && config.isComplete(status)) {
-				console.log(
-					`${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`
-				);
+				console.log(`${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`);
 				if (config.onComplete(details)) {
 					return;
 				}

@@ -11,10 +11,16 @@ import {
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json();
-	const { projectId, title, style, lyrics, extendsGenerationId, extendsAudioId, continueAt } =
-		body;
+	const { projectId, title, style, lyrics, extendsGenerationId, extendsAudioId, continueAt } = body;
 
-	requireFields(body, ['projectId', 'title', 'style', 'lyrics', 'extendsGenerationId', 'extendsAudioId']);
+	requireFields(body, [
+		'projectId',
+		'title',
+		'style',
+		'lyrics',
+		'extendsGenerationId',
+		'extendsAudioId'
+	]);
 
 	if (continueAt === undefined || continueAt === null || continueAt < 0) {
 		throw error(400, 'Invalid continueAt value');

@@ -7,9 +7,7 @@ export function createProject(name: string = 'New Project', isOpen: boolean = tr
 }
 
 export function getOpenProjects(): Project[] {
-	const stmt = prepareStmt(
-		'SELECT * FROM projects WHERE is_open = 1 ORDER BY updated_at DESC'
-	);
+	const stmt = prepareStmt('SELECT * FROM projects WHERE is_open = 1 ORDER BY updated_at DESC');
 	return stmt.all() as Project[];
 }
 

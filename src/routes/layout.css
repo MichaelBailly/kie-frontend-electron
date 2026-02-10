@@ -144,7 +144,9 @@ input[type='range']::-moz-range-thumb:hover {
 }
 
 .star-burst {
-	animation: star-burst 0.4s ease-out, star-glow 0.6s ease-out;
+	animation:
+		star-burst 0.4s ease-out,
+		star-glow 0.6s ease-out;
 }
 
 /* Star unstar (subtle shrink) */

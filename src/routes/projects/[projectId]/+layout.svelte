@@ -2,7 +2,13 @@
 	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import type { Project, Generation, SSEMessage, StemSeparation, VariationAnnotation } from '$lib/types';
+	import type {
+		Project,
+		Generation,
+		SSEMessage,
+		StemSeparation,
+		VariationAnnotation
+	} from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { onMount, onDestroy, setContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
@@ -166,7 +172,11 @@
 				: 'Your song is ready to listen';
 
 		// Try Electron API first, fall back to Web Notifications API
-		const electronAPI = (window as Window & { electronAPI?: { showNotification: (title: string, options: NotificationOptions) => void } }).electronAPI;
+		const electronAPI = (
+			window as Window & {
+				electronAPI?: { showNotification: (title: string, options: NotificationOptions) => void };
+			}
+		).electronAPI;
 		if (browser && electronAPI?.showNotification) {
 			electronAPI.showNotification(title, { body });
 		} else if (browser && 'Notification' in window) {

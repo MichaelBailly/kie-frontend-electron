@@ -5,12 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-	createDbMock,
-	type DbMock,
-	createRequestEvent,
-	resetFixtureIds
-} from '$lib/test-utils';
+import { createDbMock, type DbMock, createRequestEvent, resetFixtureIds } from '$lib/test-utils';
 
 // ---------------------------------------------------------------------------
 // Mocks

@@ -6,11 +6,7 @@ import {
 	type StemSeparationType
 } from '$lib/db.server';
 import { separateVocals } from '$lib/kie-api.server';
-import {
-	requireFields,
-	requireGeneration,
-	startStemSeparationTask
-} from '$lib/api-helpers.server';
+import { requireFields, requireGeneration, startStemSeparationTask } from '$lib/api-helpers.server';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json();

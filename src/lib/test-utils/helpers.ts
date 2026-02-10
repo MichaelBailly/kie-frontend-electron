@@ -43,10 +43,7 @@ export async function advanceTimersAndFlush(ms: number): Promise<void> {
 /**
  * Assert that a mock function was called exactly once with the given arguments.
  */
-export function expectCalledOnceWith(
-	fn: ReturnType<typeof vi.fn>,
-	...args: unknown[]
-): void {
+export function expectCalledOnceWith(fn: ReturnType<typeof vi.fn>, ...args: unknown[]): void {
 	expect(fn).toHaveBeenCalledTimes(1);
 	expect(fn).toHaveBeenCalledWith(...args);
 }
@@ -70,9 +67,7 @@ export function expectCalledWithPartial(
 	...partials: unknown[]
 ): void {
 	expect(fn).toHaveBeenCalledWith(
-		...partials.map((p) =>
-			p !== null && typeof p === 'object' ? expect.objectContaining(p) : p
-		)
+		...partials.map((p) => (p !== null && typeof p === 'object' ? expect.objectContaining(p) : p))
 	);
 }
 

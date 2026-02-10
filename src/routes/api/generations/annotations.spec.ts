@@ -161,9 +161,7 @@ describe('PATCH /api/generations/[id]/annotations — toggle_star', () => {
 
 		expect(data.starred).toBe(1);
 		expect(db.toggleStar).toHaveBeenCalledWith(1, 'audio-1-1');
-		expect(sse.notifyAnnotationClients).toHaveBeenCalledWith(
-			1, 'audio-1-1', resultAnnotation
-		);
+		expect(sse.notifyAnnotationClients).toHaveBeenCalledWith(1, 'audio-1-1', resultAnnotation);
 	});
 });
 

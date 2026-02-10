@@ -232,7 +232,9 @@ export function createCompletedStemSeparation(
 /**
  * Create a test `VariationAnnotation` with sensible defaults.
  */
-export function createAnnotation(overrides: Partial<VariationAnnotation> = {}): VariationAnnotation {
+export function createAnnotation(
+	overrides: Partial<VariationAnnotation> = {}
+): VariationAnnotation {
 	const id = overrides.id ?? nextAnnotationId++;
 	return {
 		id,

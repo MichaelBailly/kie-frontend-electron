@@ -1,12 +1,12 @@
 {
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "context7": {
-      "type": "remote",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-c3167ed6-10c5-4ae7-ade5-9e3d5bca6326"
-      }
-    }
-  }
+	"$schema": "https://opencode.ai/config.json",
+	"mcp": {
+		"context7": {
+			"type": "remote",
+			"url": "https://mcp.context7.com/mcp",
+			"headers": {
+				"CONTEXT7_API_KEY": "ctx7sk-c3167ed6-10c5-4ae7-ade5-9e3d5bca6326"
+			}
+		}
+	}
 }

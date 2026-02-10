@@ -227,7 +227,13 @@ describe('POST /api/generations/extend', () => {
 
 		expect(data.id).toBe(20);
 		expect(db.createExtendGeneration).toHaveBeenCalledWith(
-			1, 'Extended', 'rock', 'More lyrics', 5, 'audio-5-1', 30
+			1,
+			'Extended',
+			'rock',
+			'More lyrics',
+			5,
+			'audio-5-1',
+			30
 		);
 	});
 

@@ -481,12 +481,7 @@ describe('Mock helpers', () => {
 			polling.pollForStemSeparationResults(1, 'task-1', 1, 'a-1');
 
 			expect(polling.pollForResults).toHaveBeenCalledWith(1, 'task-1');
-			expect(polling.pollForStemSeparationResults).toHaveBeenCalledWith(
-				1,
-				'task-1',
-				1,
-				'a-1'
-			);
+			expect(polling.pollForStemSeparationResults).toHaveBeenCalledWith(1, 'task-1', 1, 'a-1');
 		});
 	});
 });

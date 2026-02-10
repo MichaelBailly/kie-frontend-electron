@@ -129,9 +129,7 @@ describe('Stem separations repository', () => {
 
 		it('returns undefined when no separation of that type exists', () => {
 			createStemSeparation(generationId, audioId, 'split_stem');
-			expect(
-				getStemSeparationByType(generationId, audioId, 'separate_vocal')
-			).toBeUndefined();
+			expect(getStemSeparationByType(generationId, audioId, 'separate_vocal')).toBeUndefined();
 		});
 	});
 

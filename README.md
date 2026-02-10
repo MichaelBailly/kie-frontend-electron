@@ -33,11 +33,11 @@ Configure your KIE API key in **Settings** (gear icon) or via the `KIE_API_KEY` 
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/architecture.md) | System design, tech stack, and project structure |
-| [Development](docs/development.md) | Setup, scripts, testing, and contribution guidelines |
-| [API Reference](docs/api.md) | KIE API integration and internal endpoints |
+| Document                             | Description                                          |
+| ------------------------------------ | ---------------------------------------------------- |
+| [Architecture](docs/architecture.md) | System design, tech stack, and project structure     |
+| [Development](docs/development.md)   | Setup, scripts, testing, and contribution guidelines |
+| [API Reference](docs/api.md)         | KIE API integration and internal endpoints           |
 
 ## Tech Stack
 
@@ -56,6 +56,7 @@ npm run build:electron
 ```
 
 Outputs to `dist-electron/`:
+
 - Linux: AppImage, deb
 - macOS: dmg, zip
 - Windows: NSIS installer, portable

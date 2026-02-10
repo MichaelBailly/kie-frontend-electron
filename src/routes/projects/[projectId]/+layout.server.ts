@@ -1,16 +1,23 @@
 import type { LayoutServerLoad } from './$types';
-import { getOpenProjects, getGenerationsByProject, createProject, getProject, setProjectOpen, getAnnotationsByProject } from '$lib/db.server';
+import {
+	getOpenProjects,
+	getGenerationsByProject,
+	createProject,
+	getProject,
+	setProjectOpen,
+	getAnnotationsByProject
+} from '$lib/db.server';
 import { error } from '@sveltejs/kit';
 
 export const load: LayoutServerLoad = async ({ params }) => {
 	const projectId = parseInt(params.projectId);
-	
+
 	// Check if the requested project exists
 	const requestedProject = getProject(projectId);
 	if (!requestedProject) {
 		throw error(404, 'Project not found');
 	}
-	
+
 	// If project exists but is not open, open it (user navigated directly or from project management)
 	if (!requestedProject.is_open) {
 		setProjectOpen(projectId, true);

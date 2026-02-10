@@ -379,14 +379,11 @@
 				<span class="text-sm text-purple-700 dark:text-purple-300">
 					Extended from
 					<a
-						href={resolve(
-							'/projects/[projectId]/generations/[generationId]/song/[songId]',
-							{
-								projectId: String(data.parentGeneration.project_id),
-								generationId: String(data.parentGeneration.id),
-								songId: String(data.parentSong.id)
-							}
-						)}
+						href={resolve('/projects/[projectId]/generations/[generationId]/song/[songId]', {
+							projectId: String(data.parentGeneration.project_id),
+							generationId: String(data.parentGeneration.id),
+							songId: String(data.parentSong.id)
+						})}
 						class="font-medium underline hover:text-purple-900 dark:hover:text-purple-100"
 					>
 						{data.parentSong.title}
@@ -746,7 +743,7 @@
 			</h3>
 			<div class="space-y-2">
 				{#each data.extendedGenerations as extGen (extGen.id)}
-						<a
+					<a
 						href={resolve('/projects/[projectId]/generations/[generationId]', {
 							projectId: String(extGen.project_id),
 							generationId: String(extGen.id)

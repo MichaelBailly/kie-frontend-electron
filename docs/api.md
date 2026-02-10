@@ -9,6 +9,7 @@ The application integrates with the [KIE.ai REST API](https://api.kie.ai). All e
 ### Authentication
 
 API key is read in order:
+
 1. Settings database (`settings` table, key `kie_api_key`)
 2. Environment variable `KIE_API_KEY`
 
@@ -123,8 +124,8 @@ Returns API key status.
 
 ```json
 {
-  "hasApiKey": true,
-  "maskedApiKey": "sk-...abc"
+	"hasApiKey": true,
+	"maskedApiKey": "sk-...abc"
 }
 ```
 
@@ -181,12 +182,12 @@ Start a new generation.
 
 ```json
 {
-  "projectId": 1,
-  "prompt": "A peaceful morning melody",
-  "style": "ambient, piano",
-  "title": "Morning Light",
-  "model": "V5",
-  "instrumental": false
+	"projectId": 1,
+	"prompt": "A peaceful morning melody",
+	"style": "ambient, piano",
+	"title": "Morning Light",
+	"model": "V5",
+	"instrumental": false
 }
 ```
 
@@ -206,9 +207,9 @@ Start stem separation on a track.
 
 ```json
 {
-  "generationId": 1,
-  "audioId": "audio-uuid",
-  "type": "split_stem"
+	"generationId": 1,
+	"audioId": "audio-uuid",
+	"type": "split_stem"
 }
 ```
 
@@ -232,23 +233,23 @@ data: {"status": "SUCCESS", "tracks": [...]}
 
 ### Generation Status
 
-| Status | Description |
-|--------|-------------|
-| `PENDING` | Task queued |
-| `TEXT_SUCCESS` | Lyrics processed |
-| `FIRST_SUCCESS` | First track ready |
-| `SUCCESS` | All tracks complete |
-| `CREATE_TASK_FAILED` | Failed to create task |
-| `GENERATE_AUDIO_FAILED` | Audio generation failed |
-| `SENSITIVE_WORD_ERROR` | Content policy violation |
+| Status                  | Description              |
+| ----------------------- | ------------------------ |
+| `PENDING`               | Task queued              |
+| `TEXT_SUCCESS`          | Lyrics processed         |
+| `FIRST_SUCCESS`         | First track ready        |
+| `SUCCESS`               | All tracks complete      |
+| `CREATE_TASK_FAILED`    | Failed to create task    |
+| `GENERATE_AUDIO_FAILED` | Audio generation failed  |
+| `SENSITIVE_WORD_ERROR`  | Content policy violation |
 
 ### Stem Separation Status
 
-| Status | Description |
-|--------|-------------|
-| `PENDING` | Processing |
-| `SUCCESS` | Stems available |
-| `CREATE_TASK_FAILED` | Failed |
+| Status                  | Description       |
+| ----------------------- | ----------------- |
+| `PENDING`               | Processing        |
+| `SUCCESS`               | Stems available   |
+| `CREATE_TASK_FAILED`    | Failed            |
 | `GENERATE_AUDIO_FAILED` | Processing failed |
 
 ## See Also

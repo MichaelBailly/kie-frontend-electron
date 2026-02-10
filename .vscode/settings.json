@@ -1,25 +1,19 @@
 {
-    "chat.tools.terminal.autoApprove": {
-        "/^node -e \"const db = require\\('better-sqlite3'\\); console\\.log\\('better-sqlite3 works under Node\\.js!'\\); const d = new db\\(':memory:'\\); d\\.exec\\('SELECT 1'\\); d\\.close\\(\\)\" 2>&1$/": {
-            "approve": true,
-            "matchCommandLine": true
-        },
-        "/^node -e \"const db = require\\('better-sqlite3'\\); const d = new db\\(':memory:'\\); d\\.exec\\('SELECT 1'\\); d\\.close\\(\\); console\\.log\\('OK'\\)\"$/": {
-            "approve": true,
-            "matchCommandLine": true
-        }
-    },
-    "eslint.useFlatConfig": true,
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact",
-        "svelte"
-    ],
-    "eslint.workingDirectories": [
-        {
-            "mode": "auto"
-        }
-    ]
+	"chat.tools.terminal.autoApprove": {
+		"/^node -e \"const db = require\\('better-sqlite3'\\); console\\.log\\('better-sqlite3 works under Node\\.js!'\\); const d = new db\\(':memory:'\\); d\\.exec\\('SELECT 1'\\); d\\.close\\(\\)\" 2>&1$/": {
+			"approve": true,
+			"matchCommandLine": true
+		},
+		"/^node -e \"const db = require\\('better-sqlite3'\\); const d = new db\\(':memory:'\\); d\\.exec\\('SELECT 1'\\); d\\.close\\(\\); console\\.log\\('OK'\\)\"$/": {
+			"approve": true,
+			"matchCommandLine": true
+		}
+	},
+	"eslint.useFlatConfig": true,
+	"eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "svelte"],
+	"eslint.workingDirectories": [
+		{
+			"mode": "auto"
+		}
+	]
 }

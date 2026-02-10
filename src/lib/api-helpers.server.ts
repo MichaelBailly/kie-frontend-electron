@@ -192,16 +192,10 @@ export async function startStemSeparationTask(
 		},
 		onSuccess(taskId) {
 			updateStemSeparationTaskId(separationId, taskId);
-			notifyStemSeparationClients(
-				separationId,
-				generationId,
-				audioId,
-				'stem_separation_update',
-				{
-					status: 'processing',
-					task_id: taskId
-				}
-			);
+			notifyStemSeparationClients(separationId, generationId, audioId, 'stem_separation_update', {
+				status: 'processing',
+				task_id: taskId
+			});
 			pollForStemSeparationResults(separationId, taskId, generationId, audioId);
 		}
 	});

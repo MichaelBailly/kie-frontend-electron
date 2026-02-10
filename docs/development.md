@@ -46,18 +46,18 @@ This builds SvelteKit and launches Electron. Restart required for changes.
 
 ### Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start Vite dev server with HMR |
-| `npm run build` | Build SvelteKit for production |
-| `npm run electron` | Launch Electron (requires build first) |
-| `npm run dev:electron` | Build + launch Electron |
-| `npm run build:electron` | Package for distribution |
-| `npm run test` | Run tests once |
-| `npm run test:unit` | Run tests in watch mode |
-| `npm run check` | TypeScript and Svelte checks |
-| `npm run lint` | Lint with ESLint and Prettier |
-| `npm run format` | Auto-format code |
+| Script                   | Description                            |
+| ------------------------ | -------------------------------------- |
+| `npm run dev`            | Start Vite dev server with HMR         |
+| `npm run build`          | Build SvelteKit for production         |
+| `npm run electron`       | Launch Electron (requires build first) |
+| `npm run dev:electron`   | Build + launch Electron                |
+| `npm run build:electron` | Package for distribution               |
+| `npm run test`           | Run tests once                         |
+| `npm run test:unit`      | Run tests in watch mode                |
+| `npm run check`          | TypeScript and Svelte checks           |
+| `npm run lint`           | Lint with ESLint and Prettier          |
+| `npm run format`         | Auto-format code                       |
 
 ## Testing
 
@@ -80,9 +80,9 @@ npm run test:unit -- src/lib/settings.spec.ts
 import { describe, it, expect } from 'vitest';
 
 describe('MyFeature', () => {
-  it('should work correctly', () => {
-    expect(myFunction()).toBe(expected);
-  });
+	it('should work correctly', () => {
+		expect(myFunction()).toBe(expected);
+	});
 });
 ```
 
@@ -94,19 +94,19 @@ This project uses Svelte 5 runes:
 
 ```svelte
 <script lang="ts">
-  // Props
-  let { data } = $props();
-  
-  // Reactive state
-  let count = $state(0);
-  
-  // Derived values
-  let doubled = $derived(count * 2);
-  
-  // Effects
-  $effect(() => {
-    console.log('count changed:', count);
-  });
+	// Props
+	let { data } = $props();
+
+	// Reactive state
+	let count = $state(0);
+
+	// Derived values
+	let doubled = $derived(count * 2);
+
+	// Effects
+	$effect(() => {
+		console.log('count changed:', count);
+	});
 </script>
 ```
 
@@ -129,6 +129,7 @@ TailwindCSS 4 utility classes. Follow existing patterns:
 See [Architecture](architecture.md) for detailed structure.
 
 Key conventions:
+
 - API routes in `src/routes/api/`
 - Server-side logic in `*.server.ts`
 - Tests alongside source as `*.spec.ts`
@@ -139,6 +140,7 @@ Key conventions:
 SQLite database file: `kie-music.db` (auto-created on first run)
 
 To inspect:
+
 ```bash
 sqlite3 kie-music.db ".tables"
 sqlite3 kie-music.db ".schema generations"
@@ -154,11 +156,11 @@ npm run build:electron
 
 Outputs to `dist-electron/`:
 
-| Platform | Formats |
-|----------|---------|
-| Linux | AppImage, deb |
-| macOS | dmg, zip |
-| Windows | NSIS installer, portable |
+| Platform | Formats                  |
+| -------- | ------------------------ |
+| Linux    | AppImage, deb            |
+| macOS    | dmg, zip                 |
+| Windows  | NSIS installer, portable |
 
 Configuration in `package.json` under the `build` key.
 
@@ -174,6 +176,7 @@ Configuration in `package.json` under the `build` key.
 ### Commit Messages
 
 Follow conventional commits:
+
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation

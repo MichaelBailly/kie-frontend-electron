@@ -24,7 +24,12 @@ vi.mock('$lib/kie-api.server', () => ({
 	getStemSeparationDetails: vi.fn(),
 	// Use real logic for status checks so routing works correctly
 	isErrorStatus: vi.fn((s: string) =>
-		['CREATE_TASK_FAILED', 'GENERATE_AUDIO_FAILED', 'CALLBACK_EXCEPTION', 'SENSITIVE_WORD_ERROR'].includes(s)
+		[
+			'CREATE_TASK_FAILED',
+			'GENERATE_AUDIO_FAILED',
+			'CALLBACK_EXCEPTION',
+			'SENSITIVE_WORD_ERROR'
+		].includes(s)
 	),
 	isCompleteStatus: vi.fn((s: string) => s === 'SUCCESS'),
 	isStemSeparationErrorStatus: vi.fn((s: string) =>

@@ -18,13 +18,7 @@
  */
 
 import { vi, type Mock } from 'vitest';
-import type {
-	Project,
-	Generation,
-	StemSeparation,
-	VariationAnnotation,
-	Setting
-} from '$lib/types';
+import type { Project, Generation, StemSeparation, VariationAnnotation, Setting } from '$lib/types';
 
 // Callable mock function type. `ReturnType<typeof vi.fn>` resolves to
 // `Mock<Procedure | Constructable>` which TypeScript considers non-callable.
@@ -138,14 +132,13 @@ export function createDbMock(): DbMock {
 		deleteSetting: vi.fn((key: string) => {
 			delete settings[key];
 		}),
-		getAllSettings: vi.fn(
-			(): Setting[] =>
-				Object.entries(settings).map(([key, value]) => ({
-					key,
-					value,
-					created_at: '2026-01-15T12:00:00.000Z',
-					updated_at: '2026-01-15T12:00:00.000Z'
-				}))
+		getAllSettings: vi.fn((): Setting[] =>
+			Object.entries(settings).map(([key, value]) => ({
+				key,
+				value,
+				created_at: '2026-01-15T12:00:00.000Z',
+				updated_at: '2026-01-15T12:00:00.000Z'
+			}))
 		),
 		getApiKey: vi.fn(() => settings['kie_api_key'] ?? null),
 		setApiKey: vi.fn((apiKey: string) => {
@@ -153,20 +146,18 @@ export function createDbMock(): DbMock {
 		}),
 
 		// Projects — array store with find-by-id
-		createProject: vi.fn(
-			(name: string = 'New Project'): Project => {
-				const id = projects.length + 1;
-				const project: Project = {
-					id,
-					name,
-					is_open: true,
-					created_at: '2026-01-15T12:00:00.000Z',
-					updated_at: '2026-01-15T12:00:00.000Z'
-				};
-				projects.push(project);
-				return project;
-			}
-		),
+		createProject: vi.fn((name: string = 'New Project'): Project => {
+			const id = projects.length + 1;
+			const project: Project = {
+				id,
+				name,
+				is_open: true,
+				created_at: '2026-01-15T12:00:00.000Z',
+				updated_at: '2026-01-15T12:00:00.000Z'
+			};
+			projects.push(project);
+			return project;
+		}),
 		getProject: vi.fn((id: number) => projects.find((p) => p.id === id)),
 		getAllProjects: vi.fn(() => [...projects]),
 		getOpenProjects: vi.fn(() => projects.filter((p) => p.is_open)),
@@ -185,18 +176,15 @@ export function createDbMock(): DbMock {
 		// Generations — array store with find-by-id
 		createGeneration: vi.fn(),
 		createExtendGeneration: vi.fn(),
-		getExtendedGenerations: vi.fn(
-			(generationId: number, audioId: string) =>
-				generations.filter(
-					(g) => g.extends_generation_id === generationId && g.extends_audio_id === audioId
-				)
+		getExtendedGenerations: vi.fn((generationId: number, audioId: string) =>
+			generations.filter(
+				(g) => g.extends_generation_id === generationId && g.extends_audio_id === audioId
+			)
 		),
 		getGeneration: vi.fn((id: number) => generations.find((g) => g.id === id)),
-		getGenerationByTaskId: vi.fn(
-			(taskId: string) => generations.find((g) => g.task_id === taskId)
-		),
-		getGenerationsByProject: vi.fn(
-			(projectId: number) => generations.filter((g) => g.project_id === projectId)
+		getGenerationByTaskId: vi.fn((taskId: string) => generations.find((g) => g.task_id === taskId)),
+		getGenerationsByProject: vi.fn((projectId: number) =>
+			generations.filter((g) => g.project_id === projectId)
 		),
 		getLatestGenerationByProject: vi.fn(
 			(projectId: number) =>
@@ -223,34 +211,26 @@ export function createDbMock(): DbMock {
 		deleteGeneration: vi.fn((id: number) => {
 			generations = generations.filter((g) => g.id !== id);
 		}),
-		getPendingGenerations: vi.fn(
-			() =>
-				generations.filter((g) =>
-					['pending', 'processing', 'text_success', 'first_success'].includes(g.status)
-				)
+		getPendingGenerations: vi.fn(() =>
+			generations.filter((g) =>
+				['pending', 'processing', 'text_success', 'first_success'].includes(g.status)
+			)
 		),
 		createImportedGeneration: vi.fn(),
 
 		// Stem separations — array store with find-by-id
 		createStemSeparation: vi.fn(),
 		getStemSeparation: vi.fn((id: number) => stemSeparations.find((s) => s.id === id)),
-		getStemSeparationByTaskId: vi.fn(
-			(taskId: string) => stemSeparations.find((s) => s.task_id === taskId)
+		getStemSeparationByTaskId: vi.fn((taskId: string) =>
+			stemSeparations.find((s) => s.task_id === taskId)
 		),
-		getStemSeparationsForSong: vi.fn(
-			(generationId: number, audioId: string) =>
-				stemSeparations.filter(
-					(s) => s.generation_id === generationId && s.audio_id === audioId
-				)
+		getStemSeparationsForSong: vi.fn((generationId: number, audioId: string) =>
+			stemSeparations.filter((s) => s.generation_id === generationId && s.audio_id === audioId)
 		),
-		getStemSeparationByType: vi.fn(
-			(generationId: number, audioId: string, type: string) =>
-				stemSeparations.find(
-					(s) =>
-						s.generation_id === generationId &&
-						s.audio_id === audioId &&
-						s.type === type
-				)
+		getStemSeparationByType: vi.fn((generationId: number, audioId: string, type: string) =>
+			stemSeparations.find(
+				(s) => s.generation_id === generationId && s.audio_id === audioId && s.type === type
+			)
 		),
 		updateStemSeparationTaskId: vi.fn((id: number, taskId: string) => {
 			const s = stemSeparations.find((s) => s.id === id);
@@ -259,56 +239,40 @@ export function createDbMock(): DbMock {
 				s.status = 'processing';
 			}
 		}),
-		updateStemSeparationStatus: vi.fn(
-			(id: number, status: string, errorMessage?: string) => {
-				const s = stemSeparations.find((s) => s.id === id);
-				if (s) {
-					s.status = status;
-					s.error_message = errorMessage ?? null;
-				}
+		updateStemSeparationStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+			const s = stemSeparations.find((s) => s.id === id);
+			if (s) {
+				s.status = status;
+				s.error_message = errorMessage ?? null;
 			}
-		),
+		}),
 		completeStemSeparation: vi.fn(),
-		getPendingStemSeparations: vi.fn(
-			() =>
-				stemSeparations.filter((s) =>
-					['pending', 'processing'].includes(s.status)
-				)
+		getPendingStemSeparations: vi.fn(() =>
+			stemSeparations.filter((s) => ['pending', 'processing'].includes(s.status))
 		),
 
 		// Annotations — array store
 		getLabelSuggestions: vi.fn((): string[] => []),
-		getAnnotation: vi.fn(
-			(generationId: number, audioId: string) =>
-				annotations.find(
-					(a) => a.generation_id === generationId && a.audio_id === audioId
-				)
+		getAnnotation: vi.fn((generationId: number, audioId: string) =>
+			annotations.find((a) => a.generation_id === generationId && a.audio_id === audioId)
 		),
-		getAnnotationsForGeneration: vi.fn(
-			(generationId: number) =>
-				annotations.filter((a) => a.generation_id === generationId)
+		getAnnotationsForGeneration: vi.fn((generationId: number) =>
+			annotations.filter((a) => a.generation_id === generationId)
 		),
 		getAnnotationsByProject: vi.fn((): VariationAnnotation[] => [...annotations]),
-		getStarredAnnotationsByProject: vi.fn(
-			(): VariationAnnotation[] =>
-				annotations.filter((a) => a.starred === 1 || (a.comment && a.comment !== ''))
+		getStarredAnnotationsByProject: vi.fn((): VariationAnnotation[] =>
+			annotations.filter((a) => a.starred === 1 || (a.comment && a.comment !== ''))
 		),
 		toggleStar: vi.fn((generationId: number, audioId: string) => {
-			const a = annotations.find(
-				(a) => a.generation_id === generationId && a.audio_id === audioId
-			);
+			const a = annotations.find((a) => a.generation_id === generationId && a.audio_id === audioId);
 			if (a) a.starred = a.starred ? 0 : 1;
 			return a;
 		}),
-		updateComment: vi.fn(
-			(generationId: number, audioId: string, comment: string) => {
-				const a = annotations.find(
-					(a) => a.generation_id === generationId && a.audio_id === audioId
-				);
-				if (a) a.comment = comment || null;
-				return a;
-			}
-		),
+		updateComment: vi.fn((generationId: number, audioId: string, comment: string) => {
+			const a = annotations.find((a) => a.generation_id === generationId && a.audio_id === audioId);
+			if (a) a.comment = comment || null;
+			return a;
+		}),
 		setAnnotationLabels: vi.fn(),
 
 		// Database core — stubs

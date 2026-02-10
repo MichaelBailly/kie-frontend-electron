@@ -134,7 +134,10 @@ describe('POST /api/stem-separation', () => {
 
 		expect(db.updateStemSeparationTaskId).toHaveBeenCalledWith(10, 'stem-task-mock-001');
 		expect(polling.pollForStemSeparationResults).toHaveBeenCalledWith(
-			10, 'stem-task-mock-001', 1, 'audio-1-1'
+			10,
+			'stem-task-mock-001',
+			1,
+			'audio-1-1'
 		);
 	});
 
@@ -280,7 +283,10 @@ describe('POST /api/stem-separation', () => {
 
 		expect(db.updateStemSeparationStatus).toHaveBeenCalledWith(10, 'error', 'Stem failure');
 		expect(sse.notifyStemSeparationClients).toHaveBeenCalledWith(
-			10, 1, 'audio-1-1', 'stem_separation_error',
+			10,
+			1,
+			'audio-1-1',
+			'stem_separation_error',
 			expect.objectContaining({ status: 'error', error_message: 'Stem failure' })
 		);
 	});

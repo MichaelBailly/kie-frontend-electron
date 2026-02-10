@@ -25,9 +25,7 @@
 
 	// Filtered and sorted projects
 	let filteredProjects = $derived.by(() => {
-		let result = projects.filter((p) =>
-			p.name.toLowerCase().includes(filterText.toLowerCase())
-		);
+		let result = projects.filter((p) => p.name.toLowerCase().includes(filterText.toLowerCase()));
 
 		result.sort((a, b) => {
 			let comparison: number;
@@ -130,23 +128,34 @@
 				<div>
 					<h1 class="text-3xl font-bold text-white">Your Projects</h1>
 					<p class="mt-2 text-gray-400">
-						{projects.length} project{projects.length !== 1 ? 's' : ''} • Create and manage your AI music generations
+						{projects.length} project{projects.length !== 1 ? 's' : ''} • Create and manage your AI music
+						generations
 					</p>
 				</div>
 				<div class="flex gap-3">
 					<a
 						href={resolve('/settings')}
-						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30"
+						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-4 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10"
 						aria-label="Settings"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+							/>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+							/>
 						</svg>
 					</a>
 					<button
 						onclick={() => (showImportModal = true)}
-						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/30"
+						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -161,10 +170,15 @@
 					<button
 						onclick={createNewProject}
 						disabled={isCreating}
-						class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+						class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50 disabled:hover:scale-100"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 4v16m8-8H4"
+							/>
 						</svg>
 						{isCreating ? 'Creating...' : 'New Project'}
 					</button>
@@ -177,23 +191,44 @@
 	<main class="mx-auto max-w-6xl px-6 py-8">
 		<!-- API Key Warning -->
 		{#if !data.hasApiKey}
-			<div class="mb-8 flex items-center gap-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-5 py-4">
-				<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20">
+			<div
+				class="mb-8 flex items-center gap-4 rounded-xl border border-amber-500/20 bg-amber-500/10 px-5 py-4"
+			>
+				<div
+					class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/20"
+				>
 					<svg class="h-5 w-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+						/>
 					</svg>
 				</div>
 				<div class="flex-1">
 					<p class="font-medium text-amber-300">API key required</p>
-					<p class="text-sm text-amber-400/80">Configure your KIE API key to start generating music.</p>
+					<p class="text-sm text-amber-400/80">
+						Configure your KIE API key to start generating music.
+					</p>
 				</div>
 				<a
 					href={resolve('/settings')}
 					class="flex items-center gap-2 rounded-lg bg-amber-500/20 px-4 py-2 text-sm font-medium text-amber-300 transition-colors hover:bg-amber-500/30"
 				>
 					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+						/>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+						/>
 					</svg>
 					Configure
 				</a>
@@ -202,9 +237,9 @@
 
 		<!-- Filters -->
 		<div class="mb-8 flex flex-wrap items-center gap-4">
-			<div class="relative flex-1 min-w-[200px]">
+			<div class="relative min-w-[200px] flex-1">
 				<svg
-					class="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+					class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-500"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"
@@ -220,23 +255,34 @@
 					type="text"
 					bind:value={filterText}
 					placeholder="Search projects..."
-					class="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-11 pr-4 text-sm text-white placeholder-gray-500 backdrop-blur-sm transition-colors focus:border-indigo-500/50 focus:bg-white/10 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+					class="w-full rounded-xl border border-white/10 bg-white/5 py-3 pr-4 pl-11 text-sm text-white placeholder-gray-500 backdrop-blur-sm transition-colors focus:border-indigo-500/50 focus:bg-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
 				/>
 			</div>
 			<div class="flex items-center gap-2">
 				<span class="text-sm text-gray-500">Sort by</span>
 				<button
 					onclick={() => setSortField('name')}
-					class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all {sortField === 'name'
+					class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all {sortField ===
+					'name'
 						? 'border-indigo-500/50 bg-indigo-500/20 text-indigo-300'
 						: 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}"
 				>
 					{#if sortField === 'name'}
 						<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							{#if sortOrder === 'asc'}
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 15l7-7 7 7"
+								/>
 							{:else}
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
 							{/if}
 						</svg>
 					{/if}
@@ -244,16 +290,27 @@
 				</button>
 				<button
 					onclick={() => setSortField('updated_at')}
-					class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all {sortField === 'updated_at'
+					class="flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium transition-all {sortField ===
+					'updated_at'
 						? 'border-indigo-500/50 bg-indigo-500/20 text-indigo-300'
 						: 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}"
 				>
 					{#if sortField === 'updated_at'}
 						<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							{#if sortOrder === 'asc'}
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 15l7-7 7 7"
+								/>
 							{:else}
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
 							{/if}
 						</svg>
 					{/if}
@@ -264,10 +321,19 @@
 
 		<!-- Projects grid -->
 		{#if filteredProjects.length === 0}
-			<div class="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-16 text-center backdrop-blur-sm">
+			<div
+				class="flex flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 py-16 text-center backdrop-blur-sm"
+			>
 				{#if projects.length === 0}
-					<div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
-						<svg class="h-10 w-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div
+						class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+					>
+						<svg
+							class="h-10 w-10 text-indigo-400"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -283,16 +349,26 @@
 					<button
 						onclick={createNewProject}
 						disabled={isCreating}
-						class="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:scale-[1.02] disabled:opacity-50"
+						class="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 4v16m8-8H4"
+							/>
 						</svg>
 						Create Your First Project
 					</button>
 				{:else}
 					<div class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-						<svg class="h-10 w-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg
+							class="h-10 w-10 text-gray-500"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
@@ -302,9 +378,7 @@
 						</svg>
 					</div>
 					<h3 class="text-xl font-semibold text-white">No matching projects</h3>
-					<p class="mt-2 text-gray-400">
-						Try a different search term.
-					</p>
+					<p class="mt-2 text-gray-400">Try a different search term.</p>
 				{/if}
 			</div>
 		{:else}
@@ -312,7 +386,7 @@
 				{#each filteredProjects as project (project.id)}
 					<button
 						onclick={() => openProject(project)}
-						class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 hover:border-indigo-500/50 hover:bg-white/10 hover:shadow-xl hover:shadow-indigo-500/10 hover:scale-[1.02]"
+						class="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-indigo-500/50 hover:bg-white/10 hover:shadow-xl hover:shadow-indigo-500/10"
 					>
 						<!-- Cover image or gradient -->
 						<div class="relative h-32 overflow-hidden">
@@ -322,26 +396,43 @@
 									alt=""
 									class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
 								/>
-								<div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"></div>
+								<div
+									class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"
+								></div>
 							{:else}
-								<div class="h-full w-full bg-gradient-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"></div>
+								<div
+									class="h-full w-full bg-gradient-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"
+								></div>
 								<div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
 							{/if}
 
 							<!-- Status indicator -->
 							{#if project.lastGenerationStatus && project.lastGenerationStatus !== 'success'}
-								<div class="absolute right-3 top-3">
+								<div class="absolute top-3 right-3">
 									<span class="flex h-3 w-3">
-										<span class="{getStatusColor(project.lastGenerationStatus)} absolute inline-flex h-full w-full rounded-full opacity-75 {project.lastGenerationStatus !== 'error' ? 'animate-ping' : ''}"></span>
-										<span class="{getStatusColor(project.lastGenerationStatus)} relative inline-flex h-3 w-3 rounded-full"></span>
+										<span
+											class="{getStatusColor(
+												project.lastGenerationStatus
+											)} absolute inline-flex h-full w-full rounded-full opacity-75 {project.lastGenerationStatus !==
+											'error'
+												? 'animate-ping'
+												: ''}"
+										></span>
+										<span
+											class="{getStatusColor(
+												project.lastGenerationStatus
+											)} relative inline-flex h-3 w-3 rounded-full"
+										></span>
 									</span>
 								</div>
 							{/if}
 
 							<!-- Open badge -->
 							{#if project.is_open}
-								<div class="absolute left-3 top-3">
-									<span class="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-400 backdrop-blur-sm">
+								<div class="absolute top-3 left-3">
+									<span
+										class="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-medium tracking-wider text-emerald-400 uppercase backdrop-blur-sm"
+									>
 										Open
 									</span>
 								</div>
@@ -350,20 +441,27 @@
 
 						<!-- Content -->
 						<div class="flex flex-1 flex-col p-4">
-							<h3 class="font-semibold text-white group-hover:text-indigo-300 transition-colors truncate">
+							<h3
+								class="truncate font-semibold text-white transition-colors group-hover:text-indigo-300"
+							>
 								{project.name}
 							</h3>
 
 							{#if project.lastGenerationTitle}
-								<p class="mt-1 text-sm text-gray-500 truncate">
+								<p class="mt-1 truncate text-sm text-gray-500">
 									♪ {project.lastGenerationTitle}
 								</p>
 							{/if}
 
-							<div class="mt-auto pt-4 flex items-center justify-between text-xs text-gray-500">
+							<div class="mt-auto flex items-center justify-between pt-4 text-xs text-gray-500">
 								<span class="flex items-center gap-1.5">
 									<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+										/>
 									</svg>
 									{project.generationCount} generation{project.generationCount !== 1 ? 's' : ''}
 								</span>
