@@ -174,3 +174,43 @@
 - Vitest `requireAssertions: true` is configured — every test must have at least one `expect()`
 - `$lib/test-utils` path alias works because `$lib` maps to `src/lib`
 - `Object.entries(mock)` loop for resetting spies must use `[, value]` destructuring to avoid `@typescript-eslint/no-unused-vars`
+
+### Task 4.2: Add database operation tests (2026-02-09)
+
+**What was done:**
+- Created `src/lib/test-utils/db-setup.ts` — shared helper for in-memory SQLite test databases
+- Created 5 test files (`src/lib/db/*.spec.ts`) with 116 integration tests covering all repository modules
+- Tests run against real better-sqlite3 in-memory databases, exercising actual SQL queries
+- Used `vi.mock('./database.server', async () => { ... })` pattern to intercept the database module at the lowest level
+
+**Testing strategy: Option B — in-memory SQLite integration tests**
+- Chose real SQLite over mocks because the repositories are thin SQL wrappers — mocking SQL would test nothing useful
+- `vi.mock('./database.server')` replaces `getDb()` and `prepareStmt()` with in-memory equivalents
+- Each test gets a fresh `:memory:` database via `resetTestDb()` in `beforeEach`
+- The `async` mock factory uses `await import('$lib/test-utils/db-setup')` to load the helper module inside Vitest's mock hoisting
+- Since the mock resolves `./database.server` relative to the test file (same directory as the modules under test), both the test file and the imported repository module share the same mock
+
+**Key pattern for database test files:**
+```typescript
+vi.mock('./database.server', async () => {
+  const dbSetup = await import('$lib/test-utils/db-setup');
+  return {
+    getDb: () => dbSetup.getTestDb(),
+    prepareStmt: (sql: string) => dbSetup.testPrepareStmt(sql)
+  };
+});
+import { resetTestDb, closeTestDb } from '$lib/test-utils/db-setup';
+beforeEach(() => resetTestDb());
+afterAll(() => closeTestDb());
+```
+
+**Learnings:**
+- better-sqlite3 can be loaded in Vitest tests using `createRequire(import.meta.url)` — same pattern as production code
+- `SCHEMA_DDL` is duplicated in `db-setup.ts` (not imported from `database.server.ts`) because `database.server.ts` imports `$app/environment` which isn't available in tests. If the schema changes, tests will fail naturally.
+- SQLite `CURRENT_TIMESTAMP` has second-level resolution — rows inserted in the same test have identical timestamps, making `ORDER BY created_at` non-deterministic for tie-breaking. Tests should not assert specific ordering when timestamps are identical.
+- SQLite stores booleans as INTEGER (0/1). The TypeScript interface declares `is_open: boolean` but the raw value is a number. Use truthiness checks (`p.is_open`) not strict equality (`p.is_open === 1`) in test assertions.
+- `annotations.server.ts` uses both `getDb()` (for transactions and dynamic SQL) and `prepareStmt()` (for static queries). The mock must provide both.
+- `db.transaction()` works correctly with the in-memory mock since `getDb()` returns the real SQLite instance.
+- `vi.mock` with async factory + `await import()` is fully supported in Vitest — the factory awaits properly during module resolution.
+- The `db-setup.ts` helper is NOT added to the `test-utils/index.ts` barrel to avoid forcing all test imports to load better-sqlite3 (a native module).
+- Pre-existing svelte-check errors (39 in `test-utils.spec.ts`, 1 in `helpers.ts`) exist from Task 4.1 — not introduced by this task.

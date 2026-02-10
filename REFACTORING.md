@@ -185,7 +185,26 @@ Key design decisions:
 
 - `src/lib/test-utils/test-utils.spec.ts` — 52 self-tests validating all factories, mocks, and helpers
 
-#### Task 4.2: Add database operation tests
+#### Task 4.2: Add database operation tests ✅
+
+**Status:** Completed  
+**Changes:** Created integration tests for all 5 database repository modules using in-memory SQLite databases via better-sqlite3. Tests exercise real SQL queries against a real database engine.
+
+- `src/lib/test-utils/db-setup.ts` — Shared test helper providing in-memory SQLite database setup:
+  - `SCHEMA_DDL` — full schema matching `database.server.ts`
+  - `resetTestDb()` — creates fresh in-memory database with schema (call in `beforeEach`)
+  - `closeTestDb()` — cleanup (call in `afterAll`)
+  - `getTestDb()` / `testPrepareStmt()` — mock-compatible replacements for `database.server.ts` exports
+  - Pattern: `vi.mock('./database.server', async () => { ... })` with `await import('$lib/test-utils/db-setup')`
+
+- `src/lib/db/settings.spec.ts` — 14 tests: getSetting, setSetting (upsert), deleteSetting, getAllSettings (ordering), getApiKey/setApiKey
+- `src/lib/db/projects.spec.ts` — 19 tests: createProject (defaults, custom, closed), getProject, getAllProjects, getOpenProjects, setProjectOpen, updateProjectName, deleteProject
+- `src/lib/db/generations.spec.ts` — 29 tests: createGeneration, createExtendGeneration, getGeneration, getGenerationByTaskId, getGenerationsByProject, getLatestGenerationByProject, getExtendedGenerations, updateGenerationTaskId, updateGenerationStatus, updateGenerationTracks (COALESCE), completeGeneration, deleteGeneration, getPendingGenerations, createImportedGeneration
+- `src/lib/db/stem-separations.spec.ts` — 20 tests: createStemSeparation, getStemSeparation, getStemSeparationByTaskId, getStemSeparationsForSong, getStemSeparationByType, updateStemSeparationTaskId, updateStemSeparationStatus, completeStemSeparation (vocal + stem URLs), getPendingStemSeparations
+- `src/lib/db/annotations.spec.ts` — 34 tests: getAnnotation (with labels), toggleStar (create + toggle), updateComment (create + update + null for empty), getAnnotationsForGeneration, getAnnotationsByProject (cross-generation), getStarredAnnotationsByProject, setAnnotationLabels (normalize, deduplicate, filter empty, replace, clear, reuse labels, preserve starred/comment), getLabelSuggestions (prefix, case-insensitive, limit)
+
+Total: 116 new tests across 5 test files.
+
 #### Task 4.3: Add API route integration tests
 #### Task 4.4: Add polling logic tests
 
