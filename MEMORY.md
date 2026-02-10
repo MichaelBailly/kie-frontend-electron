@@ -149,3 +149,28 @@
 - Both `GenerateMusicResponse` and `StemSeparationResponse` share the same `{ code, msg, data: { taskId } }` shape, enabling a shared `KieTaskResponse` interface constraint
 - `runKieApiTask` is private (not exported) — it's an implementation detail; consumers use the domain-specific `startGenerationTask` / `startStemSeparationTask` wrappers
 - The refactoring also cleaned up imports: routes no longer need `updateGenerationStatus`, `notifyClients`, `pollForResults`, etc. — all encapsulated in the helpers
+
+### Task 4.1: Create test utilities and fixtures (2026-02-09)
+
+**What was done:**
+- Created `src/lib/test-utils/` directory with 4 modules: `fixtures.ts`, `mocks.ts`, `helpers.ts`, `index.ts`
+- Created `test-utils.spec.ts` with 52 self-tests covering all exports
+- Fixture factories for all entity types (Project, Generation, StemSeparation, VariationAnnotation, Label, Setting) with auto-incrementing IDs and `Partial<T>` overrides
+- Convenience variants: `createCompletedGeneration`, `createErrorGeneration`, `createExtendGeneration`, `createCompletedStemSeparation`, `createStarredAnnotation`
+- KIE API request/response factories for all request/response types
+- Pre-configured mocks for `$lib/db.server` (functional in-memory stores), `$lib/kie-api.server` (real status-check logic), `$lib/sse.server` (no-op stubs), `$lib/polling.server` (no-op stubs)
+- Typed mock interfaces (`DbMock`, `KieApiMock`, `SseMock`, `PollingMock`) for autocomplete
+- Common test helpers: `useFakeTimers`, `advanceTimersAndFlush`, `expectCalledOnceWith`, `expectNotCalled`, `expectCalledWithPartial`, `createJsonRequest`, `createRequestEvent`, `flushPromises`, `createDeferredPromise`
+
+**Design decisions:**
+- Test utils are in `src/lib/test-utils/` (non-`.server.ts`) so they can be imported from any test file
+- DB mock uses functional in-memory stores for settings/projects + find-by-id lookups for other entities
+- KIE API mock status checkers use real logic so routing works correctly in integration tests
+- All mocks include `__reset()` that clears data stores and `vi.fn()` call counts
+- Deep merge for nested `data` fields in API response factories
+- `resetFixtureIds()` is separate from mock resets — independent concerns
+
+**Learnings:**
+- Vitest `requireAssertions: true` is configured — every test must have at least one `expect()`
+- `$lib/test-utils` path alias works because `$lib` maps to `src/lib`
+- `Object.entries(mock)` loop for resetting spies must use `[, value]` destructuring to avoid `@typescript-eslint/no-unused-vars`

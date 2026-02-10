@@ -157,7 +157,34 @@ Key design decisions:
 
 **Goal:** Establish test infrastructure and expand coverage
 
-#### Task 4.1: Create test utilities and fixtures
+#### Task 4.1: Create test utilities and fixtures ✅
+
+**Status:** Completed  
+**Changes:** Created reusable test infrastructure under `src/lib/test-utils/` with 4 modules:
+
+- `src/lib/test-utils/fixtures.ts` — Factory functions for all entity types and KIE API request/responses:
+  - Entity factories: `createProject`, `createGeneration`, `createCompletedGeneration`, `createErrorGeneration`, `createExtendGeneration`, `createStemSeparation`, `createCompletedStemSeparation`, `createAnnotation`, `createStarredAnnotation`, `createLabel`, `createSetting`
+  - API factories: `createGenerateMusicRequest`, `createExtendMusicRequest`, `createGenerateMusicResponse`, `createSunoTrack`, `createMusicDetailsResponse`, `createPendingMusicDetailsResponse`, `createErrorMusicDetailsResponse`, `createStemSeparationRequest`, `createStemSeparationResponse`, `createStemSeparationDetailsResponse`
+  - All factories use auto-incrementing IDs and accept `Partial<T>` overrides
+  - `resetFixtureIds()` resets all counters for deterministic tests
+
+- `src/lib/test-utils/mocks.ts` — Pre-configured mock factories for server-side dependencies:
+  - `createDbMock()` — In-memory DB mock with functional settings, projects, generations, stem separations, and annotations stores. Includes `__reset()` and `__set*()` helpers.
+  - `createKieApiMock()` — KIE API mock with default success responses and real status-check logic.
+  - `createSseMock()` — No-op SSE stubs with call tracking.
+  - `createPollingMock()` — No-op polling stubs with call tracking.
+  - Typed interfaces (`DbMock`, `KieApiMock`, `SseMock`, `PollingMock`) for autocomplete.
+
+- `src/lib/test-utils/helpers.ts` — Common test utilities:
+  - Timer helpers: `useFakeTimers()`, `advanceTimersAndFlush(ms)`
+  - Custom assertions: `expectCalledOnceWith()`, `expectNotCalled()`, `expectCalledWithPartial()`
+  - SvelteKit request helpers: `createJsonRequest()`, `createRequestEvent()`
+  - Async helpers: `flushPromises()`, `createDeferredPromise<T>()`
+
+- `src/lib/test-utils/index.ts` — Barrel file re-exporting everything from `$lib/test-utils`
+
+- `src/lib/test-utils/test-utils.spec.ts` — 52 self-tests validating all factories, mocks, and helpers
+
 #### Task 4.2: Add database operation tests
 #### Task 4.3: Add API route integration tests
 #### Task 4.4: Add polling logic tests
