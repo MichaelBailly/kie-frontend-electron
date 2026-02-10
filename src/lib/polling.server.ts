@@ -6,6 +6,7 @@ import {
 	updateStemSeparationStatus,
 	completeStemSeparation
 } from '$lib/db.server';
+import type { MusicDetailsResponse, StemSeparationDetailsResponse } from '$lib/kie-api.server';
 import {
 	getMusicDetails,
 	isErrorStatus,
@@ -16,6 +17,129 @@ import {
 } from '$lib/kie-api.server';
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
 
+// ============================================================================
+// Generic polling engine
+// ============================================================================
+
+/**
+ * Configuration for the generic polling engine.
+ *
+ * @typeParam TDetails - The full API response type (e.g., MusicDetailsResponse)
+ */
+interface PollConfig<TDetails extends { code: number; msg: string }> {
+	/** The KIE API task ID to poll */
+	taskId: string;
+	/** Human-readable label for logging (e.g., "generation 5") */
+	label: string;
+	/** Short tag for log lines (e.g., "Poll", "StemPoll") */
+	logTag: string;
+	/** Whether this is a recovery poll (prepends [Recovery] to logs) */
+	isRecovery?: boolean;
+	/** Maximum polling attempts before timeout. Default: 120 (10 min at 5s intervals) */
+	maxAttempts?: number;
+	/** Polling interval in milliseconds. Default: 5000 */
+	intervalMs?: number;
+	/** Error message on timeout. Default: "<label> timed out" */
+	timeoutMessage?: string;
+
+	/** Fetch current task details from the KIE API */
+	fetchDetails: (taskId: string) => Promise<TDetails>;
+	/** Extract the status string from the response (e.g., data.status or data.successFlag) */
+	getStatus: (details: TDetails) => string | undefined;
+	/** Extract a human-readable error message from the response data */
+	getStatusErrorMessage: (details: TDetails) => string | undefined;
+	/** Returns true if the status indicates an error */
+	isError: (status: string) => boolean;
+	/** Returns true if the status indicates completion */
+	isComplete: (status: string) => boolean;
+
+	/** Called on any error (API error, status error, timeout, unrecoverable exception) */
+	onError: (errorMessage: string) => void;
+	/** Called when completion status is detected. Return true to stop polling, false to continue. */
+	onComplete: (details: TDetails) => boolean;
+	/** Called for intermediate status updates */
+	onProgress: (details: TDetails) => void;
+}
+
+/**
+ * Generic polling engine for KIE API async tasks.
+ *
+ * Polls the API at regular intervals until the task reaches a terminal state
+ * (complete or error), a timeout is hit, or max retries are exhausted on
+ * consecutive exceptions.
+ */
+async function runPollLoop<TDetails extends { code: number; msg: string }>(
+	config: PollConfig<TDetails>
+): Promise<void> {
+	const maxAttempts = config.maxAttempts ?? 120;
+	const intervalMs = config.intervalMs ?? 5000;
+	const timeoutMessage = config.timeoutMessage ?? `${config.label} timed out`;
+	let attempts = 0;
+	const prefix = config.isRecovery ? '[Recovery]' : '';
+
+	const poll = async () => {
+		attempts++;
+		console.log(
+			`${prefix}[${config.logTag} #${attempts}] Checking taskId: ${config.taskId} for ${config.label}`
+		);
+
+		try {
+			const details = await config.fetchDetails(config.taskId);
+			const status = config.getStatus(details);
+			console.log(`${prefix}[${config.logTag} #${attempts}] Status: ${status}`);
+
+			if (details.code !== 200) {
+				config.onError(details.msg);
+				return;
+			}
+
+			if (status && config.isError(status)) {
+				console.log(
+					`${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`
+				);
+				config.onError(config.getStatusErrorMessage(details) || status);
+				return;
+			}
+
+			if (status && config.isComplete(status)) {
+				console.log(
+					`${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`
+				);
+				if (config.onComplete(details)) {
+					return;
+				}
+			}
+
+			// Intermediate update
+			config.onProgress(details);
+
+			// Continue polling or timeout
+			if (attempts < maxAttempts) {
+				console.log(
+					`${prefix}[${config.logTag} #${attempts}] Continuing to poll in ${intervalMs / 1000} seconds...`
+				);
+				setTimeout(poll, intervalMs);
+			} else {
+				config.onError(timeoutMessage);
+			}
+		} catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error(`${prefix}[${config.logTag} #${attempts}] Error:`, errorMessage);
+			if (attempts < maxAttempts) {
+				setTimeout(poll, intervalMs);
+			} else {
+				config.onError(errorMessage);
+			}
+		}
+	};
+
+	poll();
+}
+
+// ============================================================================
+// Generation polling
+// ============================================================================
+
 /**
  * Poll for generation results from the KIE API.
  * This function is extracted to be reusable for both new generations and recovery.
@@ -25,111 +149,90 @@ export async function pollForResults(
 	taskId: string,
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
-	const maxAttempts = 120; // 10 minutes with 5-second intervals
-	let attempts = 0;
-	const prefix = options.isRecovery ? '[Recovery]' : '';
+	runPollLoop<MusicDetailsResponse>({
+		taskId,
+		label: `generation ${generationId}`,
+		logTag: 'Poll',
+		isRecovery: options.isRecovery,
+		timeoutMessage: 'Generation timed out',
 
-	const poll = async () => {
-		attempts++;
-		console.log(
-			`${prefix}[Poll #${attempts}] Checking taskId: ${taskId} for generation ${generationId}`
-		);
+		fetchDetails: getMusicDetails,
+		getStatus: (d) => d.data?.status,
+		getStatusErrorMessage: (d) => d.data?.errorMessage ?? undefined,
+		isError: isErrorStatus,
+		isComplete: isCompleteStatus,
 
-		try {
-			const details = await getMusicDetails(taskId);
-			console.log(`${prefix}[Poll #${attempts}] Status: ${details.data?.status}`);
+		onError(msg) {
+			updateGenerationStatus(generationId, 'error', msg);
+			notifyClients(generationId, 'generation_error', {
+				status: 'error',
+				error_message: msg
+			});
+		},
 
-			if (details.code !== 200) {
-				updateGenerationStatus(generationId, 'error', details.msg);
-				notifyClients(generationId, 'generation_error', {
-					status: 'error',
-					error_message: details.msg
-				});
-				return;
-			}
+		onComplete(details) {
+			const sunoData = details.data.response?.sunoData || [];
+			const track1 = sunoData[0];
+			const track2 = sunoData[1];
 
-			const { status, errorMessage } = details.data;
+			if (!track1 || !track2) return false;
 
-			if (isErrorStatus(status)) {
-				console.log(`${prefix}[Poll #${attempts}] ERROR status detected: ${status}`);
-				updateGenerationStatus(generationId, 'error', errorMessage || status);
-				notifyClients(generationId, 'generation_error', {
-					status: 'error',
-					error_message: errorMessage || status
-				});
-				return;
-			}
+			completeGeneration(
+				generationId,
+				'success',
+				{
+					streamUrl: track1.streamAudioUrl,
+					audioUrl: track1.audioUrl,
+					imageUrl: track1.imageUrl,
+					duration: track1.duration,
+					audioId: track1.id
+				},
+				{
+					streamUrl: track2.streamAudioUrl,
+					audioUrl: track2.audioUrl,
+					imageUrl: track2.imageUrl,
+					duration: track2.duration,
+					audioId: track2.id
+				},
+				JSON.stringify(details.data)
+			);
 
-			if (isCompleteStatus(status)) {
-				console.log(`${prefix}[Poll #${attempts}] COMPLETE status detected: ${status}`);
-				const sunoData = details.data.response?.sunoData || [];
-				const track1 = sunoData[0];
-				const track2 = sunoData[1];
+			notifyClients(generationId, 'generation_complete', {
+				status: 'success',
+				track1_stream_url: track1.streamAudioUrl,
+				track1_audio_url: track1.audioUrl,
+				track1_image_url: track1.imageUrl,
+				track1_duration: track1.duration,
+				track1_audio_id: track1.id,
+				track2_stream_url: track2.streamAudioUrl,
+				track2_audio_url: track2.audioUrl,
+				track2_image_url: track2.imageUrl,
+				track2_duration: track2.duration,
+				track2_audio_id: track2.id,
+				response_data: JSON.stringify(details.data)
+			});
+			return true;
+		},
 
-				if (track1 && track2) {
-					console.log(`${prefix}[Poll #${attempts}] Completing generation with both tracks`);
-					completeGeneration(
-						generationId,
-						'success',
-						{
-							streamUrl: track1.streamAudioUrl,
-							audioUrl: track1.audioUrl,
-							imageUrl: track1.imageUrl,
-							duration: track1.duration,
-							audioId: track1.id
-						},
-						{
-							streamUrl: track2.streamAudioUrl,
-							audioUrl: track2.audioUrl,
-							imageUrl: track2.imageUrl,
-							duration: track2.duration,
-							audioId: track2.id
-						},
-						JSON.stringify(details.data)
-					);
-
-					notifyClients(generationId, 'generation_complete', {
-						status: 'success',
-						track1_stream_url: track1.streamAudioUrl,
-						track1_audio_url: track1.audioUrl,
-						track1_image_url: track1.imageUrl,
-						track1_duration: track1.duration,
-						track1_audio_id: track1.id,
-						track2_stream_url: track2.streamAudioUrl,
-						track2_audio_url: track2.audioUrl,
-						track2_image_url: track2.imageUrl,
-						track2_duration: track2.duration,
-						track2_audio_id: track2.id,
-						response_data: JSON.stringify(details.data)
-					});
-					return;
-				}
-			}
-
-			// Update status based on API status
+		onProgress(details) {
+			const status = details.data.status;
 			const statusMap: Record<string, string> = {
 				PENDING: 'processing',
 				TEXT_SUCCESS: 'text_success',
 				FIRST_SUCCESS: 'first_success'
 			};
-
 			const newStatus = statusMap[status] || 'processing';
 			updateGenerationStatus(generationId, newStatus);
 
-			// Check for streaming URLs in text_success or first_success
 			if (
 				(status === 'TEXT_SUCCESS' || status === 'FIRST_SUCCESS') &&
 				details.data.response?.sunoData
 			) {
-				console.log(`${prefix}[Poll #${attempts}] Intermediate status with stream URLs: ${status}`);
 				const sunoData = details.data.response.sunoData;
 				const track1 = sunoData[0];
 				const track2 = sunoData[1];
 
 				if (track1?.streamAudioUrl || track2?.streamAudioUrl) {
-					console.log(
-						`${prefix}[Poll #${attempts}] Updating stream URLs - Track1: ${!!track1?.streamAudioUrl}, Track2: ${!!track2?.streamAudioUrl}`
-					);
 					updateGenerationTracks(
 						generationId,
 						{
@@ -144,7 +247,6 @@ export async function pollForResults(
 						}
 					);
 
-					// Notify with stream URLs
 					notifyClients(generationId, 'generation_update', {
 						status: newStatus,
 						track1_stream_url: track1?.streamAudioUrl,
@@ -152,39 +254,13 @@ export async function pollForResults(
 						track2_stream_url: track2?.streamAudioUrl,
 						track2_image_url: track2?.imageUrl
 					});
-					// Don't return - continue polling until final SUCCESS
+					return;
 				}
-			} else {
-				// Only notify if we didn't already notify with stream URLs above
-				notifyClients(generationId, 'generation_update', { status: newStatus });
 			}
 
-			// Continue polling if not complete and under max attempts
-			if (attempts < maxAttempts) {
-				console.log(`${prefix}[Poll #${attempts}] Continuing to poll in 5 seconds...`);
-				setTimeout(poll, 5000);
-			} else {
-				updateGenerationStatus(generationId, 'error', 'Generation timed out');
-				notifyClients(generationId, 'generation_error', {
-					status: 'error',
-					error_message: 'Generation timed out'
-				});
-			}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-			if (attempts < maxAttempts) {
-				setTimeout(poll, 5000);
-			} else {
-				updateGenerationStatus(generationId, 'error', errorMessage);
-				notifyClients(generationId, 'generation_error', {
-					status: 'error',
-					error_message: errorMessage
-				});
-			}
+			notifyClients(generationId, 'generation_update', { status: newStatus });
 		}
-	};
-
-	poll();
+	});
 }
 
 /**
@@ -201,7 +277,6 @@ export function recoverIncompleteGenerations(generations: Generation[]): void {
 
 	for (const generation of generations) {
 		if (!generation.task_id) {
-			// Generation was created but never got a task_id - mark as error
 			console.log(`[Recovery] Generation ${generation.id} has no task_id, marking as error`);
 			updateGenerationStatus(generation.id, 'error', 'Generation interrupted before task creation');
 			continue;
@@ -214,6 +289,10 @@ export function recoverIncompleteGenerations(generations: Generation[]): void {
 	}
 }
 
+// ============================================================================
+// Stem separation polling
+// ============================================================================
+
 /**
  * Poll for stem separation results from the KIE API.
  */
@@ -224,153 +303,92 @@ export async function pollForStemSeparationResults(
 	audioId: string,
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
-	const maxAttempts = 120; // 10 minutes with 5-second intervals
-	let attempts = 0;
-	const prefix = options.isRecovery ? '[Recovery]' : '';
+	runPollLoop<StemSeparationDetailsResponse>({
+		taskId,
+		label: `stem separation ${stemSeparationId}`,
+		logTag: 'StemPoll',
+		isRecovery: options.isRecovery,
+		timeoutMessage: 'Stem separation timed out',
 
-	const poll = async () => {
-		attempts++;
-		console.log(
-			`${prefix}[StemPoll #${attempts}] Checking taskId: ${taskId} for stem separation ${stemSeparationId}`
-		);
+		fetchDetails: getStemSeparationDetails,
+		getStatus: (d) => d.data?.successFlag,
+		getStatusErrorMessage: (d) => d.data?.errorMessage ?? undefined,
+		isError: isStemSeparationErrorStatus,
+		isComplete: isStemSeparationCompleteStatus,
 
-		try {
-			const details = await getStemSeparationDetails(taskId);
-			console.log(`${prefix}[StemPoll #${attempts}] Status: ${details.data?.successFlag}`);
+		onError(msg) {
+			updateStemSeparationStatus(stemSeparationId, 'error', msg);
+			notifyStemSeparationClients(
+				stemSeparationId,
+				generationId,
+				audioId,
+				'stem_separation_error',
+				{ status: 'error', error_message: msg }
+			);
+		},
 
-			if (details.code !== 200) {
-				updateStemSeparationStatus(stemSeparationId, 'error', details.msg);
-				notifyStemSeparationClients(
-					stemSeparationId,
-					generationId,
-					audioId,
-					'stem_separation_error',
-					{
-						status: 'error',
-						error_message: details.msg
-					}
-				);
-				return;
-			}
+		onComplete(details) {
+			const { response } = details.data;
+			if (!response) return false;
 
-			const { successFlag, errorMessage, response } = details.data;
+			completeStemSeparation(
+				stemSeparationId,
+				{
+					vocalUrl: response.vocalUrl || undefined,
+					instrumentalUrl: response.instrumentalUrl || undefined,
+					backingVocalsUrl: response.backingVocalsUrl || undefined,
+					drumsUrl: response.drumsUrl || undefined,
+					bassUrl: response.bassUrl || undefined,
+					guitarUrl: response.guitarUrl || undefined,
+					keyboardUrl: response.keyboardUrl || undefined,
+					pianoUrl: response.pianoUrl || undefined,
+					percussionUrl: response.percussionUrl || undefined,
+					stringsUrl: response.stringsUrl || undefined,
+					synthUrl: response.synthUrl || undefined,
+					fxUrl: response.fxUrl || undefined,
+					brassUrl: response.brassUrl || undefined,
+					woodwindsUrl: response.woodwindsUrl || undefined
+				},
+				JSON.stringify(details.data)
+			);
 
-			if (isStemSeparationErrorStatus(successFlag)) {
-				console.log(`${prefix}[StemPoll #${attempts}] ERROR status detected: ${successFlag}`);
-				updateStemSeparationStatus(stemSeparationId, 'error', errorMessage || successFlag);
-				notifyStemSeparationClients(
-					stemSeparationId,
-					generationId,
-					audioId,
-					'stem_separation_error',
-					{
-						status: 'error',
-						error_message: errorMessage || successFlag
-					}
-				);
-				return;
-			}
+			notifyStemSeparationClients(
+				stemSeparationId,
+				generationId,
+				audioId,
+				'stem_separation_complete',
+				{
+					status: 'success',
+					vocal_url: response.vocalUrl,
+					instrumental_url: response.instrumentalUrl,
+					backing_vocals_url: response.backingVocalsUrl,
+					drums_url: response.drumsUrl,
+					bass_url: response.bassUrl,
+					guitar_url: response.guitarUrl,
+					keyboard_url: response.keyboardUrl,
+					piano_url: response.pianoUrl,
+					percussion_url: response.percussionUrl,
+					strings_url: response.stringsUrl,
+					synth_url: response.synthUrl,
+					fx_url: response.fxUrl,
+					brass_url: response.brassUrl,
+					woodwinds_url: response.woodwindsUrl
+				}
+			);
+			return true;
+		},
 
-			if (isStemSeparationCompleteStatus(successFlag) && response) {
-				console.log(`${prefix}[StemPoll #${attempts}] COMPLETE status detected`);
-
-				completeStemSeparation(
-					stemSeparationId,
-					{
-						vocalUrl: response.vocalUrl || undefined,
-						instrumentalUrl: response.instrumentalUrl || undefined,
-						backingVocalsUrl: response.backingVocalsUrl || undefined,
-						drumsUrl: response.drumsUrl || undefined,
-						bassUrl: response.bassUrl || undefined,
-						guitarUrl: response.guitarUrl || undefined,
-						keyboardUrl: response.keyboardUrl || undefined,
-						pianoUrl: response.pianoUrl || undefined,
-						percussionUrl: response.percussionUrl || undefined,
-						stringsUrl: response.stringsUrl || undefined,
-						synthUrl: response.synthUrl || undefined,
-						fxUrl: response.fxUrl || undefined,
-						brassUrl: response.brassUrl || undefined,
-						woodwindsUrl: response.woodwindsUrl || undefined
-					},
-					JSON.stringify(details.data)
-				);
-
-				notifyStemSeparationClients(
-					stemSeparationId,
-					generationId,
-					audioId,
-					'stem_separation_complete',
-					{
-						status: 'success',
-						vocal_url: response.vocalUrl,
-						instrumental_url: response.instrumentalUrl,
-						backing_vocals_url: response.backingVocalsUrl,
-						drums_url: response.drumsUrl,
-						bass_url: response.bassUrl,
-						guitar_url: response.guitarUrl,
-						keyboard_url: response.keyboardUrl,
-						piano_url: response.pianoUrl,
-						percussion_url: response.percussionUrl,
-						strings_url: response.stringsUrl,
-						synth_url: response.synthUrl,
-						fx_url: response.fxUrl,
-						brass_url: response.brassUrl,
-						woodwinds_url: response.woodwindsUrl
-					}
-				);
-				return;
-			}
-
-			// Continue polling if still pending
+		onProgress() {
 			updateStemSeparationStatus(stemSeparationId, 'processing');
 			notifyStemSeparationClients(
 				stemSeparationId,
 				generationId,
 				audioId,
 				'stem_separation_update',
-				{
-					status: 'processing'
-				}
+				{ status: 'processing' }
 			);
-
-			if (attempts < maxAttempts) {
-				console.log(`${prefix}[StemPoll #${attempts}] Continuing to poll in 5 seconds...`);
-				setTimeout(poll, 5000);
-			} else {
-				updateStemSeparationStatus(stemSeparationId, 'error', 'Stem separation timed out');
-				notifyStemSeparationClients(
-					stemSeparationId,
-					generationId,
-					audioId,
-					'stem_separation_error',
-					{
-						status: 'error',
-						error_message: 'Stem separation timed out'
-					}
-				);
-			}
-		} catch (err) {
-			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-			console.error(`${prefix}[StemPoll #${attempts}] Error:`, errorMessage);
-			if (attempts < maxAttempts) {
-				setTimeout(poll, 5000);
-			} else {
-				updateStemSeparationStatus(stemSeparationId, 'error', errorMessage);
-				notifyStemSeparationClients(
-					stemSeparationId,
-					generationId,
-					audioId,
-					'stem_separation_error',
-					{
-						status: 'error',
-						error_message: errorMessage
-					}
-				);
-			}
 		}
-	};
-
-	poll();
+	});
 }
 
 /**

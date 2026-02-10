@@ -135,7 +135,21 @@ Refactored files:
 - `api/generations/extend/+server.ts` — removed 40-line `startExtendGeneration()` function, replaced with `startGenerationTask()` call (99→53 lines)
 - `api/stem-separation/+server.ts` — removed 40-line `startStemSeparation()` function, replaced with `startStemSeparationTask()` call (88→53 lines)
 - Removed direct imports of `updateGenerationStatus`, `updateGenerationTaskId`, `updateStemSeparationStatus`, `updateStemSeparationTaskId`, `notifyClients`, `notifyStemSeparationClients`, `pollForResults`, `pollForStemSeparationResults`, `getErrorMessage` from route files — all encapsulated in the helpers
-#### Task 3.2: Unify polling logic
+#### Task 3.2: Unify polling logic ✅
+
+**Status:** Completed  
+**Changes:** Extracted a generic `runPollLoop<TDetails>()` polling engine from the two nearly-identical polling functions in `polling.server.ts`, reducing the file from 410 to 340 lines:
+
+- `PollConfig<TDetails>` — generic interface parameterized by API response type, with callbacks for `fetchDetails`, `getStatus`, `getStatusErrorMessage`, `isError`, `isComplete`, `onError`, `onComplete`, `onProgress`
+- `runPollLoop<TDetails>(config)` — private generic engine that handles the retry loop (max attempts, 5s intervals), API code checks, error/complete/progress status routing, timeout, and exception handling with retries
+- `pollForResults(generationId, taskId, options)` — thin wrapper passing `MusicDetailsResponse`-specific config (status mapping, intermediate stream URL handling, track completion logic)
+- `pollForStemSeparationResults(stemSeparationId, taskId, generationId, audioId, options)` — thin wrapper passing `StemSeparationDetailsResponse`-specific config (stem URL extraction, simple progress updates)
+
+Key design decisions:
+- `onComplete` returns `boolean` — `true` stops polling, `false` continues (handles cases where status is SUCCESS but data is incomplete)
+- `TDetails extends { code: number; msg: string }` — constrains the generic to API responses with `code`/`msg` fields, avoiding redundant `getResponseCode`/`getResponseMsg` callbacks
+- Recovery functions (`recoverIncompleteGenerations`, `recoverIncompleteStemSeparations`) remain unchanged — they're thin callers of the polling functions
+- Error handling unified: all error paths (API error, status error, timeout, fatal exception) route through a single `onError` callback
 
 ---
 

@@ -99,6 +99,32 @@
 - `db.transaction()` still requires `getDb()` — `prepareStmt` is only for individual statements
 - Cache lives for the lifetime of the process (same as database connection) — no invalidation needed since `_db` is a singleton
 
+### Task 3.1: Extract shared async operation handler (2026-02-09)
+
+**What was done:**
+- Added `runKieApiTask()`, `startGenerationTask()`, `startStemSeparationTask()` to `api-helpers.server.ts`
+- Refactored 3 API route files to use the shared helpers, removing ~110 lines of duplicated orchestration code
+- The refactoring also cleaned up imports: routes no longer need `updateGenerationStatus`, `notifyClients`, `pollForResults`, etc. — all encapsulated in the helpers
+
+### Task 3.2: Unify polling logic (2026-02-09)
+
+**What was done:**
+- Extracted `PollConfig<TDetails>` interface + `runPollLoop<TDetails>()` generic engine from two near-identical polling functions
+- Both `pollForResults` and `pollForStemSeparationResults` became thin wrappers providing domain-specific callbacks
+- File reduced from 410 to 340 lines; all duplicated retry/timeout/error logic consolidated into the generic engine
+
+**Design decisions:**
+- `onComplete` returns `boolean` (true = stop polling, false = continue) — handles edge case where API status is SUCCESS but response data is incomplete (missing tracks or null `response`)
+- `TDetails extends { code: number; msg: string }` constraint avoids redundant `getResponseCode`/`getResponseMsg` callbacks since both API response types share this shape
+- `getStatus` returns `string | undefined` to handle defensive `?.` access on `details.data` which might be undefined in non-200 responses
+- Single `onError(msg)` callback handles all error paths (API error, status error, timeout, unrecoverable catch) since all paths do the same thing: update DB status to 'error' + notify clients
+- `timeoutMessage` is configurable ("Generation timed out" vs "Stem separation timed out") rather than derived from `label`
+
+**Learnings:**
+- When extracting a generic engine from two domain-specific functions, the key insight is identifying which behaviors are truly common (retry loop, logging, error routing) vs domain-specific (status mapping, data extraction, DB/SSE calls)
+- The `onComplete` → `boolean` pattern is useful when "complete status" doesn't always mean "fully complete" — the domain callback decides
+- Preserving the same exported function signatures means zero downstream changes (callers, recovery functions, api-helpers all unchanged)
+
 **Learnings:**
 - better-sqlite3 `prepare()` parses and compiles SQL each time — caching avoids this overhead on hot paths
 - The `Map` cache approach is simpler than module-level `const stmt = ...` declarations because statements can only be prepared after the DB is initialized (lazy loading)
