@@ -7,6 +7,24 @@ import { createRequire } from 'node:module';
 // Lazy-load the database to avoid loading native module during build
 let _db: BetterSqlite3.Database | null = null;
 
+// Prepared statement cache — avoids re-parsing SQL on every call
+const _stmtCache = new Map<string, BetterSqlite3.Statement>();
+
+/**
+ * Get a cached prepared statement for the given SQL.
+ * If the statement hasn't been prepared yet, it will be prepared and cached.
+ * Use this instead of `getDb().prepare(sql)` for static SQL queries.
+ * For dynamic SQL (e.g., variable placeholder counts), use `getDb().prepare()` directly.
+ */
+export function prepareStmt(sql: string): BetterSqlite3.Statement {
+	let stmt = _stmtCache.get(sql);
+	if (!stmt) {
+		stmt = getDb().prepare(sql);
+		_stmtCache.set(sql, stmt);
+	}
+	return stmt;
+}
+
 function getDatabasePath(): string {
 	if (process.env.DATABASE_PATH) {
 		return process.env.DATABASE_PATH;

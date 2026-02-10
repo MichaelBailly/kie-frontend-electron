@@ -104,7 +104,18 @@ Refactored files:
 
 `src/lib/db.server.ts` was converted to a barrel file (~100 lines) that re-exports everything from the repository modules. All external imports (`from '$lib/db.server'`) continue to work without any changes.
 
-#### Task 2.2: Optimize prepared statements with caching
+#### Task 2.2: Optimize prepared statements with caching ✅
+
+**Status:** Completed  
+**Changes:** Added a `prepareStmt(sql)` caching utility to `database.server.ts` and applied it across all repository modules:
+
+- `src/lib/db/database.server.ts` — Added `prepareStmt()` function with a `Map<string, Statement>` cache that stores compiled prepared statements keyed by SQL string. Statements are prepared once on first use and reused on subsequent calls, avoiding repeated SQL parsing.
+- `src/lib/db/projects.server.ts` — Replaced all 7 `getDb().prepare()` calls with `prepareStmt()`
+- `src/lib/db/generations.server.ts` — Replaced all 17 `getDb().prepare()` calls with `prepareStmt()` (including 3 inline `db.prepare().run()` calls for project timestamp updates)
+- `src/lib/db/stem-separations.server.ts` — Replaced all 9 `getDb().prepare()` calls with `prepareStmt()`
+- `src/lib/db/annotations.server.ts` — Replaced 15 static `getDb().prepare()` calls with `prepareStmt()`. Kept `getDb()` for `db.transaction()` in `setAnnotationLabels` and dynamic SQL in `getLabelsForAnnotationIds` (variable placeholder count)
+- `src/lib/db/settings.server.ts` — Replaced all 4 `getDb().prepare()` calls with `prepareStmt()`
+- `src/lib/db.server.ts` — Added `prepareStmt` to barrel re-exports
 
 ### Phase 3: Pattern Consolidation (Medium Risk) — Days 7-9
 

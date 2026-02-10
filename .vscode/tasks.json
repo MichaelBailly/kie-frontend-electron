@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		}
+	]
+}

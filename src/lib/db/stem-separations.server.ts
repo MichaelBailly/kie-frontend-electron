@@ -1,13 +1,12 @@
 import type { StemSeparationType, StemSeparation } from '$lib/types';
-import { getDb } from './database.server';
+import { prepareStmt } from './database.server';
 
 export function createStemSeparation(
 	generationId: number,
 	audioId: string,
 	type: StemSeparationType
 ): StemSeparation {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		INSERT INTO stem_separations (generation_id, audio_id, type, status)
 		VALUES (?, ?, ?, 'pending')
 		RETURNING *
@@ -16,20 +15,17 @@ export function createStemSeparation(
 }
 
 export function getStemSeparation(id: number): StemSeparation | undefined {
-	const db = getDb();
-	const stmt = db.prepare('SELECT * FROM stem_separations WHERE id = ?');
+	const stmt = prepareStmt('SELECT * FROM stem_separations WHERE id = ?');
 	return stmt.get(id) as StemSeparation | undefined;
 }
 
 export function getStemSeparationByTaskId(taskId: string): StemSeparation | undefined {
-	const db = getDb();
-	const stmt = db.prepare('SELECT * FROM stem_separations WHERE task_id = ?');
+	const stmt = prepareStmt('SELECT * FROM stem_separations WHERE task_id = ?');
 	return stmt.get(taskId) as StemSeparation | undefined;
 }
 
 export function getStemSeparationsForSong(generationId: number, audioId: string): StemSeparation[] {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		SELECT * FROM stem_separations 
 		WHERE generation_id = ? AND audio_id = ?
 		ORDER BY created_at DESC
@@ -42,8 +38,7 @@ export function getStemSeparationByType(
 	audioId: string,
 	type: StemSeparationType
 ): StemSeparation | undefined {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		SELECT * FROM stem_separations 
 		WHERE generation_id = ? AND audio_id = ? AND type = ?
 		ORDER BY created_at DESC
@@ -53,8 +48,7 @@ export function getStemSeparationByType(
 }
 
 export function updateStemSeparationTaskId(id: number, taskId: string): void {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		UPDATE stem_separations 
 		SET task_id = ?, status = 'processing', updated_at = CURRENT_TIMESTAMP 
 		WHERE id = ?
@@ -67,8 +61,7 @@ export function updateStemSeparationStatus(
 	status: string,
 	errorMessage?: string
 ): void {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		UPDATE stem_separations 
 		SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP 
 		WHERE id = ?
@@ -96,8 +89,7 @@ export function completeStemSeparation(
 	},
 	responseData: string
 ): void {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		UPDATE stem_separations SET
 			status = 'success',
 			vocal_url = ?,
@@ -139,8 +131,7 @@ export function completeStemSeparation(
 }
 
 export function getPendingStemSeparations(): StemSeparation[] {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		"SELECT * FROM stem_separations WHERE status IN ('pending', 'processing')"
 	);
 	return stmt.all() as StemSeparation[];

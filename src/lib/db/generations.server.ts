@@ -1,5 +1,5 @@
 import type { Generation } from '$lib/types';
-import { getDb } from './database.server';
+import { prepareStmt } from './database.server';
 
 export function createGeneration(
 	projectId: number,
@@ -7,8 +7,7 @@ export function createGeneration(
 	style: string,
 	lyrics: string
 ): Generation {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at)
 		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL)
 		RETURNING *
@@ -16,7 +15,7 @@ export function createGeneration(
 	const generation = stmt.get(projectId, title, style, lyrics) as Generation;
 
 	// Update project's updated_at
-	db.prepare('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
 
 	return generation;
 }
@@ -30,8 +29,7 @@ export function createExtendGeneration(
 	extendsAudioId: string,
 	continueAt: number
 ): Generation {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at)
 		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
 		RETURNING *
@@ -47,14 +45,13 @@ export function createExtendGeneration(
 	) as Generation;
 
 	// Update project's updated_at
-	db.prepare('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
 
 	return generation;
 }
 
 export function getExtendedGenerations(generationId: number, audioId: string): Generation[] {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		SELECT * FROM generations 
 		WHERE extends_generation_id = ? AND extends_audio_id = ?
 		ORDER BY created_at ASC
@@ -63,44 +60,38 @@ export function getExtendedGenerations(generationId: number, audioId: string): G
 }
 
 export function getGeneration(id: number): Generation | undefined {
-	const db = getDb();
-	const stmt = db.prepare('SELECT * FROM generations WHERE id = ?');
+	const stmt = prepareStmt('SELECT * FROM generations WHERE id = ?');
 	return stmt.get(id) as Generation | undefined;
 }
 
 export function getGenerationByTaskId(taskId: string): Generation | undefined {
-	const db = getDb();
-	const stmt = db.prepare('SELECT * FROM generations WHERE task_id = ?');
+	const stmt = prepareStmt('SELECT * FROM generations WHERE task_id = ?');
 	return stmt.get(taskId) as Generation | undefined;
 }
 
 export function getGenerationsByProject(projectId: number): Generation[] {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		'SELECT * FROM generations WHERE project_id = ? ORDER BY created_at DESC'
 	);
 	return stmt.all(projectId) as Generation[];
 }
 
 export function getLatestGenerationByProject(projectId: number): Generation | undefined {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		'SELECT * FROM generations WHERE project_id = ? ORDER BY created_at DESC LIMIT 1'
 	);
 	return stmt.get(projectId) as Generation | undefined;
 }
 
 export function updateGenerationTaskId(id: number, taskId: string): void {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		'UPDATE generations SET task_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
 	);
 	stmt.run(taskId, 'processing', id);
 }
 
 export function updateGenerationStatus(id: number, status: string, errorMessage?: string): void {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		'UPDATE generations SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
 	);
 	stmt.run(status, errorMessage || null, id);
@@ -124,8 +115,7 @@ export function updateGenerationTracks(
 	},
 	responseData?: string
 ): void {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		UPDATE generations SET
 			track1_stream_url = COALESCE(?, track1_stream_url),
 			track1_audio_url = COALESCE(?, track1_audio_url),
@@ -176,8 +166,7 @@ export function completeGeneration(
 	},
 	responseData: string
 ): void {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		UPDATE generations SET
 			status = ?,
 			track1_stream_url = ?,
@@ -212,14 +201,12 @@ export function completeGeneration(
 }
 
 export function deleteGeneration(id: number): void {
-	const db = getDb();
-	const stmt = db.prepare('DELETE FROM generations WHERE id = ?');
+	const stmt = prepareStmt('DELETE FROM generations WHERE id = ?');
 	stmt.run(id);
 }
 
 export function getPendingGenerations(): Generation[] {
-	const db = getDb();
-	const stmt = db.prepare(
+	const stmt = prepareStmt(
 		"SELECT * FROM generations WHERE status IN ('pending', 'processing', 'text_success', 'first_success')"
 	);
 	return stmt.all() as Generation[];
@@ -247,8 +234,7 @@ export function createImportedGeneration(
 	},
 	responseData: string
 ): Generation {
-	const db = getDb();
-	const stmt = db.prepare(`
+	const stmt = prepareStmt(`
 		INSERT INTO generations (
 			project_id, task_id, title, style, lyrics, status,
 			track1_stream_url, track1_audio_url, track1_image_url, track1_duration, track1_audio_id,
@@ -277,7 +263,7 @@ export function createImportedGeneration(
 	) as Generation;
 
 	// Update project's updated_at
-	db.prepare('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
 
 	return generation;
 }

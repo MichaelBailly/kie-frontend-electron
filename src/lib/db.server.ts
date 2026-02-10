@@ -26,7 +26,7 @@ export type {
 } from '$lib/types';
 
 // Database core
-export { getDb } from './db/database.server';
+export { getDb, prepareStmt } from './db/database.server';
 
 // Project operations
 export {

@@ -83,3 +83,23 @@
 - Private helper functions (like `normalizeLabel`, `getAnnotationRow`, `ensureAnnotationRow`, `getLabelsForAnnotationIds`, `attachLabelsToAnnotations`) stay in their respective repository module — no need to export them
 - The default export (`export default { get instance() { return getDb(); } }`) was preserved in the barrel file even though no consumer uses it, to avoid accidental breakage
 - Heredoc (`<< 'EOF'`) in bash strips tabs with `<<-` but not spaces — using prettier to fix formatting after file generation is more reliable
+
+### Task 2.2: Optimize prepared statements with caching (2026-02-09)
+
+**What was done:**
+- Added `prepareStmt(sql)` helper to `database.server.ts` — uses a `Map<string, BetterSqlite3.Statement>` to cache compiled prepared statements by SQL string
+- Replaced ~52 `getDb().prepare(sql)` calls across all 5 repository modules with `prepareStmt(sql)`
+- Modules that only used `getDb()` for `.prepare()` now import only `prepareStmt` (projects, generations, stem-separations, settings)
+- `annotations.server.ts` imports both `getDb` and `prepareStmt` — needs `getDb()` for `db.transaction()` and for dynamic SQL in `getLabelsForAnnotationIds` (variable placeholder count based on array length)
+- Exported `prepareStmt` from barrel file `db.server.ts` for external consumers
+
+**Design decisions:**
+- Cache key is the raw SQL string — simple and sufficient since we use string literals
+- Dynamic SQL with variable placeholder counts (e.g., `IN (?, ?, ?)`) cannot be cached and still uses `getDb().prepare()` directly
+- `db.transaction()` still requires `getDb()` — `prepareStmt` is only for individual statements
+- Cache lives for the lifetime of the process (same as database connection) — no invalidation needed since `_db` is a singleton
+
+**Learnings:**
+- better-sqlite3 `prepare()` parses and compiles SQL each time — caching avoids this overhead on hot paths
+- The `Map` cache approach is simpler than module-level `const stmt = ...` declarations because statements can only be prepared after the DB is initialized (lazy loading)
+- Keeping `getDb()` accessible is still necessary for transactions and dynamic SQL — don't try to hide it completely
