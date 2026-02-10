@@ -90,7 +90,20 @@ Refactored files:
 
 **Goal:** Break up monolithic database file into focused, maintainable modules
 
-#### Task 2.1: Split db.server.ts into entity repositories
+#### Task 2.1: Split db.server.ts into entity repositories ✅
+
+**Status:** Completed  
+**Changes:** Split the monolithic 924-line `db.server.ts` into focused repository modules under `src/lib/db/`:
+
+- `src/lib/db/database.server.ts` — DB initialization, schema creation, migrations (165 lines)
+- `src/lib/db/projects.server.ts` — Project CRUD operations (48 lines)
+- `src/lib/db/generations.server.ts` — Generation CRUD + tracking + imports (248 lines)
+- `src/lib/db/stem-separations.server.ts` — Stem separation operations (131 lines)
+- `src/lib/db/annotations.server.ts` — Variation annotations + label management (195 lines)
+- `src/lib/db/settings.server.ts` — Settings CRUD + API key helpers (42 lines)
+
+`src/lib/db.server.ts` was converted to a barrel file (~100 lines) that re-exports everything from the repository modules. All external imports (`from '$lib/db.server'`) continue to work without any changes.
+
 #### Task 2.2: Optimize prepared statements with caching
 
 ### Phase 3: Pattern Consolidation (Medium Risk) — Days 7-9

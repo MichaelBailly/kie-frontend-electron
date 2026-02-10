@@ -62,3 +62,24 @@
 - The `requireGeneration(id, 'Parent generation')` label parameter keeps error messages contextual without needing separate helper functions
 - Files that use `error()` from `@sveltejs/kit` only for the helpers no longer need to import it directly — the helpers throw internally
 - The `body` must be destructured AFTER `requireFields` for type safety, but we also need to destructure before for the field names — current pattern destructures before and validates after (same as original code)
+
+### Task 2.1: Split db.server.ts into entity repositories (2026-02-09)
+
+**What was done:**
+- Created `src/lib/db/` directory with 6 focused repository modules:
+  - `database.server.ts` — `getDb()`, schema DDL, WAL mode, `is_open` migration
+  - `projects.server.ts` — `createProject`, `getProject`, `getAllProjects`, `getOpenProjects`, `setProjectOpen`, `updateProjectName`, `deleteProject`
+  - `generations.server.ts` — All generation CRUD, extend, import, pending tracking (14 exported functions)
+  - `stem-separations.server.ts` — All stem separation CRUD and status updates (9 exported functions)
+  - `annotations.server.ts` — Variation annotations, labels, starring, comments (8 exported functions + 5 private helpers)
+  - `settings.server.ts` — Settings CRUD + `getApiKey`/`setApiKey` helpers (6 exported functions)
+- Converted `src/lib/db.server.ts` into a barrel file that re-exports everything from the repository modules
+- All external imports (`from '$lib/db.server'`) remain unchanged — zero downstream breakage
+- Internal repository files import `getDb` from `./database.server` and types from `$lib/types`
+
+**Learnings:**
+- Barrel re-export strategy works well for incremental refactoring — no need to update any consuming files
+- Each repository module imports `getDb` from the sibling `database.server.ts` module using relative paths (`./database.server`)
+- Private helper functions (like `normalizeLabel`, `getAnnotationRow`, `ensureAnnotationRow`, `getLabelsForAnnotationIds`, `attachLabelsToAnnotations`) stay in their respective repository module — no need to export them
+- The default export (`export default { get instance() { return getDb(); } }`) was preserved in the barrel file even though no consumer uses it, to avoid accidental breakage
+- Heredoc (`<< 'EOF'`) in bash strips tabs with `<<-` but not spaces — using prettier to fix formatting after file generation is more reliable
