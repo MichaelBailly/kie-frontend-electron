@@ -65,7 +65,24 @@ Initial analysis identified 10 major refactoring opportunities across different 
 - Updated `polling.server.ts` to import types from `$lib/types` instead of `$lib/db.server`
 - All client-side files already imported from `$lib/types`
 
-#### Task 1.3: Create API validation helpers
+#### Task 1.3: Create API validation helpers ✅
+
+**Status:** Completed  
+**Changes:** Created `src/lib/api-helpers.server.ts` with four reusable validation helpers and refactored 6 API route files to use them:
+
+- `requireFields(body, fields)` — validates required fields, throws 400 with missing field names
+- `requireProject(id)` — fetches project or throws 404
+- `requireGeneration(id, label?)` — fetches generation or throws 404 (with custom label support)
+- `parseIntParam(value, name?)` — safely parses route param as integer, throws 400 on NaN
+- `getErrorMessage(err)` — extracts message from unknown caught value
+
+Refactored files:
+- `api/generations/+server.ts` — `requireFields`, `requireProject`, `getErrorMessage`
+- `api/generations/extend/+server.ts` — `requireFields`, `requireProject`, `requireGeneration`, `getErrorMessage`
+- `api/generations/[id]/+server.ts` — `parseIntParam`, `requireGeneration`
+- `api/generations/[id]/annotations/+server.ts` — `parseIntParam`, `requireGeneration`
+- `api/projects/[id]/+server.ts` — `parseIntParam`, `requireProject`
+- `api/stem-separation/+server.ts` — `requireFields`, `requireGeneration`, `getErrorMessage`
 
 ---
 

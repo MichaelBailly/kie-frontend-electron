@@ -1,25 +1,18 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getGeneration, deleteGeneration } from '$lib/db.server';
+import { deleteGeneration } from '$lib/db.server';
+import { parseIntParam, requireGeneration } from '$lib/api-helpers.server';
 
 export const GET: RequestHandler = async ({ params }) => {
-	const id = parseInt(params.id);
-	const generation = getGeneration(id);
-
-	if (!generation) {
-		throw error(404, 'Generation not found');
-	}
+	const id = parseIntParam(params.id);
+	const generation = requireGeneration(id);
 
 	return json(generation);
 };
 
 export const DELETE: RequestHandler = async ({ params }) => {
-	const id = parseInt(params.id);
-
-	const generation = getGeneration(id);
-	if (!generation) {
-		throw error(404, 'Generation not found');
-	}
+	const id = parseIntParam(params.id);
+	requireGeneration(id);
 
 	deleteGeneration(id);
 	return json({ success: true });

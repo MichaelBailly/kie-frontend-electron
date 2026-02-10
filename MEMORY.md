@@ -36,3 +36,29 @@
 - Types are defined in `$lib/types.ts` (canonical location)
 - `db.server.ts` re-exports types from `types.ts` for backward compatibility
 - Uncommitted changes exist for Task 1.2 (type deduplication from `db.server.ts` to `types.ts`)
+
+### Task 1.3: Create API validation helpers (2026-02-09)
+
+**What was done:**
+- Created `src/lib/api-helpers.server.ts` with five shared helpers:
+  - `requireFields(body, fields)` — validates required fields are truthy, throws 400 listing missing ones
+  - `requireProject(id)` — returns Project or throws 404
+  - `requireGeneration(id, label?)` — returns Generation or throws 404 (custom label for "Parent generation")
+  - `parseIntParam(value, name?)` — safe parseInt with 400 on NaN
+  - `getErrorMessage(err)` — `err instanceof Error ? err.message : 'Unknown error'`
+- Refactored 6 API route files (generations, extend, [id], annotations, projects/[id], stem-separation)
+- Removed direct `getProject`/`getGeneration` imports from routes that only used them for existence checks
+- Removed unused `import { error }` from routes that no longer throw directly
+
+**Patterns identified but NOT extracted (too specific):**
+- `api/labels/+server.ts` — limit/query validation is unique to that route
+- `api/settings/+server.ts` — no validation needed (simple GET/PUT)
+- `api/settings/validate/+server.ts` — unique API key validation logic
+- `api/import/+server.ts` — already has its own local type guards (complex import flow)
+- `api/sse/+server.ts` — no validation needed (SSE stream)
+
+**Learnings:**
+- `requireFields` uses truthiness check (`!body[f]`), same as original code — `0` and `""` are considered missing, which is correct for string/id fields
+- The `requireGeneration(id, 'Parent generation')` label parameter keeps error messages contextual without needing separate helper functions
+- Files that use `error()` from `@sveltejs/kit` only for the helpers no longer need to import it directly — the helpers throw internally
+- The `body` must be destructured AFTER `requireFields` for type safety, but we also need to destructure before for the field names — current pattern destructures before and validates after (same as original code)

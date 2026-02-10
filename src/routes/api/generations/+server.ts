@@ -1,26 +1,16 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	createGeneration,
-	updateGenerationTaskId,
-	updateGenerationStatus,
-	getProject
-} from '$lib/db.server';
+import { createGeneration, updateGenerationTaskId, updateGenerationStatus } from '$lib/db.server';
 import { generateMusic } from '$lib/kie-api.server';
 import { notifyClients } from '$lib/sse.server';
 import { pollForResults } from '$lib/polling.server';
+import { requireFields, requireProject, getErrorMessage } from '$lib/api-helpers.server';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const { projectId, title, style, lyrics } = await request.json();
-
-	if (!projectId || !title || !style || !lyrics) {
-		throw error(400, 'Missing required fields');
-	}
-
-	const project = getProject(projectId);
-	if (!project) {
-		throw error(404, 'Project not found');
-	}
+	const body = await request.json();
+	const { projectId, title, style, lyrics } = body;
+	requireFields(body, ['projectId', 'title', 'style', 'lyrics']);
+	requireProject(projectId);
 
 	// Create generation record
 	const generation = createGeneration(projectId, title, style, lyrics);
@@ -61,7 +51,7 @@ async function startGeneration(generationId: number, title: string, style: strin
 		// Start polling for results
 		pollForResults(generationId, taskId);
 	} catch (err) {
-		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		const errorMessage = getErrorMessage(err);
 		updateGenerationStatus(generationId, 'error', errorMessage);
 		notifyClients(generationId, 'generation_error', {
 			status: 'error',

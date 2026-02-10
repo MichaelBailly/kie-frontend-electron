@@ -1,19 +1,11 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	getProject,
-	updateProjectName,
-	setProjectOpen,
-	getGenerationsByProject
-} from '$lib/db.server';
+import { updateProjectName, setProjectOpen, getGenerationsByProject } from '$lib/db.server';
+import { parseIntParam, requireProject } from '$lib/api-helpers.server';
 
 export const GET: RequestHandler = async ({ params }) => {
-	const id = parseInt(params.id);
-	const project = getProject(id);
-
-	if (!project) {
-		throw error(404, 'Project not found');
-	}
+	const id = parseIntParam(params.id);
+	const project = requireProject(id);
 
 	const generations = getGenerationsByProject(id);
 
@@ -21,13 +13,10 @@ export const GET: RequestHandler = async ({ params }) => {
 };
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
-	const id = parseInt(params.id);
+	const id = parseIntParam(params.id);
 	const body = await request.json();
 
-	const project = getProject(id);
-	if (!project) {
-		throw error(404, 'Project not found');
-	}
+	requireProject(id);
 
 	// Update name if provided
 	if (body.name !== undefined) {

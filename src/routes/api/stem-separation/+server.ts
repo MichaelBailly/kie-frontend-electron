@@ -3,7 +3,6 @@ import type { RequestHandler } from './$types';
 import {
 	createStemSeparation,
 	getStemSeparationByType,
-	getGeneration,
 	updateStemSeparationTaskId,
 	updateStemSeparationStatus,
 	type StemSeparationType
@@ -11,22 +10,19 @@ import {
 import { separateVocals } from '$lib/kie-api.server';
 import { notifyStemSeparationClients } from '$lib/sse.server';
 import { pollForStemSeparationResults } from '$lib/polling.server';
+import { requireFields, requireGeneration, getErrorMessage } from '$lib/api-helpers.server';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const { generationId, audioId, type } = await request.json();
+	const body = await request.json();
+	const { generationId, audioId, type } = body;
 
-	if (!generationId || !audioId || !type) {
-		throw error(400, 'Missing required fields: generationId, audioId, type');
-	}
+	requireFields(body, ['generationId', 'audioId', 'type']);
 
 	if (type !== 'separate_vocal' && type !== 'split_stem') {
 		throw error(400, 'Invalid type. Must be "separate_vocal" or "split_stem"');
 	}
 
-	const generation = getGeneration(generationId);
-	if (!generation) {
-		throw error(404, 'Generation not found');
-	}
+	const generation = requireGeneration(generationId);
 
 	if (!generation.task_id) {
 		throw error(400, 'Generation has no task_id - it may still be processing');
@@ -89,7 +85,7 @@ async function startStemSeparation(
 		// Start polling for results
 		pollForStemSeparationResults(separationId, stemTaskId, generationId, audioId);
 	} catch (err) {
-		const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		const errorMessage = getErrorMessage(err);
 		updateStemSeparationStatus(separationId, 'error', errorMessage);
 		notifyStemSeparationClients(separationId, generationId, audioId, 'stem_separation_error', {
 			status: 'error',

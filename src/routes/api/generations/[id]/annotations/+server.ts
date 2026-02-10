@@ -1,26 +1,18 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	getAnnotation,
-	getGeneration,
-	setAnnotationLabels,
-	toggleStar,
-	updateComment
-} from '$lib/db.server';
+import { getAnnotation, setAnnotationLabels, toggleStar, updateComment } from '$lib/db.server';
 import { notifyAnnotationClients } from '$lib/sse.server';
+import { parseIntParam, requireGeneration } from '$lib/api-helpers.server';
 
 export const GET: RequestHandler = async ({ params, url }) => {
-	const generationId = parseInt(params.id);
+	const generationId = parseIntParam(params.id);
 	const audioId = url.searchParams.get('audioId');
 
 	if (!audioId) {
 		throw error(400, 'audioId query parameter is required');
 	}
 
-	const generation = getGeneration(generationId);
-	if (!generation) {
-		throw error(404, 'Generation not found');
-	}
+	requireGeneration(generationId);
 
 	const annotation = getAnnotation(generationId, audioId);
 	return json(
@@ -35,7 +27,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 };
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
-	const generationId = parseInt(params.id);
+	const generationId = parseIntParam(params.id);
 	const body = await request.json();
 	const { audioId, action, comment } = body as {
 		audioId: string;
@@ -48,10 +40,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		throw error(400, 'audioId is required');
 	}
 
-	const generation = getGeneration(generationId);
-	if (!generation) {
-		throw error(404, 'Generation not found');
-	}
+	const generation = requireGeneration(generationId);
 
 	// Validate audioId belongs to this generation
 	if (audioId !== generation.track1_audio_id && audioId !== generation.track2_audio_id) {
