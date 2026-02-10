@@ -224,7 +224,34 @@ Also fixed 40 pre-existing svelte-check errors from Task 4.1:
 - `helpers.ts`: Replaced non-existent `vi.runAllTicksAsync()` with `vi.advanceTimersByTimeAsync()`
 - `mocks.ts`: Replaced `ReturnType<typeof vi.fn>` (non-callable union type) with `MockFn = Mock<(...args: any[]) => any>` type alias in all mock interfaces
 
-#### Task 4.4: Add polling logic tests
+#### Task 4.4: Add polling logic tests ✅
+
+**Status:** Completed  
+**Changes:** Created `src/lib/polling.spec.ts` with 14 tests covering the polling engine, recovery functions, and error handling:
+
+- `pollForResults` — 6 tests:
+  - Successful generation completion (SUCCESS status with 2 tracks → `completeGeneration` + SSE notification)
+  - Error status handling (CREATE_TASK_FAILED → `updateGenerationStatus('error')` + SSE error)
+  - API error (non-200 code → error propagation)
+  - Intermediate PENDING status → continues polling, updates to 'processing'
+  - Fetch exception → retries on next interval, succeeds on retry
+  - SUCCESS with missing tracks (only 1 track) → `onComplete` returns false, continues polling
+
+- `recoverIncompleteGenerations` — 3 tests:
+  - Marks generations without task_id as error
+  - Resumes polling for generations with task_id
+  - Does nothing for empty array
+
+- `pollForStemSeparationResults` — 2 tests:
+  - Successful stem separation completion (SUCCESS → `completeStemSeparation` + SSE)
+  - Error status handling (CREATE_TASK_FAILED → error + SSE error)
+
+- `recoverIncompleteStemSeparations` — 3 tests:
+  - Marks separations without task_id as error
+  - Resumes polling for separations with task_id
+  - Does nothing for empty array
+
+Uses `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync(5000)` to control the polling interval. Mocks: `$lib/kie-api.server` (with real status-check logic), `$lib/db.server` (vi.fn stubs), `$lib/sse.server` (vi.fn stubs).
 
 ---
 

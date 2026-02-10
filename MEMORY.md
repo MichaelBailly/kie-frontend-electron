@@ -264,3 +264,24 @@ it('test', async () => {
 - Fixed pre-existing svelte-check errors (40 total) in test-utils from Task 4.1:
   - `helpers.ts`: `vi.runAllTicksAsync()` doesn't exist in Vitest 4.x — replaced with `vi.advanceTimersByTimeAsync(0)` which advances timers AND flushes microtasks
   - `mocks.ts`: `ReturnType<typeof vi.fn>` resolves to `Mock<Procedure | Constructable>` — a union type that TypeScript considers non-callable. Fixed by introducing `MockFn = Mock<(...args: any[]) => any>` type alias (constrains to plain function signature) and replacing all interface/cast usages
+
+### Task 4.4: Add polling logic tests (2026-02-09)
+
+**What was done:**
+- Created `src/lib/polling.spec.ts` with 14 tests covering `pollForResults`, `pollForStemSeparationResults`, `recoverIncompleteGenerations`, and `recoverIncompleteStemSeparations`
+- Uses `vi.useFakeTimers()` + `vi.advanceTimersByTimeAsync()` to control the 5-second polling interval
+- Mocks `$lib/kie-api.server` with real status-check logic (isErrorStatus, isCompleteStatus uses actual logic), `$lib/db.server` and `$lib/sse.server` with `vi.fn()` stubs
+- Tests cover: successful completion (both generation and stem separation), error status handling, non-200 API responses, intermediate PENDING → processing flow, fetch exception retry, SUCCESS with incomplete data (missing track2), and recovery functions (with/without task_id, empty arrays)
+
+**Testing strategy:**
+- Direct module mocking with `vi.mock()` — simpler than the mock factory pattern since polling tests only need specific functions, not full DB stores
+- KIE API status checkers use real logic so the polling engine routes to correct callbacks
+- `vi.advanceTimersByTimeAsync(0)` flushes the initial async `poll()` call; `vi.advanceTimersByTimeAsync(5000)` triggers the next `setTimeout(poll, 5000)` interval
+- `vi.mocked()` wrapper for type-safe mock setup (e.g., `vi.mocked(getMusicDetails).mockResolvedValue(...)`)
+
+**Learnings:**
+- The polling engine calls `poll()` immediately (not after a delay), so `vi.advanceTimersByTimeAsync(0)` is needed after `pollForResults()` to flush that initial async call
+- `runPollLoop` is private (not exported), so tests exercise it indirectly through `pollForResults` and `pollForStemSeparationResults`
+- `onComplete` returning `false` (e.g., when only 1 of 2 tracks is present) causes the engine to continue polling — this is testable by providing incomplete SUCCESS data first, then complete data on the next poll
+- `MusicDetailsResponse` type must be explicitly imported (via `import type`) for the `as MusicDetailsResponse` cast in non-200 API test — fixture types don't re-export the raw response interfaces
+- Recovery functions are synchronous wrappers that either immediately call `updateGenerationStatus('error')` or fire-and-forget `pollForResults(...)` — testing both paths is straightforward
