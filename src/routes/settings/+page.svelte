@@ -115,7 +115,7 @@
 	<title>Settings - KIE Music</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950">
+<div class="min-h-screen bg-linear-to-br from-gray-900 via-gray-900 to-indigo-950">
 	<!-- Header -->
 	<header class="border-b border-white/10 bg-black/20 backdrop-blur-sm">
 		<div class="mx-auto max-w-3xl px-6 py-8">
@@ -148,11 +148,11 @@
 		<section class="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
 			<!-- Section Header -->
 			<div
-				class="border-b border-white/10 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 px-6 py-5"
+				class="border-b border-white/10 bg-linear-to-r from-indigo-500/10 to-purple-500/10 px-6 py-5"
 			>
 				<div class="flex items-start gap-4">
 					<div
-						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25"
+						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25"
 					>
 						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -383,7 +383,7 @@
 						<button
 							onclick={saveApiKey}
 							disabled={isSaving || (!apiKey.trim() && !hasExistingKey)}
-							class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-indigo-500/25"
+							class="flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-indigo-500/25"
 						>
 							{#if isSaving}
 								<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -454,7 +454,7 @@
 			</div>
 
 			<!-- Section Footer -->
-			<div class="border-t border-white/10 bg-white/[0.02] px-6 py-4">
+			<div class="border-t border-white/10 bg-white/2 px-6 py-4">
 				<p class="text-xs text-gray-500">
 					Your API key is stored locally and never sent to any server except kie.ai. Keep it safe
 					and don't share it with others.

@@ -3,6 +3,7 @@
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import LabelPicker from './LabelPicker.svelte';
+	import ParentSongBanner from './ParentSongBanner.svelte';
 	import { getContext } from 'svelte';
 	import { resolve } from '$app/paths';
 
@@ -81,22 +82,14 @@
 			{generation.title}
 		</h2>
 		{#if parentGeneration && parentSong}
-			<a
-				href={resolve(
-					`/projects/${generation.project_id}/generations/${parentGeneration.id}/song/${parentSong.id}`
-				)}
-				class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-purple-100 px-3 py-1.5 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-800/40"
-			>
-				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 7l5 5m0 0l-5 5m5-5H6"
-					/>
-				</svg>
-				Extends from: {parentSong.title}
-			</a>
+			<ParentSongBanner
+				parentGenerationId={parentGeneration.id}
+				parentGenerationProjectId={generation.project_id}
+				parentSongId={parentSong.id}
+				parentSongTitle={parentSong.title}
+				continueAt={null}
+				variant="compact"
+			/>
 		{/if}
 		{#if isGenerating(generation.status)}
 			<div class="mt-2 flex items-center gap-2">
@@ -183,7 +176,7 @@
 									href={resolve(
 										`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track1_audio_id}`
 									)}
-									class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+									class="shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 								>
 									Variation 1
 								</a>
@@ -193,7 +186,7 @@
 							{#if generation.track1_audio_id}
 								<button
 									onclick={() => toggleTrackStar(1)}
-									class="flex-shrink-0 cursor-pointer rounded p-0.5 transition-colors {track1Starred
+									class="shrink-0 cursor-pointer rounded p-0.5 transition-colors {track1Starred
 										? 'text-amber-500 hover:text-amber-600'
 										: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 									title={track1Starred ? 'Unstar variation' : 'Star variation'}
@@ -240,7 +233,7 @@
 										href={resolve(
 											`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track2_audio_id}`
 										)}
-										class="flex-shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+										class="shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
 									>
 										Variation 2
 									</a>
@@ -250,7 +243,7 @@
 								{#if generation.track2_audio_id}
 									<button
 										onclick={() => toggleTrackStar(2)}
-										class="flex-shrink-0 cursor-pointer rounded p-0.5 transition-colors {track2Starred
+										class="shrink-0 cursor-pointer rounded p-0.5 transition-colors {track2Starred
 											? 'text-amber-500 hover:text-amber-600'
 											: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
 										title={track2Starred ? 'Unstar variation' : 'Star variation'}

@@ -1,9 +1,14 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import Waveform from '$lib/components/Waveform.svelte';
-	import ExtendSongForm from '$lib/components/ExtendSongForm.svelte';
-	import StemPlayer from '$lib/components/StemPlayer.svelte';
-	import LabelPicker from '$lib/components/LabelPicker.svelte';
+	import CoverArtPanel from '$lib/components/CoverArtPanel.svelte';
+	import ExtendedGenerationsList from '$lib/components/ExtendedGenerationsList.svelte';
+	import ParentSongBanner from '$lib/components/ParentSongBanner.svelte';
+	import SongDetailsPanels from '$lib/components/SongDetailsPanels.svelte';
+	import SongExtendSection from '$lib/components/SongExtendSection.svelte';
+	import SongHeader from '$lib/components/SongHeader.svelte';
+	import SongNotesPanel from '$lib/components/SongNotesPanel.svelte';
+	import SongPlaybackPanel from '$lib/components/SongPlaybackPanel.svelte';
+	import StemSeparationResults from '$lib/components/StemSeparationResults.svelte';
 	import { getContext } from 'svelte';
 	import type {
 		Generation,
@@ -11,7 +16,8 @@
 		StemSeparationType,
 		VariationAnnotation
 	} from '$lib/types';
-	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
+	import { audioStore } from '$lib/stores/audio.svelte';
+	import { buildAudioTrack } from '$lib/utils/audio';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 
@@ -92,29 +98,12 @@
 	let currentTime = $derived(isCurrentTrack ? audioStore.currentTime : 0);
 	let duration = $derived(isCurrentTrack ? audioStore.duration : song.duration || 0);
 
-	let lyricsExpanded = $state(false);
-	let styleExpanded = $state(false);
-	let lyricsCopied = $state(false);
-	let styleCopied = $state(false);
 	let showExtendForm = $state(false);
 
 	// Annotation (star/comment) state
-	let starred = $state(false);
-	let comment = $state('');
-	let commentDraft = $state('');
-	let notesExpanded = $state(false);
+	let starredOverride = $state<boolean | null>(null);
+	let starred = $derived.by(() => starredOverride ?? currentAnnotation?.starred === 1);
 	let starAnimClass = $state('');
-	let commentSaving = $state(false);
-	let commentSaved = $state(false);
-	let commentCharCount = $derived(commentDraft.length);
-
-	// Initialize and reset annotation state when navigating to a different song
-	$effect(() => {
-		starred = data.annotation?.starred === 1;
-		comment = data.annotation?.comment ?? '';
-		commentDraft = data.annotation?.comment ?? '';
-		notesExpanded = !!data.annotation?.comment;
-	});
 
 	// Listen for SSE annotation updates
 	const annotationsContext = getContext<
@@ -128,24 +117,22 @@
 		annotationsContext?.get(generation.id, song.id)?.labels ?? data.annotation?.labels ?? []
 	);
 
+	let currentAnnotation = $derived(
+		annotationsContext?.get(generation.id, song.id) ?? data.annotation ?? null
+	);
+
 	$effect(() => {
-		if (annotationsContext) {
-			const liveAnnotation = annotationsContext.get(generation.id, song.id);
-			if (liveAnnotation) {
-				starred = liveAnnotation.starred === 1;
-				comment = liveAnnotation.comment ?? '';
-				if (commentDraft === (data.annotation?.comment ?? '')) {
-					// Only update draft if user hasn't started editing
-					commentDraft = liveAnnotation.comment ?? '';
-				}
-			}
+		if (starredOverride === null) return;
+		const liveStarred = currentAnnotation?.starred === 1;
+		if (liveStarred === starredOverride) {
+			starredOverride = null;
 		}
 	});
 
 	async function handleToggleStar() {
 		const wasStarred = starred;
-		starred = !starred;
-		starAnimClass = starred ? 'star-burst' : 'star-unstar';
+		starredOverride = !starred;
+		starAnimClass = !wasStarred ? 'star-burst' : 'star-unstar';
 		setTimeout(() => (starAnimClass = ''), 600);
 
 		try {
@@ -155,34 +142,7 @@
 				body: JSON.stringify({ audioId: song.id, action: 'toggle_star' })
 			});
 		} catch {
-			starred = wasStarred;
-		}
-	}
-
-	let commentDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-	function handleCommentInput() {
-		if (commentDebounceTimer) clearTimeout(commentDebounceTimer);
-		commentDebounceTimer = setTimeout(() => saveComment(), 800);
-	}
-
-	async function saveComment() {
-		if (commentDraft === comment) return;
-		commentSaving = true;
-
-		try {
-			await fetch(`/api/generations/${generation.id}/annotations`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ audioId: song.id, comment: commentDraft })
-			});
-			comment = commentDraft;
-			commentSaved = true;
-			setTimeout(() => (commentSaved = false), 2000);
-		} catch {
-			console.error('Failed to save comment');
-		} finally {
-			commentSaving = false;
+			starredOverride = wasStarred;
 		}
 	}
 
@@ -191,17 +151,7 @@
 			audioStore.seek(time);
 		} else {
 			// Start playing from this position
-			const track: AudioTrack = {
-				id: song.id,
-				generationId: generation.id,
-				projectId: generation.project_id,
-				title: song.title,
-				imageUrl: song.imageUrl,
-				streamUrl: song.streamUrl,
-				audioUrl: song.audioUrl,
-				duration: song.duration
-			};
-			audioStore.play(track);
+			audioStore.play(buildAudioTrack(generation, song));
 			// Small delay to ensure audio is loaded, then seek
 			setTimeout(() => audioStore.seek(time), 100);
 		}
@@ -211,17 +161,7 @@
 		if (isCurrentTrack) {
 			audioStore.toggle();
 		} else {
-			const track: AudioTrack = {
-				id: song.id,
-				generationId: generation.id,
-				projectId: generation.project_id,
-				title: song.title,
-				imageUrl: song.imageUrl,
-				streamUrl: song.streamUrl,
-				audioUrl: song.audioUrl,
-				duration: song.duration
-			};
-			audioStore.play(track);
+			audioStore.play(buildAudioTrack(generation, song));
 		}
 	}
 
@@ -230,21 +170,6 @@
 		const time = parseFloat(target.value);
 		if (isCurrentTrack) {
 			audioStore.seek(time);
-		}
-	}
-
-	async function copyToClipboard(text: string, type: 'lyrics' | 'style') {
-		try {
-			await navigator.clipboard.writeText(text);
-			if (type === 'lyrics') {
-				lyricsCopied = true;
-				setTimeout(() => (lyricsCopied = false), 2000);
-			} else {
-				styleCopied = true;
-				setTimeout(() => (styleCopied = false), 2000);
-			}
-		} catch (err) {
-			console.error('Failed to copy:', err);
 		}
 	}
 
@@ -281,12 +206,6 @@
 		} else {
 			console.error('Failed to create extend generation');
 		}
-	}
-
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	}
 
 	// Stem separation helpers
@@ -341,728 +260,71 @@
 </script>
 
 <div class="mx-auto max-w-5xl p-6">
-	<!-- Header with back navigation -->
-	<div class="mb-6">
-		<a
-			href={resolve('/projects/[projectId]/generations/[generationId]', {
-				projectId: String(data.generation.project_id),
-				generationId: String(data.generation.id)
-			})}
-			class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-		>
-			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-			</svg>
-			Back to generation
-		</a>
-	</div>
-
 	<!-- Parent song link (if this is an extended song) -->
 	{#if data.parentGeneration && data.parentSong}
-		<div
-			class="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/30"
-		>
-			<div class="flex items-center gap-2">
-				<svg
-					class="h-5 w-5 text-purple-600 dark:text-purple-400"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
-					/>
-				</svg>
-				<span class="text-sm text-purple-700 dark:text-purple-300">
-					Extended from
-					<a
-						href={resolve('/projects/[projectId]/generations/[generationId]/song/[songId]', {
-							projectId: String(data.parentGeneration.project_id),
-							generationId: String(data.parentGeneration.id),
-							songId: String(data.parentSong.id)
-						})}
-						class="font-medium underline hover:text-purple-900 dark:hover:text-purple-100"
-					>
-						{data.parentSong.title}
-					</a>
-					{#if data.continueAt}
-						<span class="text-purple-600 dark:text-purple-400">
-							at {formatTime(data.continueAt)}
-						</span>
-					{/if}
-				</span>
-			</div>
-		</div>
+		<ParentSongBanner
+			parentGenerationId={data.parentGeneration.id}
+			parentGenerationProjectId={data.parentGeneration.project_id}
+			parentSongId={data.parentSong.id}
+			parentSongTitle={data.parentSong.title}
+			continueAt={data.continueAt ?? null}
+		/>
 	{/if}
 
-	<!-- Song title -->
-	<div class="mb-6">
-		<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-			{song.title}
-		</h1>
-		<div class="mt-3 max-w-2xl">
-			<LabelPicker
-				labels={liveLabels}
-				generationId={generation.id}
-				audioId={song.id}
-				placeholder="Add a label to this variation"
-			/>
-		</div>
-	</div>
+	<SongHeader
+		projectId={data.generation.project_id}
+		generationId={data.generation.id}
+		title={song.title}
+		labels={liveLabels}
+		audioId={song.id}
+	/>
 
 	<!-- Audio player and Waveform - PRIMARY FOCUS -->
-	<div class="mb-10">
-		{#if song.streamUrl || song.audioUrl}
-			<!-- Waveform - MAIN FOCUS -->
-			<div
-				class="mb-6 rounded-xl border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-			>
-				<Waveform
-					audioUrl={song.audioUrl || song.streamUrl || ''}
-					height={160}
-					{currentTime}
-					{duration}
-					color="#6366f1"
-					backgroundColor="#e5e7eb"
-					onSeek={handleWaveformSeek}
-				/>
-			</div>
+	<SongPlaybackPanel
+		{song}
+		{currentTime}
+		{duration}
+		{isPlaying}
+		onPlayPause={handlePlayPause}
+		onSeek={handleSeek}
+		onWaveformSeek={handleWaveformSeek}
+		{starred}
+		{starAnimClass}
+		onToggleStar={handleToggleStar}
+		onToggleExtend={() => (showExtendForm = !showExtendForm)}
+		{showStemOptions}
+		onToggleStemOptions={() => (showStemOptions = !showStemOptions)}
+		{separatingType}
+		hasVocalSeparation={!!vocalSeparation}
+		hasStemSeparation={!!stemSeparation}
+		pendingVocalSeparation={!!pendingVocalSeparation}
+		pendingStemSeparation={!!pendingStemSeparation}
+		onRequestStemSeparation={requestStemSeparation}
+	/>
 
-			<!-- Playback Controls -->
-			<div
-				class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
-			>
-				<div class="flex items-center justify-center gap-6">
-					<button
-						onclick={handlePlayPause}
-						class="flex h-16 w-16 shrink-0 cursor-pointer items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all hover:scale-105 hover:bg-indigo-700"
-					>
-						{#if !isPlaying}
-							<svg class="h-8 w-8 pl-1" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M8 5v14l11-7z" />
-							</svg>
-						{:else}
-							<svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-							</svg>
-						{/if}
-					</button>
+	<SongExtendSection
+		show={showExtendForm}
+		{generation}
+		{song}
+		onExtend={handleExtend}
+		onCancel={() => (showExtendForm = false)}
+	/>
 
-					<div class="flex flex-1 items-center gap-3">
-						<span class="w-14 text-right text-sm font-medium text-gray-600 dark:text-gray-300">
-							{Math.floor(currentTime / 60)}:{String(Math.floor(currentTime % 60)).padStart(2, '0')}
-						</span>
-						<input
-							type="range"
-							min="0"
-							max={duration || 100}
-							value={currentTime}
-							oninput={handleSeek}
-							class="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-gray-200 accent-indigo-600 dark:bg-gray-700"
-						/>
-						<span class="w-14 text-sm font-medium text-gray-600 dark:text-gray-300">
-							{Math.floor(duration / 60)}:{String(Math.floor(duration % 60)).padStart(2, '0')}
-						</span>
-					</div>
+	<StemSeparationResults
+		{vocalSeparation}
+		{stemSeparation}
+		{pendingVocalSeparation}
+		{pendingStemSeparation}
+	/>
 
-					{#if song.audioUrl}
-						<a
-							href={song.audioUrl}
-							rel="external"
-							download="{song.title}.mp3"
-							class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-							title="Download track"
-						>
-							<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-								/>
-							</svg>
-						</a>
-					{/if}
+	<ExtendedGenerationsList extendedGenerations={data.extendedGenerations ?? []} />
 
-					<!-- Star / Favorite Button -->
-					<button
-						onclick={handleToggleStar}
-						class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all duration-200 {starred
-							? 'bg-amber-100 text-amber-500 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-900'
-							: 'bg-gray-100 text-gray-400 hover:bg-amber-50 hover:text-amber-400 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-amber-400'}"
-						title={starred ? 'Remove from starred' : 'Star this variation'}
-					>
-						<svg
-							class="h-5 w-5 {starAnimClass}"
-							fill={starred ? 'currentColor' : 'none'}
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-							/>
-						</svg>
-					</button>
-
-					<!-- Extend Song Button -->
-					<button
-						onclick={() => (showExtendForm = !showExtendForm)}
-						class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-purple-100 text-purple-600 transition-colors hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-400 dark:hover:bg-purple-900"
-						title="Extend song"
-					>
-						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M13 5l7 7-7 7M5 5l7 7-7 7"
-							/>
-						</svg>
-					</button>
-
-					<!-- Stem Separation Button -->
-					<div class="relative">
-						<button
-							onclick={() => (showStemOptions = !showStemOptions)}
-							disabled={separatingType !== null}
-							class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-cyan-100 text-cyan-600 transition-colors hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-900/50 dark:text-cyan-400 dark:hover:bg-cyan-900"
-							title="Stem Separation"
-						>
-							{#if separatingType !== null || pendingVocalSeparation || pendingStemSeparation}
-								<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-									<circle
-										class="opacity-25"
-										cx="12"
-										cy="12"
-										r="10"
-										stroke="currentColor"
-										stroke-width="4"
-									></circle>
-									<path
-										class="opacity-75"
-										fill="currentColor"
-										d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-									></path>
-								</svg>
-							{:else}
-								<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-									/>
-								</svg>
-							{/if}
-						</button>
-
-						<!-- Dropdown menu -->
-						{#if showStemOptions}
-							<div
-								class="absolute top-14 right-0 z-10 w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800"
-							>
-								<div class="mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-									Separate Stems
-								</div>
-								<div class="space-y-2">
-									<button
-										onclick={() => requestStemSeparation('separate_vocal')}
-										disabled={!!vocalSeparation || !!pendingVocalSeparation}
-										class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-700"
-									>
-										<span class="text-xl">🎤</span>
-										<div>
-											<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												Vocals + Instrumental
-											</div>
-											<div class="text-xs text-gray-500 dark:text-gray-400">
-												{#if vocalSeparation}
-													✓ Already separated
-												{:else if pendingVocalSeparation}
-													Processing...
-												{:else}
-													Separate vocals from backing track
-												{/if}
-											</div>
-										</div>
-									</button>
-									<button
-										onclick={() => requestStemSeparation('split_stem')}
-										disabled={!!stemSeparation || !!pendingStemSeparation}
-										class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-700"
-									>
-										<span class="text-xl">🎛️</span>
-										<div>
-											<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
-												Full Stem Split
-											</div>
-											<div class="text-xs text-gray-500 dark:text-gray-400">
-												{#if stemSeparation}
-													✓ Already separated
-												{:else if pendingStemSeparation}
-													Processing...
-												{:else}
-													Drums, bass, guitar, keys, etc.
-												{/if}
-											</div>
-										</div>
-									</button>
-								</div>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
-		{:else}
-			<div
-				class="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-700 dark:bg-gray-800"
-			>
-				<p class="text-gray-600 dark:text-gray-400">Audio not yet available</p>
-			</div>
-		{/if}
-	</div>
-
-	<!-- Extend Song Form -->
-	{#if showExtendForm}
-		<div class="mb-10">
-			<ExtendSongForm
-				{generation}
-				{song}
-				onExtend={handleExtend}
-				onCancel={() => (showExtendForm = false)}
-			/>
-		</div>
-	{/if}
-
-	<!-- Stem Separation Results -->
-	{#if vocalSeparation || stemSeparation || pendingVocalSeparation || pendingStemSeparation}
-		<div class="mb-10 space-y-4">
-			<!-- Vocal Separation (Vocals + Instrumental) -->
-			{#if vocalSeparation}
-				<div
-					class="rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-800 dark:bg-cyan-900/30"
-				>
-					<h3 class="mb-4 flex items-center gap-2 font-semibold text-cyan-900 dark:text-cyan-100">
-						<span class="text-xl">🎤</span>
-						Vocals + Instrumental
-					</h3>
-					<StemPlayer separation={vocalSeparation} />
-				</div>
-			{:else if pendingVocalSeparation}
-				<div
-					class="rounded-xl border border-cyan-200 bg-cyan-50 p-4 dark:border-cyan-800 dark:bg-cyan-900/30"
-				>
-					<h3 class="flex items-center gap-2 font-semibold text-cyan-900 dark:text-cyan-100">
-						<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						Separating Vocals + Instrumental...
-					</h3>
-					<p class="mt-2 text-sm text-cyan-700 dark:text-cyan-300">
-						This usually takes 1-2 minutes. You can leave this page and come back later.
-					</p>
-				</div>
-			{/if}
-
-			<!-- Full Stem Split -->
-			{#if stemSeparation}
-				<div
-					class="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-4 dark:border-fuchsia-800 dark:bg-fuchsia-900/30"
-				>
-					<h3
-						class="mb-4 flex items-center gap-2 font-semibold text-fuchsia-900 dark:text-fuchsia-100"
-					>
-						<span class="text-xl">🎛️</span>
-						Full Stem Split
-					</h3>
-					<StemPlayer separation={stemSeparation} />
-				</div>
-			{:else if pendingStemSeparation}
-				<div
-					class="rounded-xl border border-fuchsia-200 bg-fuchsia-50 p-4 dark:border-fuchsia-800 dark:bg-fuchsia-900/30"
-				>
-					<h3 class="flex items-center gap-2 font-semibold text-fuchsia-900 dark:text-fuchsia-100">
-						<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						Separating Full Stems...
-					</h3>
-					<p class="mt-2 text-sm text-fuchsia-700 dark:text-fuchsia-300">
-						This usually takes 2-5 minutes. You can leave this page and come back later.
-					</p>
-				</div>
-			{/if}
-		</div>
-	{/if}
-
-	<!-- Extended Songs List -->
-	{#if data.extendedGenerations && data.extendedGenerations.length > 0}
-		<div
-			class="mb-10 rounded-xl border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30"
-		>
-			<h3 class="mb-3 flex items-center gap-2 font-semibold text-green-900 dark:text-green-100">
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 5l7 7-7 7M5 5l7 7-7 7"
-					/>
-				</svg>
-				Extended Versions ({data.extendedGenerations.length})
-			</h3>
-			<div class="space-y-2">
-				{#each data.extendedGenerations as extGen (extGen.id)}
-					<a
-						href={resolve('/projects/[projectId]/generations/[generationId]', {
-							projectId: String(extGen.project_id),
-							generationId: String(extGen.id)
-						})}
-						class="flex items-center gap-3 rounded-lg bg-white p-3 shadow-sm transition-colors hover:bg-green-100 dark:bg-green-900/40 dark:hover:bg-green-800/50"
-					>
-						<div
-							class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-100 dark:bg-green-800"
-						>
-							<svg
-								class="h-5 w-5 text-green-600 dark:text-green-400"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-								/>
-							</svg>
-						</div>
-						<div class="flex-1">
-							<p class="font-medium text-green-900 dark:text-green-100">{extGen.title}</p>
-							<p class="text-sm text-green-700 dark:text-green-300">
-								{#if extGen.continue_at}
-									Continues from {formatTime(extGen.continue_at)}
-								{/if}
-								· {extGen.status === 'success' ? 'Complete' : extGen.status}
-							</p>
-						</div>
-						<svg
-							class="h-5 w-5 text-green-600 dark:text-green-400"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 5l7 7-7 7"
-							/>
-						</svg>
-					</a>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Secondary Details - Collapsible -->
 	<div class="space-y-3">
-		<!-- Style Section -->
-		<div
-			class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-		>
-			<button
-				onclick={() => (styleExpanded = !styleExpanded)}
-				class="flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-			>
-				<div class="flex items-center gap-3">
-					<svg
-						class="h-5 w-5 text-indigo-600 dark:text-indigo-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-						/>
-					</svg>
-					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Style</h2>
-				</div>
-				<svg
-					class="h-5 w-5 text-gray-400 transition-transform {styleExpanded ? 'rotate-180' : ''}"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M19 9l-7 7-7-7"
-					/>
-				</svg>
-			</button>
-			{#if styleExpanded}
-				<div class="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-					<div class="p-4">
-						<div class="mb-3 flex justify-end">
-							<button
-								onclick={() => copyToClipboard(generation.style, 'style')}
-								class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
-							>
-								{#if styleCopied}
-									<svg
-										class="h-4 w-4 text-green-600 dark:text-green-400"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M5 13l4 4L19 7"
-										/>
-									</svg>
-									Copied!
-								{:else}
-									<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-										/>
-									</svg>
-									Copy
-								{/if}
-							</button>
-						</div>
-						<p class="text-gray-700 dark:text-gray-300">{generation.style}</p>
-					</div>
-				</div>
-			{/if}
-		</div>
+		<SongDetailsPanels style={generation.style} lyrics={generation.lyrics ?? null} />
+		<SongNotesPanel generationId={generation.id} audioId={song.id} annotation={currentAnnotation} />
 
-		<!-- Lyrics Section -->
-		{#if generation.lyrics}
-			<div
-				class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-			>
-				<button
-					onclick={() => (lyricsExpanded = !lyricsExpanded)}
-					class="flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
-				>
-					<div class="flex items-center gap-3">
-						<svg
-							class="h-5 w-5 text-indigo-600 dark:text-indigo-400"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-							/>
-						</svg>
-						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Lyrics</h2>
-					</div>
-					<svg
-						class="h-5 w-5 text-gray-400 transition-transform {lyricsExpanded ? 'rotate-180' : ''}"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 9l-7 7-7-7"
-						/>
-					</svg>
-				</button>
-				{#if lyricsExpanded}
-					<div class="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-						<div class="p-4">
-							<div class="mb-3 flex justify-end">
-								<button
-									onclick={() => copyToClipboard(generation.lyrics || '', 'lyrics')}
-									class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
-								>
-									{#if lyricsCopied}
-										<svg
-											class="h-4 w-4 text-green-600 dark:text-green-400"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M5 13l4 4L19 7"
-											/>
-										</svg>
-										Copied!
-									{:else}
-										<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-											/>
-										</svg>
-										Copy
-									{/if}
-								</button>
-							</div>
-							<p class="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-								{generation.lyrics}
-							</p>
-						</div>
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		<!-- Notes / Comment Section -->
-		<div
-			class="overflow-hidden rounded-lg border border-amber-200 bg-white shadow-sm transition-all dark:border-amber-800/50 dark:bg-gray-800"
-		>
-			<button
-				onclick={() => (notesExpanded = !notesExpanded)}
-				class="flex w-full cursor-pointer items-center justify-between p-4 text-left transition-colors hover:bg-amber-50/50 dark:hover:bg-amber-900/10"
-			>
-				<div class="flex items-center gap-3">
-					<svg
-						class="h-5 w-5 text-amber-500 dark:text-amber-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-						/>
-					</svg>
-					<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Notes</h2>
-					{#if comment && !notesExpanded}
-						<span class="ml-1 max-w-xs truncate text-sm text-gray-400 dark:text-gray-500">
-							— {comment}
-						</span>
-					{/if}
-				</div>
-				<div class="flex items-center gap-2">
-					{#if commentSaving}
-						<span class="text-xs text-gray-400">Saving...</span>
-					{:else if commentSaved}
-						<span class="text-xs text-green-500">Saved ✓</span>
-					{/if}
-					<svg
-						class="h-5 w-5 text-gray-400 transition-transform {notesExpanded ? 'rotate-180' : ''}"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M19 9l-7 7-7-7"
-						/>
-					</svg>
-				</div>
-			</button>
-			{#if notesExpanded}
-				<div
-					class="border-t border-amber-200/50 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10"
-				>
-					<textarea
-						bind:value={commentDraft}
-						oninput={handleCommentInput}
-						onblur={saveComment}
-						placeholder="Add notes about this variation — what you like, what to change, ideas for next steps..."
-						maxlength="500"
-						rows="3"
-						class="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/20"
-					></textarea>
-					<div class="mt-1.5 flex items-center justify-between">
-						<p class="text-xs text-gray-400 dark:text-gray-500">Auto-saves as you type</p>
-						<span
-							class="text-xs {commentCharCount > 450
-								? 'text-amber-500'
-								: 'text-gray-400'} dark:text-gray-500"
-						>
-							{commentCharCount}/500
-						</span>
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Cover Image Section -->
 		{#if song.imageUrl}
-			<div
-				class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800"
-			>
-				<div class="p-4">
-					<div class="mb-3 flex items-center gap-3">
-						<svg
-							class="h-5 w-5 text-indigo-600 dark:text-indigo-400"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-							/>
-						</svg>
-						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cover Art</h2>
-					</div>
-					<img src={song.imageUrl} alt={song.title} class="w-full rounded-lg object-cover" />
-				</div>
-			</div>
+			<CoverArtPanel imageUrl={song.imageUrl} title={song.title} />
 		{/if}
 	</div>
 </div>

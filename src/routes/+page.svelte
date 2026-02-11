@@ -120,7 +120,7 @@
 	<title>Projects - KIE Music</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-indigo-950">
+<div class="min-h-screen bg-linear-to-br from-gray-900 via-gray-900 to-indigo-950">
 	<!-- Header -->
 	<header class="border-b border-white/10 bg-black/20 backdrop-blur-sm">
 		<div class="mx-auto max-w-6xl px-6 py-8">
@@ -170,7 +170,7 @@
 					<button
 						onclick={createNewProject}
 						disabled={isCreating}
-						class="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50 disabled:hover:scale-100"
+						class="flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50 disabled:hover:scale-100"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -237,7 +237,7 @@
 
 		<!-- Filters -->
 		<div class="mb-8 flex flex-wrap items-center gap-4">
-			<div class="relative min-w-[200px] flex-1">
+			<div class="relative min-w-50 flex-1">
 				<svg
 					class="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-gray-500"
 					fill="none"
@@ -326,7 +326,7 @@
 			>
 				{#if projects.length === 0}
 					<div
-						class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20"
+						class="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-linear-to-br from-indigo-500/20 to-purple-500/20"
 					>
 						<svg
 							class="h-10 w-10 text-indigo-400"
@@ -349,7 +349,7 @@
 					<button
 						onclick={createNewProject}
 						disabled={isCreating}
-						class="mt-6 flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50"
+						class="mt-6 flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-purple-600 px-6 py-3 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50"
 					>
 						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -397,13 +397,13 @@
 									class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
 								/>
 								<div
-									class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent"
+									class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/50 to-transparent"
 								></div>
 							{:else}
 								<div
-									class="h-full w-full bg-gradient-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"
+									class="h-full w-full bg-linear-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"
 								></div>
-								<div class="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent"></div>
+								<div class="absolute inset-0 bg-linear-to-t from-gray-900 to-transparent"></div>
 							{/if}
 
 							<!-- Status indicator -->

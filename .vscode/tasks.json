@@ -10,6 +10,101 @@
 			"label": "lint",
 			"type": "shell",
 			"command": "npx eslint ."
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint . -f unix"
+		},
+		{
+			"label": "lint-file",
+			"type": "shell",
+			"command": "npx eslint . -f unix > /tmp/eslint-output.txt"
+		},
+		{
+			"label": "check-file",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json > /tmp/svelte-check-output.txt"
+		},
+		{
+			"label": "lint-file-default",
+			"type": "shell",
+			"command": "npx eslint . > /tmp/eslint-output.txt"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		},
+		{
+			"label": "check-file",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json > /tmp/svelte-check-output.txt"
+		},
+		{
+			"label": "lint-file",
+			"type": "shell",
+			"command": "npx eslint . > /tmp/eslint-output.txt"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "check-file",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json > /tmp/svelte-check-output.txt"
+		},
+		{
+			"label": "lint-file",
+			"type": "shell",
+			"command": "npx eslint . > /tmp/eslint-output.txt"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npx eslint ."
+		},
+		{
+			"label": "check",
+			"type": "shell",
+			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
 		}
 	]
 }

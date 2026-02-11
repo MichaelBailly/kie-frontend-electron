@@ -240,7 +240,7 @@
 					class="mt-2 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 transition outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
 				/>
 
-				<div class="mt-4 max-h-[420px] space-y-1 overflow-y-auto pr-1">
+				<div class="mt-4 max-h-105 space-y-1 overflow-y-auto pr-1">
 					{#each filteredLabels as entry (entry.label)}
 						<button
 							onclick={() => (selectedLabel = entry.label)}

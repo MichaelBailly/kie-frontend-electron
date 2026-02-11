@@ -326,7 +326,7 @@
 						: resolve('/projects/[projectId]', {
 								projectId: String(project.id)
 							})}
-					class="group relative flex max-w-[200px] min-w-0 shrink-0 items-center gap-2 border-r border-gray-200 px-4 py-3 text-sm font-medium transition-colors dark:border-gray-700 {project.id ===
+					class="group relative flex max-w-50 min-w-0 shrink-0 items-center gap-2 border-r border-gray-200 px-4 py-3 text-sm font-medium transition-colors dark:border-gray-700 {project.id ===
 					activeProjectId
 						? 'bg-gray-100 text-indigo-600 dark:bg-gray-800 dark:text-indigo-400'
 						: 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'}"
