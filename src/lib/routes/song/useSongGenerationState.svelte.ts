@@ -90,11 +90,9 @@ export function useSongGenerationState(options: {
 		return data.song;
 	});
 
+	const baseAnnotation = $derived.by(() => getData().annotation ?? null);
 	const liveAnnotation = $derived.by(() => annotationsContext?.get(generation.id, song.id));
-	const currentAnnotation = $derived.by(() => {
-		const data = getData();
-		return liveAnnotation ?? data.annotation ?? null;
-	});
+	const currentAnnotation = $derived.by(() => liveAnnotation ?? baseAnnotation);
 	const liveLabels = $derived.by(() => currentAnnotation?.labels ?? []);
 	const starred = $derived.by(() => starredOverride ?? currentAnnotation?.starred === 1);
 
