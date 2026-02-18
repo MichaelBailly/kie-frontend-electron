@@ -4,6 +4,7 @@
 	import AudioPlayer from './AudioPlayer.svelte';
 	import AnnotationActions from './AnnotationActions.svelte';
 	import ParentSongBanner from './ParentSongBanner.svelte';
+	import ReadonlyMetadataField from './ReadonlyMetadataField.svelte';
 	import { resolve } from '$app/paths';
 
 	let {
@@ -184,34 +185,15 @@
 
 		<!-- Song details (read-only) -->
 		<div class="space-y-5">
-			<div>
-				<h4 class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</h4>
-				<div
-					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-				>
-					{generation.title}
-				</div>
-			</div>
+			<ReadonlyMetadataField label="Title">{generation.title}</ReadonlyMetadataField>
 
-			<div>
-				<h4 class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-					Style Prompt
-				</h4>
-				<div
-					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 whitespace-pre-wrap text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-				>
-					{generation.style.trim()}
-				</div>
-			</div>
+			<ReadonlyMetadataField label="Style Prompt" valueClass="whitespace-pre-wrap">
+				{generation.style.trim()}
+			</ReadonlyMetadataField>
 
-			<div>
-				<h4 class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Lyrics</h4>
-				<div
-					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 font-mono text-sm whitespace-pre-wrap text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-				>
-					{generation.lyrics?.trim()}
-				</div>
-			</div>
+			<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
+				{generation.lyrics?.trim()}
+			</ReadonlyMetadataField>
 		</div>
 	</div>
 </div>

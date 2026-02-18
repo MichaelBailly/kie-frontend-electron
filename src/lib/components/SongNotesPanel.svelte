@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { VariationAnnotation } from '$lib/types';
+	import SectionBodyFrame from './SectionBodyFrame.svelte';
 
 	let {
 		generationId,
@@ -107,9 +108,7 @@
 		</div>
 	</button>
 	{#if notesExpanded}
-		<div
-			class="border-t border-amber-200/50 bg-amber-50/30 p-4 dark:border-amber-800/30 dark:bg-amber-900/10"
-		>
+		<SectionBodyFrame tone="amber" className="p-4">
 			<textarea
 				bind:value={commentDraft}
 				oninput={handleCommentInput}
@@ -129,6 +128,6 @@
 					{commentCharCount}/500
 				</span>
 			</div>
-		</div>
+		</SectionBodyFrame>
 	{/if}
 </div>

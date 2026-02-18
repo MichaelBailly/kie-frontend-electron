@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import SectionBodyFrame from './SectionBodyFrame.svelte';
 
 	let {
 		title,
@@ -39,8 +40,8 @@
 		</svg>
 	</button>
 	{#if expanded}
-		<div class="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+		<SectionBodyFrame tone="neutral">
 			{@render children()}
-		</div>
+		</SectionBodyFrame>
 	{/if}
 </div>
