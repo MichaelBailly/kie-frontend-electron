@@ -169,7 +169,7 @@ describe('POST /api/generations', () => {
 		await POST(event as never);
 		await flushPromises();
 
-		expect(db.updateGenerationStatus).toHaveBeenCalledWith(10, 'error', 'API failure');
+		expect(db.setGenerationErrored).toHaveBeenCalledWith(10, 'API failure');
 		expect(sse.notifyClients).toHaveBeenCalledWith(
 			10,
 			'generation_error',
@@ -198,7 +198,7 @@ describe('POST /api/generations', () => {
 		await POST(event as never);
 		await flushPromises();
 
-		expect(db.updateGenerationTaskId).toHaveBeenCalledWith(10, 'task-mock-001');
+		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(10, 'task-mock-001');
 		expect(polling.pollForResults).toHaveBeenCalledWith(10, 'task-mock-001');
 	});
 });

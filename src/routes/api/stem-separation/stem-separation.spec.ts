@@ -150,7 +150,7 @@ describe('POST /api/stem-separation', () => {
 		await POST(event as never);
 		await flushPromises();
 
-		expect(db.updateStemSeparationTaskId).toHaveBeenCalledWith(10, 'stem-task-mock-001');
+		expect(db.setStemSeparationTaskStarted).toHaveBeenCalledWith(10, 'stem-task-mock-001');
 		expect(polling.pollForStemSeparationResults).toHaveBeenCalledWith(
 			10,
 			'stem-task-mock-001',
@@ -299,7 +299,7 @@ describe('POST /api/stem-separation', () => {
 		await POST(event as never);
 		await flushPromises();
 
-		expect(db.updateStemSeparationStatus).toHaveBeenCalledWith(10, 'error', 'Stem failure');
+		expect(db.setStemSeparationErrored).toHaveBeenCalledWith(10, 'Stem failure');
 		expect(sse.notifyStemSeparationClients).toHaveBeenCalledWith(
 			10,
 			1,
