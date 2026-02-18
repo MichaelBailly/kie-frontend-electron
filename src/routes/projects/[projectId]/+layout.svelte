@@ -2,57 +2,26 @@
 	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import type {
-		Project,
-		Generation,
-		SSEMessage,
-		StemSeparation,
-		VariationAnnotation
-	} from '$lib/types';
+	import type { StemSeparation, VariationAnnotation } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
-	import { onMount, onDestroy, setContext } from 'svelte';
-	import { SvelteMap } from 'svelte/reactivity';
-	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
+	import { onDestroy, onMount, setContext } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { audioStore } from '$lib/stores/audio.svelte';
+	import { useProjectState } from '$lib/routes/project/useProjectState.svelte';
+	import { useSSEConnection } from '$lib/routes/project/useSSEConnection.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	// State
-	let projects = $state<(Project & { generations: Generation[] })[]>([]);
-	let eventSource: EventSource | null = null;
-
-	// Initialize projects from data
-	$effect(() => {
-		if (data.projects) {
-			projects = data.projects;
-		}
+	const projectState = useProjectState(() => data);
+	const sseConnection = useSSEConnection({
+		onMessage: (message) => projectState.handleSseMessage(message)
 	});
 
-	// Derived state
-	let activeProjectId = $derived(data.activeProject.id);
-	let activeProject = $derived(
-		projects.find((p) => p.id === activeProjectId) || data.activeProject
-	);
-	let generations = $derived(activeProject?.generations || []);
-
-	// State for stem separation updates
-	let stemSeparationUpdates = new SvelteMap<number, Partial<StemSeparation>>();
-
-	// State for annotation updates (star/comment)
-	let annotationsMap = new SvelteMap<string, VariationAnnotation>();
-
-	// Initialize annotations from server data
-	$effect(() => {
-		if (data.annotations) {
-			annotationsMap.clear();
-			for (const ann of data.annotations) {
-				annotationsMap.set(`${ann.generation_id}:${ann.audio_id}`, ann);
-			}
-		}
-	});
+	let projects = $derived(projectState.projects);
+	let activeProjectId = $derived(projectState.activeProjectId);
+	let activeProject = $derived(projectState.activeProject);
+	let generations = $derived(projectState.generations);
+	let selectedGenerationId = $derived(projectState.selectedGenerationId);
+	let annotationsMap = $derived(projectState.annotationsMap);
 
 	// Share live activeProject and stem separation updates via context
 	setContext('activeProject', {
@@ -63,250 +32,50 @@
 
 	setContext('stemSeparations', {
 		get updates() {
-			return stemSeparationUpdates;
+			return projectState.stemSeparationUpdates;
 		},
 		set: (id: number, data: Partial<StemSeparation>) => {
-			stemSeparationUpdates.set(id, data);
+			projectState.stemSeparationUpdates.set(id, data);
 		}
 	});
 
 	// Share annotations via context for child components
 	setContext('annotations', {
 		get map() {
-			return annotationsMap;
+			return projectState.annotationsMap;
 		},
 		get: (generationId: number, audioId: string): VariationAnnotation | undefined => {
-			return annotationsMap.get(`${generationId}:${audioId}`);
+			return projectState.annotationsMap.get(`${generationId}:${audioId}`);
 		},
 		isStarred: (generationId: number, audioId: string): boolean => {
-			const ann = annotationsMap.get(`${generationId}:${audioId}`);
+			const ann = projectState.annotationsMap.get(`${generationId}:${audioId}`);
 			return ann?.starred === 1;
 		},
 		hasAnyStarred: (generationId: number): boolean => {
-			for (const [key, ann] of annotationsMap) {
+			for (const [key, ann] of projectState.annotationsMap) {
 				if (key.startsWith(`${generationId}:`) && ann.starred === 1) return true;
 			}
 			return false;
 		}
 	});
 
-	// Determine selected generation from URL path
-	// The regex matches both /projects/X/generations/Y and /projects/X/generations/Y/song/Z
-	let selectedGenerationId = $derived.by(() => {
-		const match = page.url.pathname.match(/\/projects\/\d+\/generations\/(\d+)/);
-		return match ? parseInt(match[1]) : null;
-	});
-
 	// SSE connection for real-time updates
 	onMount(() => {
-		if (browser) {
-			connectSSE();
-		}
+		sseConnection.connect();
 	});
 
 	onDestroy(() => {
-		if (eventSource) {
-			eventSource.close();
-		}
+		sseConnection.disconnect();
 	});
 
-	function connectSSE() {
-		eventSource = new EventSource('/api/sse');
-
-		eventSource.onmessage = (event) => {
-			try {
-				const message = JSON.parse(event.data) as SSEMessage | { type: 'connected' };
-
-				if (message.type === 'connected') {
-					console.log('SSE connected');
-					return;
-				}
-
-				// Handle stem separation updates
-				if (
-					message.type === 'stem_separation_update' ||
-					message.type === 'stem_separation_complete' ||
-					message.type === 'stem_separation_error'
-				) {
-					if ('stemSeparationId' in message && message.stemSeparationId) {
-						stemSeparationUpdates.set(
-							message.stemSeparationId,
-							message.data as Partial<StemSeparation>
-						);
-					}
-					return;
-				}
-
-				// Handle annotation updates (star/comment)
-				if (message.type === 'annotation_update') {
-					const ann = message.data as VariationAnnotation;
-					if ('audioId' in message && message.audioId) {
-						const key = `${message.generationId}:${message.audioId}`;
-						annotationsMap.set(key, ann);
-					}
-					return;
-				}
-
-				// Update the generation in our local state
-				if ('generationId' in message) {
-					updateLocalGeneration(message.generationId, message.data);
-				}
-			} catch (e) {
-				console.error('SSE parse error:', e);
-			}
-		};
-
-		eventSource.onerror = () => {
-			console.log('SSE error, reconnecting...');
-			eventSource?.close();
-			setTimeout(connectSSE, 3000);
-		};
-	}
-
-	function showCompletionNotification(generation: Generation) {
-		const title = '🎵 Song Generation Complete!';
-		const body = generation.title
-			? `"${generation.title}"`
-			: generation.style
-				? `Style: ${generation.style}`
-				: 'Your song is ready to listen';
-
-		// Try Electron API first, fall back to Web Notifications API
-		const electronAPI = (
-			window as Window & {
-				electronAPI?: { showNotification: (title: string, options: NotificationOptions) => void };
-			}
-		).electronAPI;
-		if (browser && electronAPI?.showNotification) {
-			electronAPI.showNotification(title, { body });
-		} else if (browser && 'Notification' in window) {
-			// Request permission if needed
-			if (Notification.permission === 'granted') {
-				new Notification(title, { body });
-			} else if (Notification.permission !== 'denied') {
-				Notification.requestPermission().then((permission) => {
-					if (permission === 'granted') {
-						new Notification(title, { body });
-					}
-				});
-			}
-		}
-	}
-
-	function updateLocalGeneration(generationId: number, data: Partial<Generation>) {
-		console.log('SSE update for generation', generationId, data);
-
-		// Check if generation exists in any project
-		const generationExists = projects.some((project) =>
-			project.generations.some((gen) => gen.id === generationId)
-		);
-
-		if (generationExists) {
-			// Update existing generation
-			projects = projects.map((project) => ({
-				...project,
-				generations: project.generations.map((gen) =>
-					gen.id === generationId ? { ...gen, ...data } : gen
-				)
-			}));
-			console.log('Updated generation in local state');
-
-			// Find the updated generation to notify audio store
-			const updatedGen = projects.flatMap((p) => p.generations).find((g) => g.id === generationId);
-
-			if (updatedGen) {
-				// Show desktop notification when generation is complete
-				if (data.status === 'success') {
-					showCompletionNotification(updatedGen);
-				}
-
-				// Notify audio store if track 1 URLs changed
-				if (updatedGen.track1_audio_id && (data.track1_audio_url || data.track1_stream_url)) {
-					audioStore.updateTrackUrls(updatedGen.track1_audio_id, {
-						streamUrl: data.track1_stream_url,
-						audioUrl: data.track1_audio_url,
-						duration: data.track1_duration
-					});
-				}
-
-				// Notify audio store if track 2 URLs changed
-				if (updatedGen.track2_audio_id && (data.track2_audio_url || data.track2_stream_url)) {
-					audioStore.updateTrackUrls(updatedGen.track2_audio_id, {
-						streamUrl: data.track2_stream_url,
-						audioUrl: data.track2_audio_url,
-						duration: data.track2_duration
-					});
-				}
-			}
-		} else {
-			// New generation - refetch the active project's generations
-			console.log('Generation not found, refetching project');
-			refetchProjectGenerations(activeProjectId);
-		}
-	}
-
-	async function refetchProjectGenerations(projectId: number) {
-		try {
-			const response = await fetch(`/api/projects/${projectId}`);
-			if (response.ok) {
-				const projectData = await response.json();
-				projects = projects.map((p) =>
-					p.id === projectId ? { ...p, generations: projectData.generations } : p
-				);
-			}
-		} catch (e) {
-			console.error('Failed to refetch generations:', e);
-		}
-	}
-
 	async function createNewProject() {
-		const response = await fetch('/api/projects', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name: `Project ${projects.length + 1}` })
-		});
-
-		if (response.ok) {
-			const newProject = await response.json();
-			projects = [...projects, { ...newProject, generations: [] }];
-			// Navigate to new project
-			await goto(
-				resolve('/projects/[projectId]', {
-					projectId: String(newProject.id)
-				})
-			);
-		}
+		await projectState.createNewProject();
 	}
 
 	async function closeTab(projectId: number, event: Event) {
 		event.stopPropagation();
 		event.preventDefault();
-
-		// Mark project as closed on server
-		await fetch(`/api/projects/${projectId}`, {
-			method: 'PATCH',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ is_open: false })
-		});
-
-		// Remove from local state
-		const projectIndex = projects.findIndex((p) => p.id === projectId);
-		projects = projects.filter((p) => p.id !== projectId);
-
-		// Navigate to appropriate project if we closed the active tab
-		if (projectId === activeProjectId) {
-			const nextProject = projects[projectIndex] || projects[projectIndex - 1] || projects[0];
-			if (nextProject) {
-				await goto(
-					resolve('/projects/[projectId]', {
-						projectId: String(nextProject.id)
-					})
-				);
-			} else {
-				// No more open tabs, go to project management
-				await goto(resolve('/'));
-			}
-		}
+		await projectState.closeProjectTab(projectId);
 	}
 </script>
 
@@ -343,7 +112,7 @@
 						/>
 					</svg>
 					<span class="truncate">{project.name}</span>
-					{#if project.generations.some( (g) => ['pending', 'processing', 'text_success', 'first_success'].includes(g.status) )}
+					{#if projectState.hasAnyGenerationInProgress(project.id)}
 						<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500"></span>
 					{/if}
 					<button
