@@ -129,6 +129,18 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "check-phase-3-1",
+			"type": "shell",
+			"command": "npm run check",
+			"isBackground": false
+		},
+		{
+			"label": "check-phase-3-1-fresh",
+			"type": "shell",
+			"command": "npm run check",
+			"isBackground": false
 		}
 	]
 }
