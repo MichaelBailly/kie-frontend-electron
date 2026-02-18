@@ -87,6 +87,19 @@ describe('PUT /api/settings', () => {
 		});
 	});
 
+	it('throws 400 when JSON body is not an object', async () => {
+		const { PUT } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'PUT',
+			body: ['not-an-object']
+		});
+
+		await expect(PUT(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'JSON body must be an object' }
+		});
+	});
+
 	it('throws 400 when apiKey has invalid type', async () => {
 		const { PUT } = await import('./+server');
 		const event = createRequestEvent({
@@ -109,6 +122,11 @@ describe('PUT /api/settings', () => {
 		const response = await PUT(event as never);
 		const data = await response.json();
 
+		expect(data).toMatchObject({
+			success: true,
+			hasApiKey: true,
+			apiKey: expect.any(String)
+		});
 		expect(data.success).toBe(true);
 		expect(data.hasApiKey).toBe(true);
 		expect(db.setApiKey).toHaveBeenCalledWith('new-key-12345678');

@@ -10,21 +10,42 @@ type HttpErrorShape = {
 	};
 };
 
+function isHttpErrorShape(err: unknown): err is HttpErrorShape {
+	if (typeof err !== 'object' || err === null) {
+		return false;
+	}
+
+	if (!('status' in err) || typeof err.status !== 'number') {
+		return false;
+	}
+
+	if (!('body' in err) || err.body === undefined) {
+		return true;
+	}
+
+	if (typeof err.body !== 'object' || err.body === null) {
+		return false;
+	}
+
+	if (!('message' in err.body) || err.body.message === undefined) {
+		return true;
+	}
+
+	return typeof err.body.message === 'string';
+}
+
 function normalizeError(err: unknown): { status: number; message: string } {
-	if (typeof err === 'object' && err !== null && 'status' in err) {
-		const candidate = err as HttpErrorShape;
-		if (typeof candidate.status === 'number') {
-			const message =
-				typeof candidate.body?.message === 'string'
-					? candidate.body.message
-					: err instanceof Error
-						? err.message
-						: 'Request failed';
-			return {
-				status: candidate.status,
-				message
-			};
-		}
+	if (isHttpErrorShape(err)) {
+		const message =
+			typeof err.body?.message === 'string'
+				? err.body.message
+				: err instanceof Error
+					? err.message
+					: 'Request failed';
+		return {
+			status: err.status,
+			message
+		};
 	}
 
 	return {

@@ -25,6 +25,30 @@ import type { Project, Generation } from '$lib/types';
 
 type JsonRecord = Record<string, unknown>;
 
+export function isRecord(value: unknown): value is JsonRecord {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isNonEmptyString(value: unknown): value is string {
+	return typeof value === 'string' && value.trim().length > 0;
+}
+
+export function isPositiveInteger(value: unknown): value is number {
+	return typeof value === 'number' && Number.isInteger(value) && value > 0;
+}
+
+export function isNonNegativeNumber(value: unknown): value is number {
+	return typeof value === 'number' && !Number.isNaN(value) && value >= 0;
+}
+
+export function isEnumValue<T extends string>(value: unknown, allowed: readonly T[]): value is T {
+	return typeof value === 'string' && allowed.includes(value as T);
+}
+
+export function isNullableString(value: unknown): value is string | null {
+	return value === null || typeof value === 'string';
+}
+
 // ============================================================================
 // Request parsing and scalar validators
 // ============================================================================
@@ -41,11 +65,11 @@ export async function parseJsonBody(request: Request): Promise<JsonRecord> {
 		throw error(400, 'Invalid JSON body');
 	}
 
-	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+	if (!isRecord(parsed)) {
 		throw error(400, 'JSON body must be an object');
 	}
 
-	return parsed as JsonRecord;
+	return parsed;
 }
 
 /**
@@ -56,19 +80,18 @@ export function asNonEmptyString(value: unknown, name: string): string {
 		throw error(400, `Invalid ${name}: must be a string`);
 	}
 
-	const trimmed = value.trim();
-	if (!trimmed) {
+	if (!isNonEmptyString(value)) {
 		throw error(400, `Invalid ${name}: cannot be empty`);
 	}
 
-	return trimmed;
+	return value.trim();
 }
 
 /**
  * Validate and return a positive integer (> 0).
  */
 export function asPositiveInt(value: unknown, name: string): number {
-	if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+	if (!isPositiveInteger(value)) {
 		throw error(400, `Invalid ${name}: must be a positive integer`);
 	}
 	return value;
@@ -78,7 +101,7 @@ export function asPositiveInt(value: unknown, name: string): number {
  * Validate and return a non-negative number (>= 0).
  */
 export function asNonNegativeNumber(value: unknown, name: string): number {
-	if (typeof value !== 'number' || Number.isNaN(value) || value < 0) {
+	if (!isNonNegativeNumber(value)) {
 		throw error(400, `Invalid ${name}: must be a non-negative number`);
 	}
 	return value;
@@ -88,7 +111,7 @@ export function asNonNegativeNumber(value: unknown, name: string): number {
  * Validate and return an enum value.
  */
 export function asEnum<T extends string>(value: unknown, allowed: readonly T[], name: string): T {
-	if (typeof value !== 'string' || !allowed.includes(value as T)) {
+	if (!isEnumValue(value, allowed)) {
 		throw error(400, `Invalid ${name}: must be one of ${allowed.join(', ')}`);
 	}
 	return value as T;
@@ -98,11 +121,7 @@ export function asEnum<T extends string>(value: unknown, allowed: readonly T[], 
  * Validate and return a nullable string (string or null).
  */
 export function asNullableString(value: unknown, name: string): string | null {
-	if (value === null) {
-		return null;
-	}
-
-	if (typeof value !== 'string') {
+	if (!isNullableString(value)) {
 		throw error(400, `Invalid ${name}: must be a string or null`);
 	}
 

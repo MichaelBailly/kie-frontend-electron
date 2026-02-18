@@ -74,6 +74,18 @@ describe('POST /api/generations', () => {
 		});
 	});
 
+	it('throws 400 when JSON body is not an object', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: ['not-an-object']
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'JSON body must be an object' }
+		});
+	});
+
 	it('creates a generation and starts the task', async () => {
 		const project = createProject({ id: 1 });
 		db.__setProjects([project]);
@@ -95,6 +107,14 @@ describe('POST /api/generations', () => {
 		const data = await response.json();
 
 		expect(data.id).toBe(10);
+		expect(data).toMatchObject({
+			id: expect.any(Number),
+			project_id: 1,
+			title: expect.any(String),
+			style: expect.any(String),
+			lyrics: expect.any(String),
+			status: expect.any(String)
+		});
 		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world');
 	});
 
@@ -133,6 +153,30 @@ describe('POST /api/generations', () => {
 		await expect(POST(event as never)).rejects.toMatchObject({
 			status: 400,
 			body: { message: expect.stringContaining('title') }
+		});
+	});
+
+	it('throws 400 when projectId is not a positive integer', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { projectId: '1', title: 'T', style: 'S', lyrics: 'L' }
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid projectId: must be a positive integer' }
+		});
+	});
+
+	it('throws 400 when title is an empty string', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { projectId: 1, title: '   ', style: 'S', lyrics: 'L' }
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid title: cannot be empty' }
 		});
 	});
 
@@ -201,6 +245,30 @@ describe('POST /api/generations', () => {
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(10, 'task-mock-001');
 		expect(polling.pollForResults).toHaveBeenCalledWith(10, 'task-mock-001');
 	});
+
+	it('sets generation to error when KIE API throws', async () => {
+		const project = createProject({ id: 1 });
+		db.__setProjects([project]);
+		const newGen = createGeneration({ id: 10, project_id: 1 });
+		db.createGeneration.mockReturnValue(newGen);
+
+		kieApi.generateMusic.mockRejectedValue(new Error('network down'));
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { projectId: 1, title: 'T', style: 'S', lyrics: 'L' }
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(db.setGenerationErrored).toHaveBeenCalledWith(10, 'network down');
+		expect(sse.notifyClients).toHaveBeenCalledWith(
+			10,
+			'generation_error',
+			expect.objectContaining({ status: 'error', error_message: 'network down' })
+		);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -223,6 +291,46 @@ describe('POST /api/generations/extend', () => {
 		await expect(POST(event as never)).rejects.toMatchObject({
 			status: 400,
 			body: { message: 'Invalid JSON body' }
+		});
+	});
+
+	it('throws 400 when extendsGenerationId is not a positive integer', async () => {
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'T',
+				style: 'S',
+				lyrics: 'L',
+				extendsGenerationId: '5',
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid extendsGenerationId: must be a positive integer' }
+		});
+	});
+
+	it('throws 400 when continueAt is not a number', async () => {
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'T',
+				style: 'S',
+				lyrics: 'L',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: '30'
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid continueAt: must be a non-negative number' }
 		});
 	});
 

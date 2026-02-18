@@ -100,6 +100,13 @@ describe('POST /api/stem-separation', () => {
 		const data = await response.json();
 
 		expect(data.id).toBe(10);
+		expect(data).toMatchObject({
+			id: expect.any(Number),
+			generation_id: 1,
+			audio_id: 'audio-1-1',
+			type: 'separate_vocal',
+			status: expect.any(String)
+		});
 		expect(db.createStemSeparation).toHaveBeenCalledWith(1, 'audio-1-1', 'separate_vocal');
 	});
 
@@ -243,6 +250,18 @@ describe('POST /api/stem-separation', () => {
 		});
 	});
 
+	it('throws 400 when generationId is not a positive integer', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { generationId: '1', audioId: 'audio-1-1', type: 'separate_vocal' }
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid generationId: must be a positive integer' }
+		});
+	});
+
 	it('throws 404 when generation does not exist', async () => {
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({
@@ -306,6 +325,37 @@ describe('POST /api/stem-separation', () => {
 			'audio-1-1',
 			'stem_separation_error',
 			expect.objectContaining({ status: 'error', error_message: 'Stem failure' })
+		);
+	});
+
+	it('sets separation to error when KIE API throws', async () => {
+		const gen = createCompletedGeneration({
+			id: 1,
+			task_id: 'task-1',
+			track1_audio_id: 'audio-1-1'
+		});
+		db.__setGenerations([gen]);
+
+		const separation = createStemSeparation({ id: 10 });
+		db.createStemSeparation.mockReturnValue(separation);
+
+		kieApi.separateVocals.mockRejectedValue(new Error('timeout'));
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { generationId: 1, audioId: 'audio-1-1', type: 'separate_vocal' }
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(db.setStemSeparationErrored).toHaveBeenCalledWith(10, 'timeout');
+		expect(sse.notifyStemSeparationClients).toHaveBeenCalledWith(
+			10,
+			1,
+			'audio-1-1',
+			'stem_separation_error',
+			expect.objectContaining({ status: 'error', error_message: 'timeout' })
 		);
 	});
 

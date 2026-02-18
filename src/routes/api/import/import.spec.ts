@@ -51,6 +51,17 @@ describe('POST /api/import', () => {
 
 		expect(response.status).toBe(200);
 		expect(data.success).toBe(true);
+		expect(data).toMatchObject({
+			success: true,
+			project: {
+				id: expect.any(Number),
+				name: expect.any(String)
+			},
+			generation: {
+				id: expect.any(Number),
+				title: expect.any(String)
+			}
+		});
 		expect(data.project.name).toBe('Imported Project');
 		expect(data.generation.id).toBe(42);
 		expect(db.createProject).toHaveBeenCalledWith('Imported Project');
@@ -100,6 +111,18 @@ describe('POST /api/import', () => {
 		expect(data.error).toBe('Task ID cannot be empty');
 	});
 
+	it('returns 400 when projectName is not a string', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { taskId: 'task-abc-123', projectName: 123 }
+		});
+		const response = await POST(event as never);
+		const data = await response.json();
+
+		expect(response.status).toBe(400);
+		expect(data.error).toBe('projectName must be a string');
+	});
+
 	it('returns 404 when task is not found on KIE API', async () => {
 		kieApi.getMusicDetails.mockRejectedValue(new Error('404 Not Found'));
 
@@ -110,6 +133,18 @@ describe('POST /api/import', () => {
 
 		expect(response.status).toBe(404);
 		expect(data.error).toBe('Task ID not found. Please verify the ID is correct.');
+	});
+
+	it('returns 502 when KIE API returns unauthorized', async () => {
+		kieApi.getMusicDetails.mockRejectedValue(new Error('401 Unauthorized'));
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({ body: { taskId: 'unauthorized-task' } });
+		const response = await POST(event as never);
+		const data = await response.json();
+
+		expect(response.status).toBe(502);
+		expect(data.error).toBe('API authentication failed. Please check server configuration.');
 	});
 
 	it('returns 400 when generation is still in progress', async () => {
