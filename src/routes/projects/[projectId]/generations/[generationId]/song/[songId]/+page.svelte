@@ -108,13 +108,11 @@
 		| undefined
 	>('annotations');
 
-	let currentAnnotation = $derived(
-		annotationsContext?.get(generation.id, song.id) ?? data.annotation ?? null
-	);
+	let liveAnnotation = $derived.by(() => annotationsContext?.get(generation.id, song.id));
 
-	let liveLabels = $derived(
-		annotationsContext?.get(generation.id, song.id)?.labels ?? data.annotation?.labels ?? []
-	);
+	let currentAnnotation = $derived.by(() => liveAnnotation ?? data.annotation ?? null);
+
+	let liveLabels = $derived.by(() => currentAnnotation?.labels ?? []);
 
 	// Annotation (star/comment) state
 	let starredOverride = $state<boolean | null>(null);

@@ -44,7 +44,7 @@
 			<button
 				onclick={() => copyToClipboard(style, 'style')}
 				aria-label="Copy style"
-				class="group absolute right-3 top-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
+				class="group absolute top-3 right-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
 			>
 				{#if styleCopied}
 					<span
@@ -70,7 +70,13 @@
 						class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5"
 						>Copy</span
 					>
-					<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+					<svg
+						class="h-4 w-4 shrink-0"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+					>
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
@@ -106,7 +112,7 @@
 				<button
 					onclick={() => copyToClipboard(lyrics, 'lyrics')}
 					aria-label="Copy lyrics"
-					class="group absolute right-3 top-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
+					class="group absolute top-3 right-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
 				>
 					{#if lyricsCopied}
 						<span
@@ -132,7 +138,13 @@
 							class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5"
 							>Copy</span
 						>
-						<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+						<svg
+							class="h-4 w-4 shrink-0"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+						>
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
