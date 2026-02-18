@@ -12,6 +12,33 @@ function getEffectiveApiKey(): string {
 	return KIE_API_KEY;
 }
 
+interface KieRequestOptions {
+	method?: 'GET' | 'POST';
+	body?: unknown;
+}
+
+async function kieRequest<T>(path: string, options: KieRequestOptions = {}): Promise<T> {
+	const headers: Record<string, string> = {
+		Authorization: `Bearer ${getEffectiveApiKey()}`
+	};
+
+	if (options.body !== undefined) {
+		headers['Content-Type'] = 'application/json';
+	}
+
+	const response = await fetch(`${KIE_API_BASE}${path}`, {
+		method: options.method ?? 'GET',
+		headers,
+		body: options.body !== undefined ? JSON.stringify(options.body) : undefined
+	});
+
+	if (!response.ok) {
+		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
+	}
+
+	return response.json() as Promise<T>;
+}
+
 export interface GenerateMusicRequest {
 	prompt: string;
 	style: string;
@@ -83,52 +110,21 @@ export interface MusicDetailsResponse {
 }
 
 export async function generateMusic(request: GenerateMusicRequest): Promise<GenerateMusicResponse> {
-	const response = await fetch(`${KIE_API_BASE}/generate`, {
+	return kieRequest<GenerateMusicResponse>('/generate', {
 		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${getEffectiveApiKey()}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(request)
+		body: request
 	});
-
-	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
 }
 
 export async function extendMusic(request: ExtendMusicRequest): Promise<GenerateMusicResponse> {
-	const response = await fetch(`${KIE_API_BASE}/generate/extend`, {
+	return kieRequest<GenerateMusicResponse>('/generate/extend', {
 		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${getEffectiveApiKey()}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(request)
+		body: request
 	});
-
-	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
 }
 
 export async function getMusicDetails(taskId: string): Promise<MusicDetailsResponse> {
-	const response = await fetch(`${KIE_API_BASE}/generate/record-info?taskId=${taskId}`, {
-		method: 'GET',
-		headers: {
-			Authorization: `Bearer ${getEffectiveApiKey()}`
-		}
-	});
-
-	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
+	return kieRequest<MusicDetailsResponse>(`/generate/record-info?taskId=${taskId}`);
 }
 
 export function isErrorStatus(status: string): boolean {
@@ -208,37 +204,16 @@ export interface StemSeparationDetailsResponse {
 export async function separateVocals(
 	request: StemSeparationRequest
 ): Promise<StemSeparationResponse> {
-	const response = await fetch(`${KIE_API_BASE}/vocal-removal/generate`, {
+	return kieRequest<StemSeparationResponse>('/vocal-removal/generate', {
 		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${getEffectiveApiKey()}`,
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(request)
+		body: request
 	});
-
-	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
 }
 
 export async function getStemSeparationDetails(
 	taskId: string
 ): Promise<StemSeparationDetailsResponse> {
-	const response = await fetch(`${KIE_API_BASE}/vocal-removal/record-info?taskId=${taskId}`, {
-		method: 'GET',
-		headers: {
-			Authorization: `Bearer ${getEffectiveApiKey()}`
-		}
-	});
-
-	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
-	}
-
-	return response.json();
+	return kieRequest<StemSeparationDetailsResponse>(`/vocal-removal/record-info?taskId=${taskId}`);
 }
 
 export function isStemSeparationErrorStatus(status: string): boolean {
