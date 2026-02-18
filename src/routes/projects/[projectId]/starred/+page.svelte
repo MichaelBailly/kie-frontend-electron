@@ -7,6 +7,7 @@
 	import { getContext } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
+	import { formatDate, formatTime, getTimeAgo } from '$lib/utils/format';
 
 	let { data }: { data: PageData } = $props();
 
@@ -101,36 +102,25 @@
 		}
 	}
 
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
-
-	function formatDate(dateStr: string): string {
-		const date = new Date(dateStr);
-		return date.toLocaleDateString('en-US', {
+	const starredDateOptions = {
+		locale: 'en-US',
+		formatOptions: {
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric',
 			hour: '2-digit',
 			minute: '2-digit'
-		});
+		} satisfies Intl.DateTimeFormatOptions
+	};
+
+	function formatStarredDate(dateStr: string): string {
+		return formatDate(dateStr, starredDateOptions);
 	}
 
-	function getTimeAgo(dateStr: string): string {
-		const date = new Date(dateStr);
-		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMins / 60);
-		const diffDays = Math.floor(diffHours / 24);
-
-		if (diffMins < 1) return 'just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-		return formatDate(dateStr);
+	function getStarredTimeAgo(dateStr: string): string {
+		return getTimeAgo(dateStr, {
+			fallback: (date) => formatDate(date.toISOString(), starredDateOptions)
+		});
 	}
 
 	let progressBar: HTMLDivElement | undefined = $state();
@@ -401,9 +391,9 @@
 											<span class="text-gray-300 dark:text-gray-600">·</span>
 											<span
 												class="truncate text-xs"
-												title={formatDate(variation.annotation.updated_at)}
+												title={formatStarredDate(variation.annotation.updated_at)}
 											>
-												{getTimeAgo(variation.annotation.updated_at)}
+												{getStarredTimeAgo(variation.annotation.updated_at)}
 											</span>
 										</div>
 									</div>

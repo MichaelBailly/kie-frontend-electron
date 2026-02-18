@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
+	import { formatDate } from '$lib/utils/format';
 
 	let {
 		generation,
@@ -8,15 +9,15 @@
 		hasStarred = false
 	}: { generation: Generation; selected?: boolean; hasStarred?: boolean } = $props();
 
-	function formatDate(dateStr: string): string {
-		const date = new Date(dateStr);
-		return date.toLocaleDateString('en-US', {
+	const generationDateOptions = {
+		locale: 'en-US',
+		formatOptions: {
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
 			minute: '2-digit'
-		});
-	}
+		} satisfies Intl.DateTimeFormatOptions
+	};
 </script>
 
 <div
@@ -34,7 +35,7 @@
 				/>
 			{:else}
 				<div
-					class="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-purple-600"
+					class="flex h-12 w-12 items-center justify-center rounded-md bg-linear-to-br from-indigo-500 to-purple-600"
 				>
 					<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -117,7 +118,7 @@
 					</span>
 				{/if}
 				<span class="text-xs text-gray-400 dark:text-gray-500">
-					{formatDate(generation.created_at)}
+					{formatDate(generation.created_at, generationDateOptions)}
 				</span>
 			</div>
 		</div>

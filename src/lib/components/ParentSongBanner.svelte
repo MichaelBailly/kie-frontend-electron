@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { formatTime } from '$lib/utils/format';
 
 	let {
 		parentGenerationId,
@@ -18,12 +19,6 @@
 		variant?: 'banner' | 'compact';
 		label?: string;
 	} = $props();
-
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
 </script>
 
 {#if variant === 'compact'}

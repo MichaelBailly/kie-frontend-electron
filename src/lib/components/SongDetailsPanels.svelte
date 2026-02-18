@@ -1,25 +1,25 @@
 <script lang="ts">
 	import CollapsiblePanel from './CollapsiblePanel.svelte';
+	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 
 	let { style, lyrics }: { style: string; lyrics: string | null } = $props();
 
 	let lyricsCopied = $state(false);
 	let styleCopied = $state(false);
 
-	async function copyToClipboard(text: string, type: 'lyrics' | 'style') {
-		try {
-			await navigator.clipboard.writeText(text);
-			if (type === 'lyrics') {
-				lyricsCopied = true;
-				setTimeout(() => (lyricsCopied = false), 2000);
-			} else {
-				styleCopied = true;
-				setTimeout(() => (styleCopied = false), 2000);
-			}
-		} catch (err) {
-			console.error('Failed to copy:', err);
-		}
-	}
+	const copyStyle = createCopyWithFeedback(
+		(copied) => {
+			styleCopied = copied;
+		},
+		{ onError: (error) => console.error('Failed to copy style:', error) }
+	);
+
+	const copyLyrics = createCopyWithFeedback(
+		(copied) => {
+			lyricsCopied = copied;
+		},
+		{ onError: (error) => console.error('Failed to copy lyrics:', error) }
+	);
 </script>
 
 <div class="space-y-3">
@@ -42,7 +42,7 @@
 		{/snippet}
 		<div class="relative p-4">
 			<button
-				onclick={() => copyToClipboard(style, 'style')}
+				onclick={() => copyStyle(style)}
 				aria-label="Copy style"
 				class="group absolute top-3 right-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
 			>
@@ -110,7 +110,7 @@
 			{/snippet}
 			<div class="relative p-4">
 				<button
-					onclick={() => copyToClipboard(lyrics, 'lyrics')}
+					onclick={() => copyLyrics(lyrics)}
 					aria-label="Copy lyrics"
 					class="group absolute top-3 right-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
 				>

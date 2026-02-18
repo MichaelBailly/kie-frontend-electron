@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { StemSeparation } from '$lib/types';
+	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 
 	interface StemTrack {
 		name: string;
@@ -94,6 +95,12 @@
 	}
 
 	let downloadCommandCopied = $state(false);
+	const copyWithFeedback = createCopyWithFeedback(
+		(copied) => {
+			downloadCommandCopied = copied;
+		},
+		{ onError: (error) => console.error('Failed to copy download command:', error) }
+	);
 
 	async function copyDownloadCommand() {
 		const commands = downloadUrls
@@ -105,10 +112,7 @@
 			.join(' && \\\n');
 
 		const fullCommand = `# Download all stems\n${commands}`;
-
-		await navigator.clipboard.writeText(fullCommand);
-		downloadCommandCopied = true;
-		setTimeout(() => (downloadCommandCopied = false), 2000);
+		await copyWithFeedback(fullCommand);
 	}
 </script>
 

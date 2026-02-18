@@ -2,6 +2,7 @@
 	import type { Generation } from '$lib/types';
 	import Waveform from './Waveform.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
+	import { formatTime } from '$lib/utils/format';
 	import { untrack } from 'svelte';
 
 	let {
@@ -39,12 +40,6 @@
 	let isCurrentTrack = $derived(audioStore.isCurrentTrack(song.id));
 	let isPlaying = $derived(audioStore.isTrackPlaying(song.id));
 	let duration = $derived(song.duration || 0);
-
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
 
 	function handleWaveformSeek(time: number) {
 		// When clicking on waveform, set the continueAt point instead of playing

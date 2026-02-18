@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ImportSongModal from '$lib/components/ImportSongModal.svelte';
+	import { formatDate, getTimeAgo } from '$lib/utils/format';
 
 	type ProjectWithStats = Project & {
 		generationCount: number;
@@ -88,23 +89,21 @@
 		}
 	}
 
-	function formatDate(dateString: string): string {
+	function formatProjectUpdatedAt(dateString: string): string {
 		const date = new Date(dateString);
 		const now = new Date();
-		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
 
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins}m ago`;
-		if (diffHours < 24) return `${diffHours}h ago`;
-		if (diffDays < 7) return `${diffDays}d ago`;
-
-		return date.toLocaleDateString(undefined, {
-			month: 'short',
-			day: 'numeric',
-			year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+		return getTimeAgo(dateString, {
+			now,
+			justNowText: 'Just now',
+			fallback: () =>
+				formatDate(dateString, {
+					formatOptions: {
+						month: 'short',
+						day: 'numeric',
+						year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+					}
+				})
 		});
 	}
 
@@ -465,7 +464,7 @@
 									</svg>
 									{project.generationCount} generation{project.generationCount !== 1 ? 's' : ''}
 								</span>
-								<span>{formatDate(project.updated_at)}</span>
+								<span>{formatProjectUpdatedAt(project.updated_at)}</span>
 							</div>
 						</div>
 					</button>

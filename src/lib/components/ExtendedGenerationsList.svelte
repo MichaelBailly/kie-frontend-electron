@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { formatTime } from '$lib/utils/format';
 
 	type ExtendedGeneration = {
 		id: number;
@@ -10,12 +11,6 @@
 	};
 
 	let { extendedGenerations }: { extendedGenerations: ExtendedGeneration[] } = $props();
-
-	function formatTime(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = Math.floor(seconds % 60);
-		return `${mins}:${secs.toString().padStart(2, '0')}`;
-	}
 </script>
 
 {#if extendedGenerations.length > 0}
