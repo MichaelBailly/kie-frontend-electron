@@ -64,6 +64,10 @@ export interface DbMock {
 	getGenerationByTaskId: MockFn;
 	getGenerationsByProject: MockFn;
 	getLatestGenerationByProject: MockFn;
+	setGenerationTaskStarted: MockFn;
+	setGenerationStatus: MockFn;
+	setGenerationErrored: MockFn;
+	setGenerationCompleted: MockFn;
 	updateGenerationTaskId: MockFn;
 	updateGenerationStatus: MockFn;
 	updateGenerationTracks: MockFn;
@@ -78,6 +82,10 @@ export interface DbMock {
 	getStemSeparationByTaskId: MockFn;
 	getStemSeparationsForSong: MockFn;
 	getStemSeparationByType: MockFn;
+	setStemSeparationTaskStarted: MockFn;
+	setStemSeparationStatus: MockFn;
+	setStemSeparationErrored: MockFn;
+	setStemSeparationCompleted: MockFn;
 	updateStemSeparationTaskId: MockFn;
 	updateStemSeparationStatus: MockFn;
 	completeStemSeparation: MockFn;
@@ -192,22 +200,44 @@ export function createDbMock(): DbMock {
 					.filter((g) => g.project_id === projectId)
 					.sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
 		),
-		updateGenerationTaskId: vi.fn((id: number, taskId: string) => {
+		setGenerationTaskStarted: vi.fn((id: number, taskId: string) => {
 			const g = generations.find((g) => g.id === id);
 			if (g) {
 				g.task_id = taskId;
 				g.status = 'processing';
 			}
 		}),
-		updateGenerationStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+		setGenerationStatus: vi.fn((id: number, status: string) => {
 			const g = generations.find((g) => g.id === id);
 			if (g) {
 				g.status = status;
-				g.error_message = errorMessage ?? null;
+				g.error_message = null;
 			}
 		}),
+		setGenerationErrored: vi.fn((id: number, errorMessage: string) => {
+			const g = generations.find((g) => g.id === id);
+			if (g) {
+				g.status = 'error';
+				g.error_message = errorMessage;
+			}
+		}),
+		setGenerationCompleted: vi.fn(),
+		updateGenerationTaskId: vi.fn((id: number, taskId: string) => {
+			mock.setGenerationTaskStarted(id, taskId);
+		}),
+		updateGenerationStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+			if (status === 'error') {
+				mock.setGenerationErrored(id, errorMessage ?? 'Unknown generation error');
+				return;
+			}
+			mock.setGenerationStatus(id, status);
+		}),
 		updateGenerationTracks: vi.fn(),
-		completeGeneration: vi.fn(),
+		completeGeneration: vi.fn(
+			(id: number, _status: string, track1: unknown, track2: unknown, responseData: string) => {
+				mock.setGenerationCompleted(id, track1, track2, responseData);
+			}
+		),
 		deleteGeneration: vi.fn((id: number) => {
 			generations = generations.filter((g) => g.id !== id);
 		}),
@@ -232,21 +262,41 @@ export function createDbMock(): DbMock {
 				(s) => s.generation_id === generationId && s.audio_id === audioId && s.type === type
 			)
 		),
-		updateStemSeparationTaskId: vi.fn((id: number, taskId: string) => {
+		setStemSeparationTaskStarted: vi.fn((id: number, taskId: string) => {
 			const s = stemSeparations.find((s) => s.id === id);
 			if (s) {
 				s.task_id = taskId;
 				s.status = 'processing';
 			}
 		}),
-		updateStemSeparationStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+		setStemSeparationStatus: vi.fn((id: number, status: string) => {
 			const s = stemSeparations.find((s) => s.id === id);
 			if (s) {
 				s.status = status;
-				s.error_message = errorMessage ?? null;
+				s.error_message = null;
 			}
 		}),
-		completeStemSeparation: vi.fn(),
+		setStemSeparationErrored: vi.fn((id: number, errorMessage: string) => {
+			const s = stemSeparations.find((s) => s.id === id);
+			if (s) {
+				s.status = 'error';
+				s.error_message = errorMessage;
+			}
+		}),
+		setStemSeparationCompleted: vi.fn(),
+		updateStemSeparationTaskId: vi.fn((id: number, taskId: string) => {
+			mock.setStemSeparationTaskStarted(id, taskId);
+		}),
+		updateStemSeparationStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+			if (status === 'error') {
+				mock.setStemSeparationErrored(id, errorMessage ?? 'Unknown stem separation error');
+				return;
+			}
+			mock.setStemSeparationStatus(id, status);
+		}),
+		completeStemSeparation: vi.fn((id: number, data: unknown, responseData: string) => {
+			mock.setStemSeparationCompleted(id, data, responseData);
+		}),
 		getPendingStemSeparations: vi.fn(() =>
 			stemSeparations.filter((s) => ['pending', 'processing'].includes(s.status))
 		),

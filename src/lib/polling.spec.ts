@@ -39,11 +39,13 @@ vi.mock('$lib/kie-api.server', () => ({
 }));
 
 vi.mock('$lib/db.server', () => ({
-	updateGenerationStatus: vi.fn(),
+	setGenerationErrored: vi.fn(),
+	setGenerationStatus: vi.fn(),
 	updateGenerationTracks: vi.fn(),
-	completeGeneration: vi.fn(),
-	updateStemSeparationStatus: vi.fn(),
-	completeStemSeparation: vi.fn()
+	setGenerationCompleted: vi.fn(),
+	setStemSeparationErrored: vi.fn(),
+	setStemSeparationStatus: vi.fn(),
+	setStemSeparationCompleted: vi.fn()
 }));
 
 vi.mock('$lib/sse.server', () => ({
@@ -67,10 +69,12 @@ import {
 
 import { getMusicDetails, getStemSeparationDetails } from '$lib/kie-api.server';
 import {
-	updateGenerationStatus,
-	completeGeneration,
-	updateStemSeparationStatus,
-	completeStemSeparation
+	setGenerationErrored,
+	setGenerationStatus,
+	setGenerationCompleted,
+	setStemSeparationErrored,
+	setStemSeparationStatus,
+	setStemSeparationCompleted
 } from '$lib/db.server';
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
 
@@ -140,10 +144,9 @@ describe('pollForResults', () => {
 		// First poll fires immediately — advance to flush the async call
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(completeGeneration).toHaveBeenCalledTimes(1);
-		expect(completeGeneration).toHaveBeenCalledWith(
+		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
+		expect(setGenerationCompleted).toHaveBeenCalledWith(
 			1,
-			'success',
 			expect.objectContaining({ audioId: 'track-1' }),
 			expect.objectContaining({ audioId: 'track-2' }),
 			expect.any(String)
@@ -163,13 +166,13 @@ describe('pollForResults', () => {
 		await pollForResults(1, 'task-1');
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(updateGenerationStatus).toHaveBeenCalledWith(1, 'error', 'Task creation failed');
+		expect(setGenerationErrored).toHaveBeenCalledWith(1, 'Task creation failed');
 		expect(notifyClients).toHaveBeenCalledWith(
 			1,
 			'generation_error',
 			expect.objectContaining({ status: 'error' })
 		);
-		expect(completeGeneration).not.toHaveBeenCalled();
+		expect(setGenerationCompleted).not.toHaveBeenCalled();
 	});
 
 	it('marks generation as error when API returns non-200 code', async () => {
@@ -182,7 +185,7 @@ describe('pollForResults', () => {
 		await pollForResults(1, 'task-1');
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(updateGenerationStatus).toHaveBeenCalledWith(1, 'error', 'Internal Server Error');
+		expect(setGenerationErrored).toHaveBeenCalledWith(1, 'Internal Server Error');
 		expect(notifyClients).toHaveBeenCalledWith(
 			1,
 			'generation_error',
@@ -202,18 +205,18 @@ describe('pollForResults', () => {
 		// First poll (PENDING)
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(updateGenerationStatus).toHaveBeenCalledWith(1, 'processing');
+		expect(setGenerationStatus).toHaveBeenCalledWith(1, 'processing');
 		expect(notifyClients).toHaveBeenCalledWith(
 			1,
 			'generation_update',
 			expect.objectContaining({ status: 'processing' })
 		);
-		expect(completeGeneration).not.toHaveBeenCalled();
+		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
 		// Second poll after 5s (SUCCESS)
 		await vi.advanceTimersByTimeAsync(5000);
 
-		expect(completeGeneration).toHaveBeenCalledTimes(1);
+		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
 
 	it('retries on fetch exception and succeeds on next poll', async () => {
@@ -227,12 +230,12 @@ describe('pollForResults', () => {
 		// First poll throws
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(completeGeneration).not.toHaveBeenCalled();
+		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
 		// Retry after 5s
 		await vi.advanceTimersByTimeAsync(5000);
 
-		expect(completeGeneration).toHaveBeenCalledTimes(1);
+		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
 
 	it('continues polling when SUCCESS but tracks are missing', async () => {
@@ -258,10 +261,10 @@ describe('pollForResults', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		// onComplete returned false (only 1 track), should keep polling
-		expect(completeGeneration).not.toHaveBeenCalled();
+		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
 		await vi.advanceTimersByTimeAsync(5000);
-		expect(completeGeneration).toHaveBeenCalledTimes(1);
+		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
 
 	it('deduplicates poll loop start for same generation taskId', async () => {
@@ -306,9 +309,8 @@ describe('recoverIncompleteGenerations', () => {
 
 		recoverIncompleteGenerations([gen]);
 
-		expect(updateGenerationStatus).toHaveBeenCalledWith(
+		expect(setGenerationErrored).toHaveBeenCalledWith(
 			5,
-			'error',
 			'Generation interrupted before task creation'
 		);
 	});
@@ -322,13 +324,13 @@ describe('recoverIncompleteGenerations', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(getMusicDetails).toHaveBeenCalledWith('task-abc');
-		expect(completeGeneration).toHaveBeenCalledTimes(1);
+		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
 
 	it('does nothing for empty array', () => {
 		recoverIncompleteGenerations([]);
 
-		expect(updateGenerationStatus).not.toHaveBeenCalled();
+		expect(setGenerationErrored).not.toHaveBeenCalled();
 		expect(getMusicDetails).not.toHaveBeenCalled();
 	});
 });
@@ -346,8 +348,8 @@ describe('pollForStemSeparationResults', () => {
 		await pollForStemSeparationResults(1, 'stem-task-1', 10, 'audio-1');
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(completeStemSeparation).toHaveBeenCalledTimes(1);
-		expect(completeStemSeparation).toHaveBeenCalledWith(
+		expect(setStemSeparationCompleted).toHaveBeenCalledTimes(1);
+		expect(setStemSeparationCompleted).toHaveBeenCalledWith(
 			1,
 			expect.objectContaining({
 				vocalUrl: expect.any(String),
@@ -385,7 +387,7 @@ describe('pollForStemSeparationResults', () => {
 		await pollForStemSeparationResults(1, 'stem-task-1', 10, 'audio-1');
 		await vi.advanceTimersByTimeAsync(0);
 
-		expect(updateStemSeparationStatus).toHaveBeenCalledWith(1, 'error', 'Stem task failed');
+		expect(setStemSeparationErrored).toHaveBeenCalledWith(1, 'Stem task failed');
 		expect(notifyStemSeparationClients).toHaveBeenCalledWith(
 			1,
 			10,
@@ -393,7 +395,7 @@ describe('pollForStemSeparationResults', () => {
 			'stem_separation_error',
 			expect.objectContaining({ status: 'error' })
 		);
-		expect(completeStemSeparation).not.toHaveBeenCalled();
+		expect(setStemSeparationCompleted).not.toHaveBeenCalled();
 	});
 
 	it('deduplicates poll loop start for same stem taskId', async () => {
@@ -464,9 +466,8 @@ describe('recoverIncompleteStemSeparations', () => {
 
 		recoverIncompleteStemSeparations([sep]);
 
-		expect(updateStemSeparationStatus).toHaveBeenCalledWith(
+		expect(setStemSeparationErrored).toHaveBeenCalledWith(
 			7,
-			'error',
 			'Stem separation interrupted before task creation'
 		);
 	});
@@ -486,13 +487,13 @@ describe('recoverIncompleteStemSeparations', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(getStemSeparationDetails).toHaveBeenCalledWith('stem-task-abc');
-		expect(completeStemSeparation).toHaveBeenCalledTimes(1);
+		expect(setStemSeparationCompleted).toHaveBeenCalledTimes(1);
 	});
 
 	it('does nothing for empty array', () => {
 		recoverIncompleteStemSeparations([]);
 
-		expect(updateStemSeparationStatus).not.toHaveBeenCalled();
+		expect(setStemSeparationErrored).not.toHaveBeenCalled();
 		expect(getStemSeparationDetails).not.toHaveBeenCalled();
 	});
 });

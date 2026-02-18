@@ -13,10 +13,10 @@ import { error } from '@sveltejs/kit';
 import {
 	getProject,
 	getGeneration,
-	updateGenerationStatus,
-	updateGenerationTaskId,
-	updateStemSeparationStatus,
-	updateStemSeparationTaskId
+	setGenerationErrored,
+	setGenerationTaskStarted,
+	setStemSeparationErrored,
+	setStemSeparationTaskStarted
 } from '$lib/db.server';
 import type { GenerateMusicResponse, StemSeparationResponse } from '$lib/kie-api.server';
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
@@ -241,14 +241,14 @@ export async function startGenerationTask(
 	await runKieApiTask({
 		apiCall,
 		onError(message) {
-			updateGenerationStatus(generationId, 'error', message);
+			setGenerationErrored(generationId, message);
 			notifyClients(generationId, 'generation_error', {
 				status: 'error',
 				error_message: message
 			});
 		},
 		onSuccess(taskId) {
-			updateGenerationTaskId(generationId, taskId);
+			setGenerationTaskStarted(generationId, taskId);
 			notifyClients(generationId, 'generation_update', { status: 'processing', task_id: taskId });
 			pollForResults(generationId, taskId);
 		}
@@ -270,14 +270,14 @@ export async function startStemSeparationTask(
 	await runKieApiTask({
 		apiCall,
 		onError(message) {
-			updateStemSeparationStatus(separationId, 'error', message);
+			setStemSeparationErrored(separationId, message);
 			notifyStemSeparationClients(separationId, generationId, audioId, 'stem_separation_error', {
 				status: 'error',
 				error_message: message
 			});
 		},
 		onSuccess(taskId) {
-			updateStemSeparationTaskId(separationId, taskId);
+			setStemSeparationTaskStarted(separationId, taskId);
 			notifyStemSeparationClients(separationId, generationId, audioId, 'stem_separation_update', {
 				status: 'processing',
 				task_id: taskId

@@ -17,9 +17,10 @@ import {
 	getStemSeparationByTaskId,
 	getStemSeparationsForSong,
 	getStemSeparationByType,
-	updateStemSeparationTaskId,
-	updateStemSeparationStatus,
-	completeStemSeparation,
+	setTaskStarted,
+	setStatus,
+	setErrored,
+	setCompleted,
 	getPendingStemSeparations
 } from './stem-separations.server';
 
@@ -81,7 +82,7 @@ describe('Stem separations repository', () => {
 	describe('getStemSeparationByTaskId', () => {
 		it('returns a stem separation by task_id', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			updateStemSeparationTaskId(sep.id, 'task-stem-1');
+			setTaskStarted(sep.id, 'task-stem-1');
 			const fetched = getStemSeparationByTaskId('task-stem-1');
 			expect(fetched).toBeDefined();
 			expect(fetched!.id).toBe(sep.id);
@@ -133,38 +134,41 @@ describe('Stem separations repository', () => {
 		});
 	});
 
-	describe('updateStemSeparationTaskId', () => {
+	describe('setTaskStarted', () => {
 		it('sets task_id and status to processing', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			updateStemSeparationTaskId(sep.id, 'task-123');
+			setTaskStarted(sep.id, 'task-123');
 			const updated = getStemSeparation(sep.id)!;
 			expect(updated.task_id).toBe('task-123');
 			expect(updated.status).toBe('processing');
 		});
 	});
 
-	describe('updateStemSeparationStatus', () => {
-		it('updates status without error message', () => {
+	describe('setStatus', () => {
+		it('updates status and clears error message', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			updateStemSeparationStatus(sep.id, 'success');
+			setErrored(sep.id, 'old error');
+			setStatus(sep.id, 'success');
 			const updated = getStemSeparation(sep.id)!;
 			expect(updated.status).toBe('success');
 			expect(updated.error_message).toBeNull();
 		});
+	});
 
-		it('updates status with error message', () => {
+	describe('setErrored', () => {
+		it('sets error status with error message', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			updateStemSeparationStatus(sep.id, 'error', 'Separation failed');
+			setErrored(sep.id, 'Separation failed');
 			const updated = getStemSeparation(sep.id)!;
 			expect(updated.status).toBe('error');
 			expect(updated.error_message).toBe('Separation failed');
 		});
 	});
 
-	describe('completeStemSeparation', () => {
+	describe('setCompleted', () => {
 		it('sets vocal/instrumental URLs for separate_vocal', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			completeStemSeparation(
+			setCompleted(
 				sep.id,
 				{
 					vocalUrl: 'http://vocal.mp3',
@@ -181,7 +185,7 @@ describe('Stem separations repository', () => {
 
 		it('sets stem URLs for split_stem', () => {
 			const sep = createStemSeparation(generationId, audioId, 'split_stem');
-			completeStemSeparation(
+			setCompleted(
 				sep.id,
 				{
 					drumsUrl: 'http://drums.mp3',
@@ -209,8 +213,8 @@ describe('Stem separations repository', () => {
 			const s2 = createStemSeparation(generationId, 'audio-2', 'split_stem');
 			const s3 = createStemSeparation(generationId, 'audio-3', 'separate_vocal');
 
-			updateStemSeparationTaskId(s2.id, 'task-2');
-			updateStemSeparationStatus(s3.id, 'success');
+			setTaskStarted(s2.id, 'task-2');
+			setStatus(s3.id, 'success');
 
 			const pending = getPendingStemSeparations();
 			expect(pending).toHaveLength(2);
@@ -220,7 +224,7 @@ describe('Stem separations repository', () => {
 
 		it('returns empty array when no pending separations exist', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
-			updateStemSeparationStatus(sep.id, 'success');
+			setStatus(sep.id, 'success');
 			expect(getPendingStemSeparations()).toEqual([]);
 		});
 	});

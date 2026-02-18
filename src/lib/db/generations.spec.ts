@@ -18,10 +18,11 @@ import {
 	getGenerationByTaskId,
 	getGenerationsByProject,
 	getLatestGenerationByProject,
-	updateGenerationTaskId,
-	updateGenerationStatus,
+	setTaskStarted,
+	setStatus,
+	setErrored,
 	updateGenerationTracks,
-	completeGeneration,
+	setCompleted,
 	deleteGeneration,
 	getPendingGenerations,
 	createImportedGeneration
@@ -114,7 +115,7 @@ describe('Generations repository', () => {
 	describe('getGenerationByTaskId', () => {
 		it('returns a generation by task_id', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			updateGenerationTaskId(gen.id, 'task-abc');
+			setTaskStarted(gen.id, 'task-abc');
 			const fetched = getGenerationByTaskId('task-abc');
 			expect(fetched).toBeDefined();
 			expect(fetched!.id).toBe(gen.id);
@@ -182,39 +183,34 @@ describe('Generations repository', () => {
 		});
 	});
 
-	describe('updateGenerationTaskId', () => {
+	describe('setTaskStarted', () => {
 		it('sets task_id and changes status to processing', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			updateGenerationTaskId(gen.id, 'task-xyz');
+			setTaskStarted(gen.id, 'task-xyz');
 			const updated = getGeneration(gen.id)!;
 			expect(updated.task_id).toBe('task-xyz');
 			expect(updated.status).toBe('processing');
 		});
 	});
 
-	describe('updateGenerationStatus', () => {
-		it('updates status without error message', () => {
+	describe('setStatus', () => {
+		it('updates status and clears error message', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			updateGenerationStatus(gen.id, 'success');
+			setErrored(gen.id, 'Old error');
+			setStatus(gen.id, 'success');
 			const updated = getGeneration(gen.id)!;
 			expect(updated.status).toBe('success');
 			expect(updated.error_message).toBeNull();
 		});
+	});
 
-		it('updates status with error message', () => {
+	describe('setErrored', () => {
+		it('sets error status with error message', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			updateGenerationStatus(gen.id, 'error', 'Something failed');
+			setErrored(gen.id, 'Something failed');
 			const updated = getGeneration(gen.id)!;
 			expect(updated.status).toBe('error');
 			expect(updated.error_message).toBe('Something failed');
-		});
-
-		it('clears error message when not provided', () => {
-			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			updateGenerationStatus(gen.id, 'error', 'Old error');
-			updateGenerationStatus(gen.id, 'processing');
-			const updated = getGeneration(gen.id)!;
-			expect(updated.error_message).toBeNull();
 		});
 	});
 
@@ -253,12 +249,11 @@ describe('Generations repository', () => {
 		});
 	});
 
-	describe('completeGeneration', () => {
+	describe('setCompleted', () => {
 		it('sets all track fields and status', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
-			completeGeneration(
+			setCompleted(
 				gen.id,
-				'success',
 				{
 					streamUrl: 'http://s1',
 					audioUrl: 'http://a1',
@@ -316,11 +311,11 @@ describe('Generations repository', () => {
 			createGeneration(projectId, 'Failed', 'pop', 'l');
 
 			// Set statuses
-			updateGenerationStatus(g2.id, 'processing');
-			updateGenerationStatus(g3.id, 'text_success');
-			updateGenerationStatus(g4.id, 'first_success');
-			updateGenerationStatus(g1.id + 4, 'success');
-			updateGenerationStatus(g1.id + 5, 'error');
+			setStatus(g2.id, 'processing');
+			setStatus(g3.id, 'text_success');
+			setStatus(g4.id, 'first_success');
+			setStatus(g1.id + 4, 'success');
+			setErrored(g1.id + 5, 'failed');
 
 			const pending = getPendingGenerations();
 			expect(pending).toHaveLength(4);
@@ -330,7 +325,7 @@ describe('Generations repository', () => {
 
 		it('returns empty array when no pending generations exist', () => {
 			const gen = createGeneration(projectId, 'Done', 'pop', 'l');
-			updateGenerationStatus(gen.id, 'success');
+			setStatus(gen.id, 'success');
 			expect(getPendingGenerations()).toEqual([]);
 		});
 	});

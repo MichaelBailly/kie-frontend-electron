@@ -47,7 +47,7 @@ export function getStemSeparationByType(
 	return stmt.get(generationId, audioId, type) as StemSeparation | undefined;
 }
 
-export function updateStemSeparationTaskId(id: number, taskId: string): void {
+export function setTaskStarted(id: number, taskId: string): void {
 	const stmt = prepareStmt(`
 		UPDATE stem_separations 
 		SET task_id = ?, status = 'processing', updated_at = CURRENT_TIMESTAMP 
@@ -56,20 +56,25 @@ export function updateStemSeparationTaskId(id: number, taskId: string): void {
 	stmt.run(taskId, id);
 }
 
-export function updateStemSeparationStatus(
-	id: number,
-	status: string,
-	errorMessage?: string
-): void {
+export function setStatus(id: number, status: string): void {
+	const stmt = prepareStmt(`
+		UPDATE stem_separations 
+		SET status = ?, error_message = NULL, updated_at = CURRENT_TIMESTAMP 
+		WHERE id = ?
+	`);
+	stmt.run(status, id);
+}
+
+export function setErrored(id: number, errorMessage: string): void {
 	const stmt = prepareStmt(`
 		UPDATE stem_separations 
 		SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP 
 		WHERE id = ?
 	`);
-	stmt.run(status, errorMessage || null, id);
+	stmt.run('error', errorMessage, id);
 }
 
-export function completeStemSeparation(
+export function setCompleted(
 	id: number,
 	data: {
 		vocalUrl?: string;
@@ -128,6 +133,45 @@ export function completeStemSeparation(
 		responseData,
 		id
 	);
+}
+
+export function updateStemSeparationTaskId(id: number, taskId: string): void {
+	setTaskStarted(id, taskId);
+}
+
+export function updateStemSeparationStatus(
+	id: number,
+	status: string,
+	errorMessage?: string
+): void {
+	if (status === 'error') {
+		setErrored(id, errorMessage || 'Unknown stem separation error');
+		return;
+	}
+	setStatus(id, status);
+}
+
+export function completeStemSeparation(
+	id: number,
+	data: {
+		vocalUrl?: string;
+		instrumentalUrl?: string;
+		backingVocalsUrl?: string;
+		drumsUrl?: string;
+		bassUrl?: string;
+		guitarUrl?: string;
+		keyboardUrl?: string;
+		pianoUrl?: string;
+		percussionUrl?: string;
+		stringsUrl?: string;
+		synthUrl?: string;
+		fxUrl?: string;
+		brassUrl?: string;
+		woodwindsUrl?: string;
+	},
+	responseData: string
+): void {
+	setCompleted(id, data, responseData);
 }
 
 export function getPendingStemSeparations(): StemSeparation[] {

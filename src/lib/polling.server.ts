@@ -1,10 +1,12 @@
 import type { Generation, StemSeparation } from '$lib/types';
 import {
-	updateGenerationStatus,
+	setGenerationErrored,
+	setGenerationStatus,
 	updateGenerationTracks,
-	completeGeneration,
-	updateStemSeparationStatus,
-	completeStemSeparation
+	setGenerationCompleted,
+	setStemSeparationErrored,
+	setStemSeparationStatus,
+	setStemSeparationCompleted
 } from '$lib/db.server';
 import type { MusicDetailsResponse, StemSeparationDetailsResponse } from '$lib/kie-api.server';
 import {
@@ -321,7 +323,7 @@ export async function pollForResults(
 
 		onError(msg) {
 			activeGenerationPolls.delete(taskId);
-			updateGenerationStatus(generationId, 'error', msg);
+			setGenerationErrored(generationId, msg);
 			notifyClients(generationId, 'generation_error', {
 				status: 'error',
 				error_message: msg
@@ -334,9 +336,8 @@ export async function pollForResults(
 
 			activeGenerationPolls.delete(taskId);
 
-			completeGeneration(
+			setGenerationCompleted(
 				generationId,
-				'success',
 				completion.track1,
 				completion.track2,
 				completion.responseData
@@ -348,7 +349,7 @@ export async function pollForResults(
 
 		onProgress(details) {
 			const progress = mapGenerationProgress(details);
-			updateGenerationStatus(generationId, progress.status);
+			setGenerationStatus(generationId, progress.status);
 
 			if (progress.trackUpdate) {
 				updateGenerationTracks(
@@ -401,7 +402,7 @@ export function recoverIncompleteGenerations(generations: Generation[]): void {
 				isRecovery: true,
 				detail: `[Recovery] Generation ${generation.id} has no task_id, marking as error`
 			});
-			updateGenerationStatus(generation.id, 'error', 'Generation interrupted before task creation');
+			setGenerationErrored(generation.id, 'Generation interrupted before task creation');
 			continue;
 		}
 
@@ -459,7 +460,7 @@ export async function pollForStemSeparationResults(
 
 		onError(msg) {
 			activeStemPolls.delete(taskId);
-			updateStemSeparationStatus(stemSeparationId, 'error', msg);
+			setStemSeparationErrored(stemSeparationId, msg);
 			notifyStemSeparationClients(
 				stemSeparationId,
 				generationId,
@@ -475,7 +476,7 @@ export async function pollForStemSeparationResults(
 
 			activeStemPolls.delete(taskId);
 
-			completeStemSeparation(stemSeparationId, completion.data, completion.responseData);
+			setStemSeparationCompleted(stemSeparationId, completion.data, completion.responseData);
 
 			notifyStemSeparationClients(
 				stemSeparationId,
@@ -488,7 +489,7 @@ export async function pollForStemSeparationResults(
 		},
 
 		onProgress() {
-			updateStemSeparationStatus(stemSeparationId, 'processing');
+			setStemSeparationStatus(stemSeparationId, 'processing');
 			notifyStemSeparationClients(
 				stemSeparationId,
 				generationId,
@@ -535,11 +536,7 @@ export function recoverIncompleteStemSeparations(separations: StemSeparation[]):
 				isRecovery: true,
 				detail: `[Recovery] Stem separation ${separation.id} has no task_id, marking as error`
 			});
-			updateStemSeparationStatus(
-				separation.id,
-				'error',
-				'Stem separation interrupted before task creation'
-			);
+			setStemSeparationErrored(separation.id, 'Stem separation interrupted before task creation');
 			continue;
 		}
 

@@ -83,18 +83,25 @@ export function getLatestGenerationByProject(projectId: number): Generation | un
 	return stmt.get(projectId) as Generation | undefined;
 }
 
-export function updateGenerationTaskId(id: number, taskId: string): void {
+export function setTaskStarted(id: number, taskId: string): void {
 	const stmt = prepareStmt(
 		'UPDATE generations SET task_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
 	);
 	stmt.run(taskId, 'processing', id);
 }
 
-export function updateGenerationStatus(id: number, status: string, errorMessage?: string): void {
+export function setStatus(id: number, status: string): void {
+	const stmt = prepareStmt(
+		'UPDATE generations SET status = ?, error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+	);
+	stmt.run(status, id);
+}
+
+export function setErrored(id: number, errorMessage: string): void {
 	const stmt = prepareStmt(
 		'UPDATE generations SET status = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
 	);
-	stmt.run(status, errorMessage || null, id);
+	stmt.run('error', errorMessage, id);
 }
 
 export function updateGenerationTracks(
@@ -147,9 +154,8 @@ export function updateGenerationTracks(
 	);
 }
 
-export function completeGeneration(
+export function setCompleted(
 	id: number,
-	status: string,
 	track1: {
 		streamUrl: string;
 		audioUrl: string;
@@ -184,7 +190,7 @@ export function completeGeneration(
 		WHERE id = ?
 	`);
 	stmt.run(
-		status,
+		'success',
 		track1.streamUrl,
 		track1.audioUrl,
 		track1.imageUrl,
@@ -198,6 +204,40 @@ export function completeGeneration(
 		responseData,
 		id
 	);
+}
+
+export function updateGenerationTaskId(id: number, taskId: string): void {
+	setTaskStarted(id, taskId);
+}
+
+export function updateGenerationStatus(id: number, status: string, errorMessage?: string): void {
+	if (status === 'error') {
+		setErrored(id, errorMessage || 'Unknown generation error');
+		return;
+	}
+	setStatus(id, status);
+}
+
+export function completeGeneration(
+	id: number,
+	_status: string,
+	track1: {
+		streamUrl: string;
+		audioUrl: string;
+		imageUrl: string;
+		duration: number;
+		audioId: string;
+	},
+	track2: {
+		streamUrl: string;
+		audioUrl: string;
+		imageUrl: string;
+		duration: number;
+		audioId: string;
+	},
+	responseData: string
+): void {
+	setCompleted(id, track1, track2, responseData);
 }
 
 export function deleteGeneration(id: number): void {
