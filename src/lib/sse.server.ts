@@ -2,6 +2,21 @@ import type { Generation, StemSeparation, VariationAnnotation } from '$lib/types
 
 // Store connected clients
 const clients = new Map<string, ReadableStreamDefaultController<Uint8Array>>();
+const encoder = new TextEncoder();
+
+function broadcast(payload: Record<string, unknown>) {
+	const message = JSON.stringify(payload);
+	const eventData = encoder.encode(`data: ${message}\n\n`);
+
+	for (const [clientId, controller] of clients.entries()) {
+		try {
+			controller.enqueue(eventData);
+		} catch {
+			// Client disconnected, clean up
+			clients.delete(clientId);
+		}
+	}
+}
 
 export function addClient(
 	clientId: string,
@@ -19,18 +34,7 @@ export function notifyClients(
 	type: 'generation_update' | 'generation_complete' | 'generation_error',
 	data: Partial<Generation>
 ) {
-	const message = JSON.stringify({ type, generationId, data });
-	const encoder = new TextEncoder();
-	const eventData = encoder.encode(`data: ${message}\n\n`);
-
-	for (const [clientId, controller] of clients.entries()) {
-		try {
-			controller.enqueue(eventData);
-		} catch {
-			// Client disconnected, clean up
-			clients.delete(clientId);
-		}
-	}
+	broadcast({ type, generationId, data });
 }
 
 export function notifyStemSeparationClients(
@@ -40,18 +44,7 @@ export function notifyStemSeparationClients(
 	type: 'stem_separation_update' | 'stem_separation_complete' | 'stem_separation_error',
 	data: Partial<StemSeparation>
 ) {
-	const message = JSON.stringify({ type, stemSeparationId, generationId, audioId, data });
-	const encoder = new TextEncoder();
-	const eventData = encoder.encode(`data: ${message}\n\n`);
-
-	for (const [clientId, controller] of clients.entries()) {
-		try {
-			controller.enqueue(eventData);
-		} catch {
-			// Client disconnected, clean up
-			clients.delete(clientId);
-		}
-	}
+	broadcast({ type, stemSeparationId, generationId, audioId, data });
 }
 
 export function notifyAnnotationClients(
@@ -59,21 +52,10 @@ export function notifyAnnotationClients(
 	audioId: string,
 	data: Partial<VariationAnnotation>
 ) {
-	const message = JSON.stringify({
+	broadcast({
 		type: 'annotation_update',
 		generationId,
 		audioId,
 		data
 	});
-	const encoder = new TextEncoder();
-	const eventData = encoder.encode(`data: ${message}\n\n`);
-
-	for (const [clientId, controller] of clients.entries()) {
-		try {
-			controller.enqueue(eventData);
-		} catch {
-			// Client disconnected, clean up
-			clients.delete(clientId);
-		}
-	}
 }
