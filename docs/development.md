@@ -132,8 +132,10 @@ Key conventions:
 
 - API routes in `src/routes/api/`
 - Server-side logic in `*.server.ts`
+- Complex server-side modules (e.g. import orchestration) in `src/lib/server/`
+- DB access functions in `src/lib/db/` re-exported via `src/lib/db.server.ts`
 - Tests alongside source as `*.spec.ts`
-- Shared utilities in `src/lib/`
+- Shared utilities and types in `src/lib/`
 
 ## Database
 

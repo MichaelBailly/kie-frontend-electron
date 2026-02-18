@@ -193,11 +193,71 @@ Start a new generation.
 
 #### GET /api/generations/{id}
 
-Get generation details with audio tracks.
+Get generation details.
 
 #### DELETE /api/generations/{id}
 
 Delete a generation.
+
+#### POST /api/generations/extend
+
+Extend an existing generated track.
+
+```json
+{
+	"projectId": 1,
+	"title": "Morning Light Extended",
+	"style": "ambient, piano",
+	"lyrics": "...",
+	"extendsGenerationId": 3,
+	"extendsAudioId": "audio-uuid",
+	"continueAt": 60
+}
+```
+
+#### GET /api/generations/{id}/annotations?audioId={audioId}
+
+Get annotation (starred, comment, labels) for a specific audio track.
+
+#### PATCH /api/generations/{id}/annotations
+
+Update annotation for a specific audio track.
+
+```json
+// Toggle star
+{ "audioId": "audio-uuid", "action": "toggle_star" }
+
+// Set labels
+{ "audioId": "audio-uuid", "action": "set_labels", "labels": ["chill", "demo"] }
+
+// Update comment
+{ "audioId": "audio-uuid", "comment": "maybe use this one" }
+```
+
+### Stem Separation
+
+### Labels
+
+#### GET /api/labels?query={q}&limit={n}
+
+Return autocomplete label suggestions matching the query (ordered by recency).
+
+```json
+{ "suggestions": ["chill", "chorus", "cinematic"] }
+```
+
+### Import
+
+#### POST /api/import
+
+Import an existing generation from a known KIE task ID into a project.
+
+```json
+{
+	"taskId": "abc123",
+	"projectId": 1
+}
+```
 
 ### Stem Separation
 
@@ -215,23 +275,44 @@ Start stem separation on a track.
 
 ### Server-Sent Events
 
-#### GET /api/sse/generations/{taskId}
+#### GET /api/sse
 
-Stream status updates for a generation task.
+Global SSE stream. All generation, stem-separation, and annotation updates for all tasks are broadcast to every connected client. Connect once on app load and react to typed events.
 
 ```
-event: status
-data: {"status": "PENDING"}
+// Initial handshake
+data: {"type": "connected", "clientId": "uuid"}
 
-event: status
-data: {"status": "SUCCESS", "tracks": [...]}
+// Generation progress / completion
+data: {"type": "generation_update", "generationId": 3, "data": {...}}
+data: {"type": "generation_complete", "generationId": 3, "data": {...}}
+data: {"type": "generation_error", "generationId": 3, "data": {...}}
+
+// Stem separation progress / completion
+data: {"type": "stem_separation_update", "stemSeparationId": 1, "generationId": 3, "audioId": "uuid", "data": {...}}
+data: {"type": "stem_separation_complete", ...}
+data: {"type": "stem_separation_error", ...}
+
+// Annotation change (star, comment, labels)
+data: {"type": "annotation_update", "generationId": 3, "audioId": "uuid", "data": {...}}
 ```
 
 ---
 
 ## Status Codes
 
-### Generation Status
+### Internal Generation Status (stored in SQLite)
+
+| Status          | Description                 |
+| --------------- | --------------------------- |
+| `pending`       | Task queued                 |
+| `processing`    | KIE task created            |
+| `text_success`  | Lyrics processed            |
+| `first_success` | First track ready           |
+| `success`       | All tracks complete         |
+| `error`         | Failed (see error_message)  |
+
+### KIE API Generation Status (returned by KIE API)
 
 | Status                  | Description              |
 | ----------------------- | ------------------------ |
@@ -243,7 +324,7 @@ data: {"status": "SUCCESS", "tracks": [...]}
 | `GENERATE_AUDIO_FAILED` | Audio generation failed  |
 | `SENSITIVE_WORD_ERROR`  | Content policy violation |
 
-### Stem Separation Status
+### KIE API Stem Separation Status
 
 | Status                  | Description       |
 | ----------------------- | ----------------- |

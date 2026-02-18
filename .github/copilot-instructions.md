@@ -23,14 +23,15 @@
 
 ## Project Conventions
 
-- DB repository pattern: SQL and data access live under [src/lib/db/](src/lib/db/) and are re-exported via [src/lib/db.server.ts](src/lib/db.server.ts).
+- DB repository pattern: SQL and data access live under [src/lib/db/](src/lib/db/) and are re-exported via [src/lib/db.server.ts](src/lib/db.server.ts). Examples: [src/lib/db/annotations.server.ts](src/lib/db/annotations.server.ts), [src/lib/db/generations.server.ts](src/lib/db/generations.server.ts).
+- Complex multi-step server-side orchestration belongs in [src/lib/server/](src/lib/server/) (e.g. import logic), not directly in route handlers.
 - API routes live under [src/routes/api/](src/routes/api/) and should validate inputs before calling server helpers. Examples in [src/routes/api/generations/+server.ts](src/routes/api/generations/+server.ts).
 - Layout composition uses `children` from `$props()` with `{@render children()}`. See [src/routes/+layout.svelte](src/routes/+layout.svelte).
 
 ## Integration Points
 
 - KIE API is server-side only; API key comes from DB settings with env fallback. See [src/lib/kie-api.server.ts](src/lib/kie-api.server.ts) and [docs/api.md](docs/api.md).
-- Async tasks are polled server-side and updates are pushed via SSE. See [src/lib/polling.server.ts](src/lib/polling.server.ts) and [src/lib/sse.server.ts](src/lib/sse.server.ts).
+- Async tasks are polled server-side; all updates (generation, stem separation, annotations) are pushed to clients via a **single global SSE stream** at `/api/sse`. See [src/lib/polling.server.ts](src/lib/polling.server.ts) and [src/lib/sse.server.ts](src/lib/sse.server.ts).
 - SQLite database location is configured via Electron on startup. See [electron/main.js](electron/main.js) and [docs/development.md](docs/development.md).
 
 ## Security

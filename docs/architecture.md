@@ -46,19 +46,31 @@ kie-frontend-electron/
 │   └── preload.js        # Context bridge for renderer
 ├── src/
 │   ├── lib/
-│   │   ├── db.server.ts      # Database operations
+│   │   ├── db/               # DB repository modules (one file per domain)
+│   │   ├── server/           # Complex server-side logic (e.g. import)
+│   │   ├── polling/          # Task poller helpers
+│   │   ├── stores/           # Svelte 5 reactive stores (.svelte.ts)
+│   │   ├── components/       # Shared Svelte components
+│   │   ├── db.server.ts      # Re-exports from db/ modules
 │   │   ├── kie-api.server.ts # KIE API client
-│   │   └── constants.server.ts
+│   │   ├── polling.server.ts # Background task polling
+│   │   ├── sse.server.ts     # Server-sent events broadcaster
+│   │   └── types.ts          # Shared TypeScript types
 │   └── routes/
 │       ├── +page.svelte      # Home / project list
 │       ├── settings/         # API key configuration
-│       ├── projects/[id]/    # Project detail view
-│       │   └── generations/  # Generation detail
+│       ├── projects/[projectId]/
+│       │   ├── +page.svelte         # Project detail / generations list
+│       │   ├── starred/             # Starred variations view
+│       │   └── generations/[generationId]/
+│       │       └── song/[songId]/   # Song detail view
 │       └── api/              # Internal API endpoints
-│           ├── generations/  # CRUD for generations
+│           ├── generations/  # CRUD for generations + extend + annotations
+│           ├── import/       # Import song from external KIE task ID
+│           ├── labels/       # Label autocomplete suggestions
 │           ├── projects/     # CRUD for projects
 │           ├── settings/     # Settings management
-│           ├── sse/          # Server-sent events for polling
+│           ├── sse/          # Global server-sent events stream
 │           └── stem-separation/
 ├── static/                   # Favicons, static assets
 ├── build-resources/          # App icons for packaging
@@ -72,18 +84,20 @@ kie-frontend-electron/
 1. User submits prompt via UI
 2. SvelteKit API route calls KIE API `/generate`
 3. Task ID stored in SQLite with "pending" status
-4. SSE endpoint polls KIE API for status updates
-5. On completion, audio URLs saved to database
-6. UI updates reactively via SSE
+4. Background poller checks KIE API for status updates
+5. On completion, audio track URLs saved inline to the `generations` row
+6. All connected clients notified via the global SSE stream
 
 ### Database Schema
 
 Key tables:
 
 - **projects** - Organize generations into named projects
-- **generations** - Music generation tasks with prompts, status, metadata
-- **audios** - Generated audio tracks (multiple per generation)
-- **stem_separations** - Vocal/stem extraction tasks
+- **generations** - Music generation tasks with prompts, status, and inline audio track URLs (up to two tracks per generation)
+- **stem_separations** - Vocal/stem extraction tasks with per-stem result URLs
+- **variation_annotations** - Per-track user metadata: starred flag, freeform comment, and label links
+- **labels** - Reusable tag strings with recency tracking for autocomplete
+- **variation_label_links** - Many-to-many join between annotations and labels
 - **settings** - Key-value store (API key, preferences)
 
 ## Electron Integration
