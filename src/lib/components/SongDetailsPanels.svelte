@@ -57,41 +57,40 @@
 		</button>
 		{#if styleExpanded}
 			<div class="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-				<div class="p-4">
-					<div class="mb-3 flex justify-end">
-						<button
-							onclick={() => copyToClipboard(style, 'style')}
-							class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
-						>
-							{#if styleCopied}
-								<svg
-									class="h-4 w-4 text-green-600 dark:text-green-400"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M5 13l4 4L19 7"
-									/>
-								</svg>
-								Copied!
-							{:else}
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-									/>
-								</svg>
-								Copy
-							{/if}
-						</button>
-					</div>
-					<p class="text-gray-700 dark:text-gray-300">{style}</p>
+				<div class="relative p-4">
+					<button
+						onclick={() => copyToClipboard(style, 'style')}
+						aria-label="Copy style"
+						class="group absolute right-3 top-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
+					>
+						{#if styleCopied}
+							<span class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5">Copied!</span>
+							<svg
+								class="h-4 w-4 shrink-0 text-green-600 dark:text-green-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+						{:else}
+							<span class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5">Copy</span>
+							<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+								/>
+							</svg>
+						{/if}
+					</button>
+					<p class="whitespace-pre-wrap text-gray-700 dark:text-gray-300">{style.trim()}</p>
 				</div>
 			</div>
 		{/if}
@@ -137,42 +136,41 @@
 			</button>
 			{#if lyricsExpanded}
 				<div class="border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-					<div class="p-4">
-						<div class="mb-3 flex justify-end">
-							<button
-								onclick={() => copyToClipboard(lyrics, 'lyrics')}
-								class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-colors hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
-							>
-								{#if lyricsCopied}
-									<svg
-										class="h-4 w-4 text-green-600 dark:text-green-400"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M5 13l4 4L19 7"
-										/>
-									</svg>
-									Copied!
-								{:else}
-									<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-										/>
-									</svg>
-									Copy
-								{/if}
-							</button>
-						</div>
+					<div class="relative p-4">
+						<button
+							onclick={() => copyToClipboard(lyrics, 'lyrics')}
+							aria-label="Copy lyrics"
+							class="group absolute right-3 top-3 inline-flex cursor-pointer items-center overflow-hidden rounded-lg bg-white p-2 text-sm font-medium text-gray-700 shadow-sm ring-1 ring-gray-300 transition-all hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-600 dark:hover:bg-gray-700"
+						>
+							{#if lyricsCopied}
+								<span class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5">Copied!</span>
+								<svg
+									class="h-4 w-4 shrink-0 text-green-600 dark:text-green-400"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+							{:else}
+								<span class="max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-xs group-hover:pr-1.5">Copy</span>
+								<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+									/>
+								</svg>
+							{/if}
+						</button>
 						<p class="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-							{lyrics}
+							{lyrics.trim()}
 						</p>
 					</div>
 				</div>

@@ -218,9 +218,9 @@
 					Style Prompt
 				</h4>
 				<div
-					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 whitespace-pre-wrap text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
 				>
-					{generation.style}
+					{generation.style.trim()}
 				</div>
 			</div>
 
@@ -229,7 +229,7 @@
 				<div
 					class="w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 font-mono text-sm whitespace-pre-wrap text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
 				>
-					{generation.lyrics}
+					{generation.lyrics?.trim()}
 				</div>
 			</div>
 		</div>
