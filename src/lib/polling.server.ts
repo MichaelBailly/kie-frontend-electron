@@ -16,6 +16,11 @@ import {
 	isStemSeparationCompleteStatus
 } from '$lib/kie-api.server';
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
+import {
+	mapGenerationCompletion,
+	mapGenerationProgress
+} from '$lib/polling/generation-mapper.server';
+import { mapStemCompletion } from '$lib/polling/stem-mapper.server';
 
 // ============================================================================
 // Generic polling engine
@@ -167,94 +172,36 @@ export async function pollForResults(
 		},
 
 		onComplete(details) {
-			const sunoData = details.data.response?.sunoData || [];
-			const track1 = sunoData[0];
-			const track2 = sunoData[1];
-
-			if (!track1 || !track2) return false;
+			const completion = mapGenerationCompletion(details);
+			if (!completion) return false;
 
 			completeGeneration(
 				generationId,
 				'success',
-				{
-					streamUrl: track1.streamAudioUrl,
-					audioUrl: track1.audioUrl,
-					imageUrl: track1.imageUrl,
-					duration: track1.duration,
-					audioId: track1.id
-				},
-				{
-					streamUrl: track2.streamAudioUrl,
-					audioUrl: track2.audioUrl,
-					imageUrl: track2.imageUrl,
-					duration: track2.duration,
-					audioId: track2.id
-				},
-				JSON.stringify(details.data)
+				completion.track1,
+				completion.track2,
+				completion.responseData
 			);
 
-			notifyClients(generationId, 'generation_complete', {
-				status: 'success',
-				track1_stream_url: track1.streamAudioUrl,
-				track1_audio_url: track1.audioUrl,
-				track1_image_url: track1.imageUrl,
-				track1_duration: track1.duration,
-				track1_audio_id: track1.id,
-				track2_stream_url: track2.streamAudioUrl,
-				track2_audio_url: track2.audioUrl,
-				track2_image_url: track2.imageUrl,
-				track2_duration: track2.duration,
-				track2_audio_id: track2.id,
-				response_data: JSON.stringify(details.data)
-			});
+			notifyClients(generationId, 'generation_complete', completion.ssePayload);
 			return true;
 		},
 
 		onProgress(details) {
-			const status = details.data.status;
-			const statusMap: Record<string, string> = {
-				PENDING: 'processing',
-				TEXT_SUCCESS: 'text_success',
-				FIRST_SUCCESS: 'first_success'
-			};
-			const newStatus = statusMap[status] || 'processing';
-			updateGenerationStatus(generationId, newStatus);
+			const progress = mapGenerationProgress(details);
+			updateGenerationStatus(generationId, progress.status);
 
-			if (
-				(status === 'TEXT_SUCCESS' || status === 'FIRST_SUCCESS') &&
-				details.data.response?.sunoData
-			) {
-				const sunoData = details.data.response.sunoData;
-				const track1 = sunoData[0];
-				const track2 = sunoData[1];
-
-				if (track1?.streamAudioUrl || track2?.streamAudioUrl) {
-					updateGenerationTracks(
-						generationId,
-						{
-							streamUrl: track1?.streamAudioUrl,
-							imageUrl: track1?.imageUrl,
-							audioId: track1?.id
-						},
-						{
-							streamUrl: track2?.streamAudioUrl,
-							imageUrl: track2?.imageUrl,
-							audioId: track2?.id
-						}
-					);
-
-					notifyClients(generationId, 'generation_update', {
-						status: newStatus,
-						track1_stream_url: track1?.streamAudioUrl,
-						track1_image_url: track1?.imageUrl,
-						track2_stream_url: track2?.streamAudioUrl,
-						track2_image_url: track2?.imageUrl
-					});
-					return;
-				}
+			if (progress.trackUpdate) {
+				updateGenerationTracks(
+					generationId,
+					progress.trackUpdate.track1,
+					progress.trackUpdate.track2
+				);
+				notifyClients(generationId, 'generation_update', progress.trackUpdate.ssePayload);
+				return;
 			}
 
-			notifyClients(generationId, 'generation_update', { status: newStatus });
+			notifyClients(generationId, 'generation_update', progress.ssePayload);
 		}
 	});
 }
@@ -324,52 +271,17 @@ export async function pollForStemSeparationResults(
 		},
 
 		onComplete(details) {
-			const { response } = details.data;
-			if (!response) return false;
+			const completion = mapStemCompletion(details);
+			if (!completion) return false;
 
-			completeStemSeparation(
-				stemSeparationId,
-				{
-					vocalUrl: response.vocalUrl || undefined,
-					instrumentalUrl: response.instrumentalUrl || undefined,
-					backingVocalsUrl: response.backingVocalsUrl || undefined,
-					drumsUrl: response.drumsUrl || undefined,
-					bassUrl: response.bassUrl || undefined,
-					guitarUrl: response.guitarUrl || undefined,
-					keyboardUrl: response.keyboardUrl || undefined,
-					pianoUrl: response.pianoUrl || undefined,
-					percussionUrl: response.percussionUrl || undefined,
-					stringsUrl: response.stringsUrl || undefined,
-					synthUrl: response.synthUrl || undefined,
-					fxUrl: response.fxUrl || undefined,
-					brassUrl: response.brassUrl || undefined,
-					woodwindsUrl: response.woodwindsUrl || undefined
-				},
-				JSON.stringify(details.data)
-			);
+			completeStemSeparation(stemSeparationId, completion.data, completion.responseData);
 
 			notifyStemSeparationClients(
 				stemSeparationId,
 				generationId,
 				audioId,
 				'stem_separation_complete',
-				{
-					status: 'success',
-					vocal_url: response.vocalUrl,
-					instrumental_url: response.instrumentalUrl,
-					backing_vocals_url: response.backingVocalsUrl,
-					drums_url: response.drumsUrl,
-					bass_url: response.bassUrl,
-					guitar_url: response.guitarUrl,
-					keyboard_url: response.keyboardUrl,
-					piano_url: response.pianoUrl,
-					percussion_url: response.percussionUrl,
-					strings_url: response.stringsUrl,
-					synth_url: response.synthUrl,
-					fx_url: response.fxUrl,
-					brass_url: response.brassUrl,
-					woodwinds_url: response.woodwindsUrl
-				}
+				completion.ssePayload
 			);
 			return true;
 		},
