@@ -56,6 +56,24 @@ beforeEach(async () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/generations', () => {
+	it('throws 400 for invalid JSON body', async () => {
+		const { POST } = await import('./+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: {},
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
 	it('creates a generation and starts the task', async () => {
 		const project = createProject({ id: 1 });
 		db.__setProjects([project]);
@@ -190,6 +208,24 @@ describe('POST /api/generations', () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/generations/extend', () => {
+	it('throws 400 for invalid JSON body', async () => {
+		const { POST } = await import('./extend/+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: {},
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
 	it('creates an extend generation and starts the task', async () => {
 		const project = createProject({ id: 1 });
 		const parentGen = createCompletedGeneration({

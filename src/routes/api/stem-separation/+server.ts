@@ -6,17 +6,22 @@ import {
 	type StemSeparationType
 } from '$lib/db.server';
 import { separateVocals } from '$lib/kie-api.server';
-import { requireFields, requireGeneration, startStemSeparationTask } from '$lib/api-helpers.server';
+import {
+	asEnum,
+	asNonEmptyString,
+	asPositiveInt,
+	parseJsonBody,
+	requireGeneration,
+	startStemSeparationTask
+} from '$lib/api-helpers.server';
+
+const STEM_SEPARATION_TYPES = ['separate_vocal', 'split_stem'] as const;
 
 export const POST: RequestHandler = async ({ request }) => {
-	const body = await request.json();
-	const { generationId, audioId, type } = body;
-
-	requireFields(body, ['generationId', 'audioId', 'type']);
-
-	if (type !== 'separate_vocal' && type !== 'split_stem') {
-		throw error(400, 'Invalid type. Must be "separate_vocal" or "split_stem"');
-	}
+	const body = await parseJsonBody(request);
+	const generationId = asPositiveInt(body.generationId, 'generationId');
+	const audioId = asNonEmptyString(body.audioId, 'audioId');
+	const type = asEnum(body.type, STEM_SEPARATION_TYPES, 'type');
 
 	const generation = requireGeneration(generationId);
 

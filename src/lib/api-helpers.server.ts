@@ -23,6 +23,77 @@ import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
 import { pollForResults, pollForStemSeparationResults } from '$lib/polling.server';
 import type { Project, Generation } from '$lib/types';
 
+type JsonRecord = Record<string, unknown>;
+
+// ============================================================================
+// Request parsing and scalar validators
+// ============================================================================
+
+/**
+ * Parse JSON request body and guarantee an object payload.
+ * Throws 400 for invalid JSON or non-object payloads.
+ */
+export async function parseJsonBody(request: Request): Promise<JsonRecord> {
+	let parsed: unknown;
+	try {
+		parsed = await request.json();
+	} catch {
+		throw error(400, 'Invalid JSON body');
+	}
+
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+		throw error(400, 'JSON body must be an object');
+	}
+
+	return parsed as JsonRecord;
+}
+
+/**
+ * Validate and return a non-empty string.
+ */
+export function asNonEmptyString(value: unknown, name: string): string {
+	if (typeof value !== 'string') {
+		throw error(400, `Invalid ${name}: must be a string`);
+	}
+
+	const trimmed = value.trim();
+	if (!trimmed) {
+		throw error(400, `Invalid ${name}: cannot be empty`);
+	}
+
+	return trimmed;
+}
+
+/**
+ * Validate and return a positive integer (> 0).
+ */
+export function asPositiveInt(value: unknown, name: string): number {
+	if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+		throw error(400, `Invalid ${name}: must be a positive integer`);
+	}
+	return value;
+}
+
+/**
+ * Validate and return a non-negative number (>= 0).
+ */
+export function asNonNegativeNumber(value: unknown, name: string): number {
+	if (typeof value !== 'number' || Number.isNaN(value) || value < 0) {
+		throw error(400, `Invalid ${name}: must be a non-negative number`);
+	}
+	return value;
+}
+
+/**
+ * Validate and return an enum value.
+ */
+export function asEnum<T extends string>(value: unknown, allowed: readonly T[], name: string): T {
+	if (typeof value !== 'string' || !allowed.includes(value as T)) {
+		throw error(400, `Invalid ${name}: must be one of ${allowed.join(', ')}`);
+	}
+	return value as T;
+}
+
 // ============================================================================
 // Required-field validation
 // ============================================================================

@@ -1,6 +1,7 @@
-import { json } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getApiKey, setApiKey, setSetting } from '$lib/db.server';
+import { parseJsonBody } from '$lib/api-helpers.server';
 
 export const GET: RequestHandler = async () => {
 	const apiKey = getApiKey();
@@ -12,14 +13,16 @@ export const GET: RequestHandler = async () => {
 };
 
 export const PUT: RequestHandler = async ({ request }) => {
-	const body = await request.json();
+	const body = await parseJsonBody(request);
 
 	if (body.apiKey !== undefined) {
 		if (body.apiKey === null || body.apiKey === '') {
 			// Clear the API key
 			setSetting('kie_api_key', '');
-		} else {
+		} else if (typeof body.apiKey === 'string') {
 			setApiKey(body.apiKey);
+		} else {
+			throw error(400, 'Invalid apiKey: must be a string or null');
 		}
 	}
 

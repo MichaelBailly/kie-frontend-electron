@@ -69,6 +69,37 @@ describe('GET /api/settings', () => {
 // ---------------------------------------------------------------------------
 
 describe('PUT /api/settings', () => {
+	it('throws 400 for invalid JSON body', async () => {
+		const { PUT } = await import('./+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: {},
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(PUT(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
+	it('throws 400 when apiKey has invalid type', async () => {
+		const { PUT } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'PUT',
+			body: { apiKey: 123 }
+		});
+
+		await expect(PUT(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid apiKey: must be a string or null' }
+		});
+	});
+
 	it('sets the API key', async () => {
 		const { PUT } = await import('./+server');
 		const event = createRequestEvent({

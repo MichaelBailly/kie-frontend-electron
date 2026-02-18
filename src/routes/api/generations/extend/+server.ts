@@ -3,28 +3,29 @@ import type { RequestHandler } from './$types';
 import { createExtendGeneration } from '$lib/db.server';
 import { extendMusic } from '$lib/kie-api.server';
 import {
-	requireFields,
+	asNonEmptyString,
+	asNonNegativeNumber,
+	asPositiveInt,
+	parseJsonBody,
 	requireProject,
 	requireGeneration,
 	startGenerationTask
 } from '$lib/api-helpers.server';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const body = await request.json();
-	const { projectId, title, style, lyrics, extendsGenerationId, extendsAudioId, continueAt } = body;
+	const body = await parseJsonBody(request);
+	const projectId = asPositiveInt(body.projectId, 'projectId');
+	const title = asNonEmptyString(body.title, 'title');
+	const style = asNonEmptyString(body.style, 'style');
+	const lyrics = asNonEmptyString(body.lyrics, 'lyrics');
+	const extendsGenerationId = asPositiveInt(body.extendsGenerationId, 'extendsGenerationId');
+	const extendsAudioId = asNonEmptyString(body.extendsAudioId, 'extendsAudioId');
 
-	requireFields(body, [
-		'projectId',
-		'title',
-		'style',
-		'lyrics',
-		'extendsGenerationId',
-		'extendsAudioId'
-	]);
-
-	if (continueAt === undefined || continueAt === null || continueAt < 0) {
+	if (body.continueAt === undefined || body.continueAt === null) {
 		throw error(400, 'Invalid continueAt value');
 	}
+
+	const continueAt = asNonNegativeNumber(body.continueAt, 'continueAt');
 
 	requireProject(projectId);
 	requireGeneration(extendsGenerationId, 'Parent generation');

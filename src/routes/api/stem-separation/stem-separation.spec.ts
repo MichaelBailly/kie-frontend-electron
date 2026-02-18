@@ -53,6 +53,24 @@ beforeEach(async () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/stem-separation', () => {
+	it('throws 400 for invalid JSON body', async () => {
+		const { POST } = await import('./+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: {},
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
 	it('creates a stem separation and starts the task', async () => {
 		const gen = createCompletedGeneration({
 			id: 1,
