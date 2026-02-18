@@ -96,6 +96,28 @@ afterEach(() => {
 // ============================================================================
 
 describe('pollForResults', () => {
+	it('emits structured poll logs with metadata fields', async () => {
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+		const pendingDetails = createPendingMusicDetailsResponse();
+		vi.mocked(getMusicDetails).mockResolvedValue(pendingDetails);
+
+		await pollForResults(1, 'task-log-meta');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(logSpy).toHaveBeenCalledWith(
+			expect.stringContaining(
+				'"tag":"Poll","phase":"check","taskId":"task-log-meta","entity":"generation 1"'
+			)
+		);
+		expect(logSpy).toHaveBeenCalledWith(
+			expect.stringContaining(
+				'"tag":"Poll","phase":"status","taskId":"task-log-meta","entity":"generation 1"'
+			)
+		);
+
+		logSpy.mockRestore();
+	});
+
 	it('completes generation when API returns SUCCESS with tracks', async () => {
 		const track1 = createSunoTrack({ id: 'track-1' });
 		const track2 = createSunoTrack({ id: 'track-2' });
@@ -243,6 +265,7 @@ describe('pollForResults', () => {
 	});
 
 	it('deduplicates poll loop start for same generation taskId', async () => {
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 		const pendingDetails = createPendingMusicDetailsResponse();
 		vi.mocked(getMusicDetails).mockResolvedValue(pendingDetails);
 
@@ -251,6 +274,11 @@ describe('pollForResults', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(getMusicDetails).toHaveBeenCalledTimes(1);
+		expect(logSpy).toHaveBeenCalledWith(
+			expect.stringContaining('"tag":"PollRegistry","phase":"dedupe","taskId":"task-dedupe"')
+		);
+
+		logSpy.mockRestore();
 	});
 
 	it('cancels active generation poll loop', async () => {

@@ -94,6 +94,21 @@ export function asEnum<T extends string>(value: unknown, allowed: readonly T[], 
 	return value as T;
 }
 
+/**
+ * Validate and return a nullable string (string or null).
+ */
+export function asNullableString(value: unknown, name: string): string | null {
+	if (value === null) {
+		return null;
+	}
+
+	if (typeof value !== 'string') {
+		throw error(400, `Invalid ${name}: must be a string or null`);
+	}
+
+	return value;
+}
+
 // ============================================================================
 // Required-field validation
 // ============================================================================

@@ -73,6 +73,30 @@ interface PollLoopController {
 const activeGenerationPolls = new Map<string, PollLoopController>();
 const activeStemPolls = new Map<string, PollLoopController>();
 
+type PollLogLevel = 'log' | 'error';
+
+interface PollLogEvent {
+	tag: string;
+	phase: string;
+	taskId?: string;
+	entity?: string;
+	attempt?: number;
+	status?: string;
+	intervalSeconds?: number;
+	isRecovery?: boolean;
+	detail?: string;
+}
+
+function emitPollLog(level: PollLogLevel, event: PollLogEvent): void {
+	const payload = JSON.stringify(event);
+	if (level === 'error') {
+		console.error(`[PollEvent] ${payload}`);
+		return;
+	}
+
+	console.log(`[PollEvent] ${payload}`);
+}
+
 /**
  * Generic polling engine for KIE API async tasks.
  *
@@ -105,9 +129,15 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 		}
 
 		attempts++;
-		console.log(
-			`${prefix}[${config.logTag} #${attempts}] Checking taskId: ${config.taskId} for ${config.label}`
-		);
+		emitPollLog('log', {
+			tag: config.logTag,
+			phase: 'check',
+			taskId: config.taskId,
+			entity: config.label,
+			attempt: attempts,
+			isRecovery: !!config.isRecovery,
+			detail: `${prefix}[${config.logTag} #${attempts}] Checking taskId: ${config.taskId} for ${config.label}`
+		});
 
 		try {
 			const details = await config.fetchDetails(config.taskId);
@@ -116,7 +146,16 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 			}
 
 			const status = config.getStatus(details);
-			console.log(`${prefix}[${config.logTag} #${attempts}] Status: ${status}`);
+			emitPollLog('log', {
+				tag: config.logTag,
+				phase: 'status',
+				taskId: config.taskId,
+				entity: config.label,
+				attempt: attempts,
+				status,
+				isRecovery: !!config.isRecovery,
+				detail: `${prefix}[${config.logTag} #${attempts}] Status: ${status}`
+			});
 
 			if (details.code !== 200) {
 				config.onError(details.msg);
@@ -125,14 +164,32 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 			}
 
 			if (status && config.isError(status)) {
-				console.log(`${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`);
+				emitPollLog('log', {
+					tag: config.logTag,
+					phase: 'terminal_error',
+					taskId: config.taskId,
+					entity: config.label,
+					attempt: attempts,
+					status,
+					isRecovery: !!config.isRecovery,
+					detail: `${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`
+				});
 				config.onError(config.getStatusErrorMessage(details) || status);
 				cancel();
 				return;
 			}
 
 			if (status && config.isComplete(status)) {
-				console.log(`${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`);
+				emitPollLog('log', {
+					tag: config.logTag,
+					phase: 'terminal_complete',
+					taskId: config.taskId,
+					entity: config.label,
+					attempt: attempts,
+					status,
+					isRecovery: !!config.isRecovery,
+					detail: `${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`
+				});
 				if (config.onComplete(details)) {
 					cancel();
 					return;
@@ -144,9 +201,16 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 
 			// Continue polling or timeout
 			if (attempts < maxAttempts) {
-				console.log(
-					`${prefix}[${config.logTag} #${attempts}] Continuing to poll in ${intervalMs / 1000} seconds...`
-				);
+				emitPollLog('log', {
+					tag: config.logTag,
+					phase: 'schedule_next',
+					taskId: config.taskId,
+					entity: config.label,
+					attempt: attempts,
+					intervalSeconds: intervalMs / 1000,
+					isRecovery: !!config.isRecovery,
+					detail: `${prefix}[${config.logTag} #${attempts}] Continuing to poll in ${intervalMs / 1000} seconds...`
+				});
 				timeoutHandle = setTimeout(poll, intervalMs);
 			} else {
 				config.onError(timeoutMessage);
@@ -158,7 +222,15 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 			}
 
 			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-			console.error(`${prefix}[${config.logTag} #${attempts}] Error:`, errorMessage);
+			emitPollLog('error', {
+				tag: config.logTag,
+				phase: 'exception',
+				taskId: config.taskId,
+				entity: config.label,
+				attempt: attempts,
+				isRecovery: !!config.isRecovery,
+				detail: `${prefix}[${config.logTag} #${attempts}] Error: ${errorMessage}`
+			});
 			if (attempts < maxAttempts) {
 				timeoutHandle = setTimeout(poll, intervalMs);
 			} else {
@@ -223,7 +295,14 @@ export async function pollForResults(
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
 	if (activeGenerationPolls.has(taskId)) {
-		console.log(`[PollRegistry] Poll already active for generation taskId: ${taskId}`);
+		emitPollLog('log', {
+			tag: 'PollRegistry',
+			phase: 'dedupe',
+			taskId,
+			entity: `generation ${generationId}`,
+			isRecovery: !!options.isRecovery,
+			detail: `[PollRegistry] Poll already active for generation taskId: ${taskId}`
+		});
 		return;
 	}
 
@@ -294,22 +373,47 @@ export async function pollForResults(
  */
 export function recoverIncompleteGenerations(generations: Generation[]): void {
 	if (generations.length === 0) {
-		console.log('[Recovery] No incomplete generations to recover');
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'scan_none',
+			entity: 'generation',
+			isRecovery: true,
+			detail: '[Recovery] No incomplete generations to recover'
+		});
 		return;
 	}
 
-	console.log(`[Recovery] Found ${generations.length} incomplete generation(s) to recover`);
+	emitPollLog('log', {
+		tag: 'Recovery',
+		phase: 'scan_found',
+		entity: 'generation',
+		status: String(generations.length),
+		isRecovery: true,
+		detail: `[Recovery] Found ${generations.length} incomplete generation(s) to recover`
+	});
 
 	for (const generation of generations) {
 		if (!generation.task_id) {
-			console.log(`[Recovery] Generation ${generation.id} has no task_id, marking as error`);
+			emitPollLog('log', {
+				tag: 'Recovery',
+				phase: 'missing_task_id',
+				entity: `generation ${generation.id}`,
+				isRecovery: true,
+				detail: `[Recovery] Generation ${generation.id} has no task_id, marking as error`
+			});
 			updateGenerationStatus(generation.id, 'error', 'Generation interrupted before task creation');
 			continue;
 		}
 
-		console.log(
-			`[Recovery] Resuming polling for generation ${generation.id} (taskId: ${generation.task_id}, status: ${generation.status})`
-		);
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'resume',
+			taskId: generation.task_id,
+			entity: `generation ${generation.id}`,
+			status: generation.status,
+			isRecovery: true,
+			detail: `[Recovery] Resuming polling for generation ${generation.id} (taskId: ${generation.task_id}, status: ${generation.status})`
+		});
 		pollForResults(generation.id, generation.task_id, { isRecovery: true });
 	}
 }
@@ -329,7 +433,14 @@ export async function pollForStemSeparationResults(
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
 	if (activeStemPolls.has(taskId)) {
-		console.log(`[PollRegistry] Poll already active for stem taskId: ${taskId}`);
+		emitPollLog('log', {
+			tag: 'PollRegistry',
+			phase: 'dedupe',
+			taskId,
+			entity: `stem separation ${stemSeparationId}`,
+			isRecovery: !!options.isRecovery,
+			detail: `[PollRegistry] Poll already active for stem taskId: ${taskId}`
+		});
 		return;
 	}
 
@@ -396,15 +507,34 @@ export async function pollForStemSeparationResults(
  */
 export function recoverIncompleteStemSeparations(separations: StemSeparation[]): void {
 	if (separations.length === 0) {
-		console.log('[Recovery] No incomplete stem separations to recover');
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'scan_none',
+			entity: 'stem separation',
+			isRecovery: true,
+			detail: '[Recovery] No incomplete stem separations to recover'
+		});
 		return;
 	}
 
-	console.log(`[Recovery] Found ${separations.length} incomplete stem separation(s) to recover`);
+	emitPollLog('log', {
+		tag: 'Recovery',
+		phase: 'scan_found',
+		entity: 'stem separation',
+		status: String(separations.length),
+		isRecovery: true,
+		detail: `[Recovery] Found ${separations.length} incomplete stem separation(s) to recover`
+	});
 
 	for (const separation of separations) {
 		if (!separation.task_id) {
-			console.log(`[Recovery] Stem separation ${separation.id} has no task_id, marking as error`);
+			emitPollLog('log', {
+				tag: 'Recovery',
+				phase: 'missing_task_id',
+				entity: `stem separation ${separation.id}`,
+				isRecovery: true,
+				detail: `[Recovery] Stem separation ${separation.id} has no task_id, marking as error`
+			});
 			updateStemSeparationStatus(
 				separation.id,
 				'error',
@@ -413,9 +543,15 @@ export function recoverIncompleteStemSeparations(separations: StemSeparation[]):
 			continue;
 		}
 
-		console.log(
-			`[Recovery] Resuming polling for stem separation ${separation.id} (taskId: ${separation.task_id}, status: ${separation.status})`
-		);
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'resume',
+			taskId: separation.task_id,
+			entity: `stem separation ${separation.id}`,
+			status: separation.status,
+			isRecovery: true,
+			detail: `[Recovery] Resuming polling for stem separation ${separation.id} (taskId: ${separation.task_id}, status: ${separation.status})`
+		});
 		pollForStemSeparationResults(
 			separation.id,
 			separation.task_id,
