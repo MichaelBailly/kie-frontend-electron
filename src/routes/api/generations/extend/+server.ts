@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createExtendGeneration } from '$lib/db.server';
 import { extendMusic } from '$lib/kie-api.server';
+import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asNonEmptyString,
 	asNonNegativeNumber,
@@ -51,10 +52,12 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			continueAt,
 			model: 'V5',
-			callBackUrl: 'https://api.example.com/callback',
+			callBackUrl: KIE_CALLBACK_URL,
 			negativeTags: ''
 		})
-	).catch(console.error);
+	).catch((err) =>
+		console.error(`[AsyncTask] extend generation ${generation.id} failed to start:`, err)
+	);
 
 	return json(generation);
 };

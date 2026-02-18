@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { createGeneration } from '$lib/db.server';
 import { generateMusic } from '$lib/kie-api.server';
+import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asNonEmptyString,
 	asPositiveInt,
@@ -30,10 +31,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			customMode: true,
 			instrumental: false,
 			model: 'V5',
-			callBackUrl: 'https://api.example.com/callback',
+			callBackUrl: KIE_CALLBACK_URL,
 			negativeTags: ''
 		})
-	).catch(console.error);
+	).catch((err) => console.error(`[AsyncTask] generation ${generation.id} failed to start:`, err));
 
 	return json(generation);
 };

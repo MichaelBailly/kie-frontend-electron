@@ -6,6 +6,7 @@ import {
 	type StemSeparationType
 } from '$lib/db.server';
 import { separateVocals } from '$lib/kie-api.server';
+import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asEnum,
 	asNonEmptyString,
@@ -49,9 +50,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			taskId: generation.task_id!,
 			audioId,
 			type,
-			callBackUrl: 'https://api.example.com/callback'
+			callBackUrl: KIE_CALLBACK_URL
 		})
-	).catch(console.error);
+	).catch((err) =>
+		console.error(`[AsyncTask] stem separation ${separation.id} failed to start:`, err)
+	);
 
 	return json(separation);
 };

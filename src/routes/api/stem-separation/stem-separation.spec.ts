@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	createDbMock,
 	createKieApiMock,
@@ -133,7 +134,8 @@ describe('POST /api/stem-separation', () => {
 			expect.objectContaining({
 				taskId: 'task-1',
 				audioId: 'audio-1-1',
-				type: 'separate_vocal'
+				type: 'separate_vocal',
+				callBackUrl: KIE_CALLBACK_URL
 			})
 		);
 	});

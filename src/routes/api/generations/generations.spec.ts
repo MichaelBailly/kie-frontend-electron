@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	createDbMock,
 	createKieApiMock,
@@ -164,7 +165,8 @@ describe('POST /api/generations', () => {
 				title: 'Song',
 				customMode: true,
 				instrumental: false,
-				model: 'V5'
+				model: 'V5',
+				callBackUrl: KIE_CALLBACK_URL
 			})
 		);
 	});
@@ -512,7 +514,8 @@ describe('POST /api/generations/extend', () => {
 				style: 'rock',
 				title: 'Extended',
 				continueAt: 30,
-				model: 'V5'
+				model: 'V5',
+				callBackUrl: KIE_CALLBACK_URL
 			})
 		);
 	});

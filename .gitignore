@@ -33,3 +33,4 @@ dist-electron/
 *.AppImage
 *.deb
 *.snap
+*.bak
