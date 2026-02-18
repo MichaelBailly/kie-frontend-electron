@@ -105,6 +105,30 @@
 			"label": "check",
 			"type": "shell",
 			"command": "npx svelte-kit sync && npx svelte-check --tsconfig ./tsconfig.json"
+		},
+		{
+			"label": "format",
+			"type": "shell",
+			"command": "npm run format",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npm run lint",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "lint",
+			"type": "shell",
+			"command": "npm run lint",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

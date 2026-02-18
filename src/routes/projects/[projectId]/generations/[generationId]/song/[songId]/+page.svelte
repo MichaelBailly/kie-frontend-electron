@@ -100,11 +100,6 @@
 
 	let showExtendForm = $state(false);
 
-	// Annotation (star/comment) state
-	let starredOverride = $state<boolean | null>(null);
-	let starred = $derived.by(() => starredOverride ?? currentAnnotation?.starred === 1);
-	let starAnimClass = $state('');
-
 	// Listen for SSE annotation updates
 	const annotationsContext = getContext<
 		| {
@@ -113,13 +108,18 @@
 		| undefined
 	>('annotations');
 
+	let currentAnnotation = $derived(
+		annotationsContext?.get(generation.id, song.id) ?? data.annotation ?? null
+	);
+
 	let liveLabels = $derived(
 		annotationsContext?.get(generation.id, song.id)?.labels ?? data.annotation?.labels ?? []
 	);
 
-	let currentAnnotation = $derived(
-		annotationsContext?.get(generation.id, song.id) ?? data.annotation ?? null
-	);
+	// Annotation (star/comment) state
+	let starredOverride = $state<boolean | null>(null);
+	let starred = $derived.by(() => starredOverride ?? currentAnnotation?.starred === 1);
+	let starAnimClass = $state('');
 
 	$effect(() => {
 		if (starredOverride === null) return;

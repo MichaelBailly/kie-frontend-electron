@@ -62,8 +62,6 @@
 				height={160}
 				{currentTime}
 				{duration}
-				color="#6366f1"
-				backgroundColor="#e5e7eb"
 				onSeek={onWaveformSeek}
 			/>
 		</div>
@@ -108,7 +106,7 @@
 					<a
 						href={song.audioUrl}
 						rel="external"
-						download="{song.title}.mp3"
+						download={`${song.title}.mp3`}
 						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
 						title="Download track"
 					>
@@ -125,10 +123,10 @@
 
 				<button
 					onclick={onToggleStar}
-					class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full transition-all duration-200 {starred
-						? 'bg-amber-100 text-amber-500 hover:bg-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:hover:bg-amber-900'
-						: 'bg-gray-100 text-gray-400 hover:bg-amber-50 hover:text-amber-400 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-amber-400'}"
-					title={starred ? 'Remove from starred' : 'Star this variation'}
+					class="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors {starred
+						? 'bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:hover:bg-amber-900/60'
+						: 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}"
+					title={starred ? 'Unstar' : 'Star'}
 				>
 					<svg
 						class="h-5 w-5 {starAnimClass}"

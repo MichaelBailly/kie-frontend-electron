@@ -106,7 +106,7 @@
 		<img src={imageUrl} alt={title} class="h-16 w-16 shrink-0 rounded-lg object-cover" />
 	{:else}
 		<div
-			class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600"
+			class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-purple-600"
 		>
 			<svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path

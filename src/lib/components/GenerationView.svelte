@@ -1,10 +1,9 @@
 <script lang="ts">
-	import type { Generation, VariationAnnotation } from '$lib/types';
+	import type { Generation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
-	import LabelPicker from './LabelPicker.svelte';
+	import AnnotationActions from './AnnotationActions.svelte';
 	import ParentSongBanner from './ParentSongBanner.svelte';
-	import { getContext } from 'svelte';
 	import { resolve } from '$app/paths';
 
 	let {
@@ -16,63 +15,6 @@
 		parentGeneration?: { id: number } | null;
 		parentSong?: { id: string; title: string } | null;
 	} = $props();
-
-	// Get annotations from context
-	const annotationsContext = getContext<
-		| {
-				get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
-				isStarred: (generationId: number, audioId: string) => boolean;
-		  }
-		| undefined
-	>('annotations');
-
-	let track1Starred = $derived(
-		generation.track1_audio_id
-			? (annotationsContext?.isStarred(generation.id, generation.track1_audio_id) ?? false)
-			: false
-	);
-	let track2Starred = $derived(
-		generation.track2_audio_id
-			? (annotationsContext?.isStarred(generation.id, generation.track2_audio_id) ?? false)
-			: false
-	);
-
-	let track1Labels = $derived(
-		generation.track1_audio_id
-			? (annotationsContext?.get(generation.id, generation.track1_audio_id)?.labels ?? [])
-			: []
-	);
-	let track2Labels = $derived(
-		generation.track2_audio_id
-			? (annotationsContext?.get(generation.id, generation.track2_audio_id)?.labels ?? [])
-			: []
-	);
-
-	let track1StarAnimClass = $state('');
-	let track2StarAnimClass = $state('');
-
-	async function toggleTrackStar(trackNum: 1 | 2) {
-		const audioId = trackNum === 1 ? generation.track1_audio_id : generation.track2_audio_id;
-		if (!audioId) return;
-
-		if (trackNum === 1) {
-			track1StarAnimClass = !track1Starred ? 'star-burst' : 'star-unstar';
-			setTimeout(() => (track1StarAnimClass = ''), 600);
-		} else {
-			track2StarAnimClass = !track2Starred ? 'star-burst' : 'star-unstar';
-			setTimeout(() => (track2StarAnimClass = ''), 600);
-		}
-
-		try {
-			await fetch(`/api/generations/${generation.id}/annotations`, {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ audioId, action: 'toggle_star' })
-			});
-		} catch {
-			console.error('Failed to toggle star');
-		}
-	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -184,19 +126,8 @@
 								<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 1</p>
 							{/if}
 							{#if generation.track1_audio_id}
-								<button
-									onclick={() => toggleTrackStar(1)}
-									class="shrink-0 cursor-pointer rounded p-0.5 transition-colors {track1Starred
-										? 'text-amber-500 hover:text-amber-600'
-										: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
-									title={track1Starred ? 'Unstar variation' : 'Star variation'}
-								>
-									<svg
-										class="h-4 w-4 {track1StarAnimClass}"
-										fill={track1Starred ? 'currentColor' : 'none'}
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-									>
+								<button hidden class="hidden">
+									<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path
 											stroke-linecap="round"
 											stroke-linejoin="round"
@@ -205,11 +136,9 @@
 										/>
 									</svg>
 								</button>
-								<LabelPicker
-									labels={track1Labels}
+								<AnnotationActions
 									generationId={generation.id}
 									audioId={generation.track1_audio_id}
-									placeholder="Add a label to this variation"
 								/>
 							{/if}
 						</div>
@@ -241,19 +170,8 @@
 									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 2</p>
 								{/if}
 								{#if generation.track2_audio_id}
-									<button
-										onclick={() => toggleTrackStar(2)}
-										class="shrink-0 cursor-pointer rounded p-0.5 transition-colors {track2Starred
-											? 'text-amber-500 hover:text-amber-600'
-											: 'text-gray-300 hover:text-amber-400 dark:text-gray-600 dark:hover:text-amber-400'}"
-										title={track2Starred ? 'Unstar variation' : 'Star variation'}
-									>
-										<svg
-											class="h-4 w-4 {track2StarAnimClass}"
-											fill={track2Starred ? 'currentColor' : 'none'}
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
+									<button hidden class="hidden">
+										<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 											<path
 												stroke-linecap="round"
 												stroke-linejoin="round"
@@ -262,11 +180,10 @@
 											/>
 										</svg>
 									</button>
-									<LabelPicker
-										labels={track2Labels}
+									<!-- LabelPicker removed -->
+									<AnnotationActions
 										generationId={generation.id}
 										audioId={generation.track2_audio_id}
-										placeholder="Add a label to this variation"
 									/>
 								{/if}
 							</div>
