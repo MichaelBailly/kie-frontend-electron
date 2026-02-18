@@ -66,6 +66,13 @@ interface PollConfig<TDetails extends { code: number; msg: string }> {
 	onProgress: (details: TDetails) => void;
 }
 
+interface PollLoopController {
+	cancel: () => void;
+}
+
+const activeGenerationPolls = new Map<string, PollLoopController>();
+const activeStemPolls = new Map<string, PollLoopController>();
+
 /**
  * Generic polling engine for KIE API async tasks.
  *
@@ -73,16 +80,30 @@ interface PollConfig<TDetails extends { code: number; msg: string }> {
  * (complete or error), a timeout is hit, or max retries are exhausted on
  * consecutive exceptions.
  */
-async function runPollLoop<TDetails extends { code: number; msg: string }>(
+function runPollLoop<TDetails extends { code: number; msg: string }>(
 	config: PollConfig<TDetails>
-): Promise<void> {
+): PollLoopController {
 	const maxAttempts = config.maxAttempts ?? 120;
 	const intervalMs = config.intervalMs ?? 5000;
 	const timeoutMessage = config.timeoutMessage ?? `${config.label} timed out`;
 	let attempts = 0;
+	let cancelled = false;
+	let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
 	const prefix = config.isRecovery ? '[Recovery]' : '';
 
+	const cancel = () => {
+		cancelled = true;
+		if (timeoutHandle) {
+			clearTimeout(timeoutHandle);
+			timeoutHandle = null;
+		}
+	};
+
 	const poll = async () => {
+		if (cancelled) {
+			return;
+		}
+
 		attempts++;
 		console.log(
 			`${prefix}[${config.logTag} #${attempts}] Checking taskId: ${config.taskId} for ${config.label}`
@@ -90,23 +111,30 @@ async function runPollLoop<TDetails extends { code: number; msg: string }>(
 
 		try {
 			const details = await config.fetchDetails(config.taskId);
+			if (cancelled) {
+				return;
+			}
+
 			const status = config.getStatus(details);
 			console.log(`${prefix}[${config.logTag} #${attempts}] Status: ${status}`);
 
 			if (details.code !== 200) {
 				config.onError(details.msg);
+				cancel();
 				return;
 			}
 
 			if (status && config.isError(status)) {
 				console.log(`${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`);
 				config.onError(config.getStatusErrorMessage(details) || status);
+				cancel();
 				return;
 			}
 
 			if (status && config.isComplete(status)) {
 				console.log(`${prefix}[${config.logTag} #${attempts}] COMPLETE status detected: ${status}`);
 				if (config.onComplete(details)) {
+					cancel();
 					return;
 				}
 			}
@@ -119,22 +147,66 @@ async function runPollLoop<TDetails extends { code: number; msg: string }>(
 				console.log(
 					`${prefix}[${config.logTag} #${attempts}] Continuing to poll in ${intervalMs / 1000} seconds...`
 				);
-				setTimeout(poll, intervalMs);
+				timeoutHandle = setTimeout(poll, intervalMs);
 			} else {
 				config.onError(timeoutMessage);
+				cancel();
 			}
 		} catch (err) {
+			if (cancelled) {
+				return;
+			}
+
 			const errorMessage = err instanceof Error ? err.message : 'Unknown error';
 			console.error(`${prefix}[${config.logTag} #${attempts}] Error:`, errorMessage);
 			if (attempts < maxAttempts) {
-				setTimeout(poll, intervalMs);
+				timeoutHandle = setTimeout(poll, intervalMs);
 			} else {
 				config.onError(errorMessage);
+				cancel();
 			}
 		}
 	};
 
-	poll();
+	void poll();
+
+	return {
+		cancel
+	};
+}
+
+export function cancelGenerationPoll(taskId: string): boolean {
+	const loop = activeGenerationPolls.get(taskId);
+	if (!loop) {
+		return false;
+	}
+
+	loop.cancel();
+	activeGenerationPolls.delete(taskId);
+	return true;
+}
+
+export function cancelStemSeparationPoll(taskId: string): boolean {
+	const loop = activeStemPolls.get(taskId);
+	if (!loop) {
+		return false;
+	}
+
+	loop.cancel();
+	activeStemPolls.delete(taskId);
+	return true;
+}
+
+export function cancelAllPolls(): void {
+	for (const loop of activeGenerationPolls.values()) {
+		loop.cancel();
+	}
+	activeGenerationPolls.clear();
+
+	for (const loop of activeStemPolls.values()) {
+		loop.cancel();
+	}
+	activeStemPolls.clear();
 }
 
 // ============================================================================
@@ -150,7 +222,12 @@ export async function pollForResults(
 	taskId: string,
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
-	runPollLoop<MusicDetailsResponse>({
+	if (activeGenerationPolls.has(taskId)) {
+		console.log(`[PollRegistry] Poll already active for generation taskId: ${taskId}`);
+		return;
+	}
+
+	const loop = runPollLoop<MusicDetailsResponse>({
 		taskId,
 		label: `generation ${generationId}`,
 		logTag: 'Poll',
@@ -164,6 +241,7 @@ export async function pollForResults(
 		isComplete: isCompleteStatus,
 
 		onError(msg) {
+			activeGenerationPolls.delete(taskId);
 			updateGenerationStatus(generationId, 'error', msg);
 			notifyClients(generationId, 'generation_error', {
 				status: 'error',
@@ -174,6 +252,8 @@ export async function pollForResults(
 		onComplete(details) {
 			const completion = mapGenerationCompletion(details);
 			if (!completion) return false;
+
+			activeGenerationPolls.delete(taskId);
 
 			completeGeneration(
 				generationId,
@@ -204,6 +284,8 @@ export async function pollForResults(
 			notifyClients(generationId, 'generation_update', progress.ssePayload);
 		}
 	});
+
+	activeGenerationPolls.set(taskId, loop);
 }
 
 /**
@@ -246,7 +328,12 @@ export async function pollForStemSeparationResults(
 	audioId: string,
 	options: { isRecovery?: boolean } = {}
 ): Promise<void> {
-	runPollLoop<StemSeparationDetailsResponse>({
+	if (activeStemPolls.has(taskId)) {
+		console.log(`[PollRegistry] Poll already active for stem taskId: ${taskId}`);
+		return;
+	}
+
+	const loop = runPollLoop<StemSeparationDetailsResponse>({
 		taskId,
 		label: `stem separation ${stemSeparationId}`,
 		logTag: 'StemPoll',
@@ -260,6 +347,7 @@ export async function pollForStemSeparationResults(
 		isComplete: isStemSeparationCompleteStatus,
 
 		onError(msg) {
+			activeStemPolls.delete(taskId);
 			updateStemSeparationStatus(stemSeparationId, 'error', msg);
 			notifyStemSeparationClients(
 				stemSeparationId,
@@ -273,6 +361,8 @@ export async function pollForStemSeparationResults(
 		onComplete(details) {
 			const completion = mapStemCompletion(details);
 			if (!completion) return false;
+
+			activeStemPolls.delete(taskId);
 
 			completeStemSeparation(stemSeparationId, completion.data, completion.responseData);
 
@@ -297,6 +387,8 @@ export async function pollForStemSeparationResults(
 			);
 		}
 	});
+
+	activeStemPolls.set(taskId, loop);
 }
 
 /**

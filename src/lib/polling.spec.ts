@@ -59,7 +59,10 @@ import {
 	pollForResults,
 	recoverIncompleteGenerations,
 	pollForStemSeparationResults,
-	recoverIncompleteStemSeparations
+	recoverIncompleteStemSeparations,
+	cancelGenerationPoll,
+	cancelStemSeparationPoll,
+	cancelAllPolls
 } from '$lib/polling.server';
 
 import { getMusicDetails, getStemSeparationDetails } from '$lib/kie-api.server';
@@ -84,6 +87,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+	cancelAllPolls();
 	cleanupTimers();
 });
 
@@ -237,6 +241,31 @@ describe('pollForResults', () => {
 		await vi.advanceTimersByTimeAsync(5000);
 		expect(completeGeneration).toHaveBeenCalledTimes(1);
 	});
+
+	it('deduplicates poll loop start for same generation taskId', async () => {
+		const pendingDetails = createPendingMusicDetailsResponse();
+		vi.mocked(getMusicDetails).mockResolvedValue(pendingDetails);
+
+		await pollForResults(1, 'task-dedupe');
+		await pollForResults(1, 'task-dedupe');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(getMusicDetails).toHaveBeenCalledTimes(1);
+	});
+
+	it('cancels active generation poll loop', async () => {
+		const pendingDetails = createPendingMusicDetailsResponse();
+		vi.mocked(getMusicDetails).mockResolvedValue(pendingDetails);
+
+		await pollForResults(1, 'task-cancel');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(cancelGenerationPoll('task-cancel')).toBe(true);
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(getMusicDetails).toHaveBeenCalledTimes(1);
+		expect(cancelGenerationPoll('task-cancel')).toBe(false);
+	});
 });
 
 // ============================================================================
@@ -337,6 +366,57 @@ describe('pollForStemSeparationResults', () => {
 			expect.objectContaining({ status: 'error' })
 		);
 		expect(completeStemSeparation).not.toHaveBeenCalled();
+	});
+
+	it('deduplicates poll loop start for same stem taskId', async () => {
+		const pendingStemDetails = createStemSeparationDetailsResponse({
+			data: {
+				taskId: 'stem-dedupe',
+				musicId: 'music-1',
+				callbackUrl: '',
+				audioId: 'audio-1',
+				completeTime: null,
+				response: null,
+				successFlag: 'PENDING',
+				createTime: Date.now(),
+				errorCode: null,
+				errorMessage: null
+			}
+		});
+		vi.mocked(getStemSeparationDetails).mockResolvedValue(pendingStemDetails);
+
+		await pollForStemSeparationResults(1, 'stem-dedupe', 10, 'audio-1');
+		await pollForStemSeparationResults(1, 'stem-dedupe', 10, 'audio-1');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(getStemSeparationDetails).toHaveBeenCalledTimes(1);
+	});
+
+	it('cancels active stem poll loop', async () => {
+		const pendingStemDetails = createStemSeparationDetailsResponse({
+			data: {
+				taskId: 'stem-cancel',
+				musicId: 'music-1',
+				callbackUrl: '',
+				audioId: 'audio-1',
+				completeTime: null,
+				response: null,
+				successFlag: 'PENDING',
+				createTime: Date.now(),
+				errorCode: null,
+				errorMessage: null
+			}
+		});
+		vi.mocked(getStemSeparationDetails).mockResolvedValue(pendingStemDetails);
+
+		await pollForStemSeparationResults(1, 'stem-cancel', 10, 'audio-1');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(cancelStemSeparationPoll('stem-cancel')).toBe(true);
+		await vi.advanceTimersByTimeAsync(5000);
+
+		expect(getStemSeparationDetails).toHaveBeenCalledTimes(1);
+		expect(cancelStemSeparationPoll('stem-cancel')).toBe(false);
 	});
 });
 
