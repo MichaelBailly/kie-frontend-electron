@@ -52,6 +52,38 @@ beforeEach(async () => {
 });
 
 // ---------------------------------------------------------------------------
+// Local scenario builders
+//
+// Repeated DB-seeding steps are extracted here so each test reads as a
+// scenario description rather than raw infrastructure setup.
+// ---------------------------------------------------------------------------
+
+/** Seeds a project (id=1) and wires db.createGeneration to return a pending
+ *  generation (id=10).  Used across all "create generation" happy-path tests. */
+function seedNewGenerationScenario() {
+	const project = createProject({ id: 1 });
+	db.__setProjects([project]);
+	const gen = createGeneration({ id: 10, project_id: 1 });
+	db.createGeneration.mockReturnValue(gen);
+	return { project, gen };
+}
+
+/** Seeds a project (id=1) and a completed parent generation ready for the
+ *  extend-song route tests. */
+function seedExtendScenario(opts: { parentId?: number; audioId?: string } = {}) {
+	const { parentId = 5, audioId = 'audio-5-1' } = opts;
+	const project = createProject({ id: 1 });
+	const parentGen = createCompletedGeneration({
+		id: parentId,
+		project_id: 1,
+		track1_audio_id: audioId
+	});
+	db.__setProjects([project]);
+	db.__setGenerations([parentGen]);
+	return { project, parentGen };
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/generations
 // ---------------------------------------------------------------------------
 
@@ -87,11 +119,7 @@ describe('POST /api/generations', () => {
 	});
 
 	it('creates a generation and starts the task', async () => {
-		const project = createProject({ id: 1 });
-		db.__setProjects([project]);
-
-		const newGen = createGeneration({ id: 10, project_id: 1 });
-		db.createGeneration.mockReturnValue(newGen);
+		seedNewGenerationScenario();
 
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({
@@ -119,10 +147,7 @@ describe('POST /api/generations', () => {
 	});
 
 	it('calls KIE API generateMusic after creating the generation', async () => {
-		const project = createProject({ id: 1 });
-		db.__setProjects([project]);
-		const newGen = createGeneration({ id: 10, project_id: 1 });
-		db.createGeneration.mockReturnValue(newGen);
+		seedNewGenerationScenario();
 
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({
@@ -193,10 +218,7 @@ describe('POST /api/generations', () => {
 	});
 
 	it('sets generation to error when KIE API returns non-200', async () => {
-		const project = createProject({ id: 1 });
-		db.__setProjects([project]);
-		const newGen = createGeneration({ id: 10, project_id: 1 });
-		db.createGeneration.mockReturnValue(newGen);
+		seedNewGenerationScenario();
 
 		kieApi.generateMusic.mockResolvedValue({
 			code: 500,
@@ -222,10 +244,7 @@ describe('POST /api/generations', () => {
 	});
 
 	it('starts polling on successful KIE API response', async () => {
-		const project = createProject({ id: 1 });
-		db.__setProjects([project]);
-		const newGen = createGeneration({ id: 10, project_id: 1 });
-		db.createGeneration.mockReturnValue(newGen);
+		seedNewGenerationScenario();
 
 		// Ensure default success response (previous test may have overridden)
 		kieApi.generateMusic.mockResolvedValue({
@@ -247,10 +266,7 @@ describe('POST /api/generations', () => {
 	});
 
 	it('sets generation to error when KIE API throws', async () => {
-		const project = createProject({ id: 1 });
-		db.__setProjects([project]);
-		const newGen = createGeneration({ id: 10, project_id: 1 });
-		db.createGeneration.mockReturnValue(newGen);
+		seedNewGenerationScenario();
 
 		kieApi.generateMusic.mockRejectedValue(new Error('network down'));
 
@@ -335,14 +351,7 @@ describe('POST /api/generations/extend', () => {
 	});
 
 	it('creates an extend generation and starts the task', async () => {
-		const project = createProject({ id: 1 });
-		const parentGen = createCompletedGeneration({
-			id: 5,
-			project_id: 1,
-			track1_audio_id: 'audio-5-1'
-		});
-		db.__setProjects([project]);
-		db.__setGenerations([parentGen]);
+		seedExtendScenario();
 
 		const extendGen = createGeneration({
 			id: 20,
@@ -475,14 +484,7 @@ describe('POST /api/generations/extend', () => {
 	});
 
 	it('calls extendMusic on the KIE API', async () => {
-		const project = createProject({ id: 1 });
-		const parentGen = createCompletedGeneration({
-			id: 5,
-			project_id: 1,
-			track1_audio_id: 'audio-5-1'
-		});
-		db.__setProjects([project]);
-		db.__setGenerations([parentGen]);
+		seedExtendScenario();
 
 		const extendGen = createGeneration({ id: 20, project_id: 1 });
 		db.createExtendGeneration.mockReturnValue(extendGen);

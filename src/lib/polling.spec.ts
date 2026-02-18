@@ -78,6 +78,85 @@ import {
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
 
 // ============================================================================
+// Scenario builders
+//
+// Thin wrappers around the shared fixture factories expressing *intent*
+// (e.g. "a pending stem task") rather than raw data blobs.  Kept local
+// because the patterns appear only in this spec file.
+// ============================================================================
+
+/** A stem-separation details response in PENDING state. */
+function buildPendingStemDetails(taskId: string) {
+	return createStemSeparationDetailsResponse({
+		data: {
+			taskId,
+			musicId: 'music-1',
+			callbackUrl: '',
+			audioId: 'audio-1',
+			completeTime: null,
+			response: null,
+			successFlag: 'PENDING',
+			createTime: Date.now(),
+			errorCode: null,
+			errorMessage: null
+		}
+	});
+}
+
+/** A stem-separation details response in an error (CREATE_TASK_FAILED) state. */
+function buildErrorStemDetails(taskId: string, errorMessage = 'Stem task failed') {
+	return createStemSeparationDetailsResponse({
+		data: {
+			taskId,
+			musicId: 'music-1',
+			callbackUrl: '',
+			audioId: 'audio-1',
+			completeTime: null,
+			response: null,
+			successFlag: 'CREATE_TASK_FAILED',
+			createTime: Date.now(),
+			errorCode: null,
+			errorMessage
+		}
+	});
+}
+
+/** A SUCCESS music-details response carrying exactly one track (incomplete). */
+function buildSingleTrackMusicDetails(taskId: string) {
+	return createMusicDetailsResponse({
+		data: {
+			taskId,
+			parentMusicId: '',
+			param: '',
+			response: { taskId, sunoData: [createSunoTrack({ id: 'track-1' })] },
+			status: 'SUCCESS',
+			type: 'generate',
+			errorCode: null,
+			errorMessage: null
+		}
+	});
+}
+
+/** A SUCCESS music-details response with two explicitly-named tracks. */
+function buildNamedTrackMusicDetails(taskId: string, track1Id: string, track2Id: string) {
+	return createMusicDetailsResponse({
+		data: {
+			taskId,
+			parentMusicId: '',
+			param: '',
+			response: {
+				taskId,
+				sunoData: [createSunoTrack({ id: track1Id }), createSunoTrack({ id: track2Id })]
+			},
+			status: 'SUCCESS',
+			type: 'generate',
+			errorCode: null,
+			errorMessage: null
+		}
+	});
+}
+
+// ============================================================================
 // Setup
 // ============================================================================
 
@@ -122,20 +201,7 @@ describe('pollForResults', () => {
 	});
 
 	it('completes generation when API returns SUCCESS with tracks', async () => {
-		const track1 = createSunoTrack({ id: 'track-1' });
-		const track2 = createSunoTrack({ id: 'track-2' });
-		const details = createMusicDetailsResponse({
-			data: {
-				taskId: 'task-1',
-				parentMusicId: '',
-				param: '',
-				response: { taskId: 'task-1', sunoData: [track1, track2] },
-				status: 'SUCCESS',
-				type: 'generate',
-				errorCode: null,
-				errorMessage: null
-			}
-		});
+		const details = buildNamedTrackMusicDetails('task-1', 'track-1', 'track-2');
 
 		vi.mocked(getMusicDetails).mockResolvedValue(details);
 
@@ -238,18 +304,7 @@ describe('pollForResults', () => {
 	});
 
 	it('continues polling when SUCCESS but tracks are missing', async () => {
-		const incompleteDetails = createMusicDetailsResponse({
-			data: {
-				taskId: 'task-1',
-				parentMusicId: '',
-				param: '',
-				response: { taskId: 'task-1', sunoData: [createSunoTrack({ id: 'track-1' })] },
-				status: 'SUCCESS',
-				type: 'generate',
-				errorCode: null,
-				errorMessage: null
-			}
-		});
+		const incompleteDetails = buildSingleTrackMusicDetails('task-1');
 		const completeDetails = createMusicDetailsResponse();
 
 		vi.mocked(getMusicDetails)
@@ -366,20 +421,7 @@ describe('pollForStemSeparationResults', () => {
 	});
 
 	it('marks stem separation as error on error status', async () => {
-		const details = createStemSeparationDetailsResponse({
-			data: {
-				taskId: 'stem-task-1',
-				musicId: 'music-1',
-				callbackUrl: '',
-				audioId: 'audio-1',
-				completeTime: null,
-				response: null,
-				successFlag: 'CREATE_TASK_FAILED',
-				createTime: Date.now(),
-				errorCode: null,
-				errorMessage: 'Stem task failed'
-			}
-		});
+		const details = buildErrorStemDetails('stem-task-1', 'Stem task failed');
 
 		vi.mocked(getStemSeparationDetails).mockResolvedValue(details);
 
@@ -398,20 +440,7 @@ describe('pollForStemSeparationResults', () => {
 	});
 
 	it('deduplicates poll loop start for same stem taskId', async () => {
-		const pendingStemDetails = createStemSeparationDetailsResponse({
-			data: {
-				taskId: 'stem-dedupe',
-				musicId: 'music-1',
-				callbackUrl: '',
-				audioId: 'audio-1',
-				completeTime: null,
-				response: null,
-				successFlag: 'PENDING',
-				createTime: Date.now(),
-				errorCode: null,
-				errorMessage: null
-			}
-		});
+		const pendingStemDetails = buildPendingStemDetails('stem-dedupe');
 		vi.mocked(getStemSeparationDetails).mockResolvedValue(pendingStemDetails);
 
 		await pollForStemSeparationResults(1, 'stem-dedupe', 10, 'audio-1');
@@ -422,20 +451,7 @@ describe('pollForStemSeparationResults', () => {
 	});
 
 	it('cancels active stem poll loop', async () => {
-		const pendingStemDetails = createStemSeparationDetailsResponse({
-			data: {
-				taskId: 'stem-cancel',
-				musicId: 'music-1',
-				callbackUrl: '',
-				audioId: 'audio-1',
-				completeTime: null,
-				response: null,
-				successFlag: 'PENDING',
-				createTime: Date.now(),
-				errorCode: null,
-				errorMessage: null
-			}
-		});
+		const pendingStemDetails = buildPendingStemDetails('stem-cancel');
 		vi.mocked(getStemSeparationDetails).mockResolvedValue(pendingStemDetails);
 
 		await pollForStemSeparationResults(1, 'stem-cancel', 10, 'audio-1');
