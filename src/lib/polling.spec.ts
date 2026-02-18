@@ -73,7 +73,6 @@ import {
 	setGenerationStatus,
 	setGenerationCompleted,
 	setStemSeparationErrored,
-	setStemSeparationStatus,
 	setStemSeparationCompleted
 } from '$lib/db.server';
 import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
