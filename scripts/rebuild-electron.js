@@ -54,12 +54,12 @@ try {
 			'rebuild',
 			`--target=${electronVersion}`,
 			'--arch=x64',
-			'--dist-url=https://electronjs.org/headers',
+			'--dist-url=https://electronjs.org/headers'
 		],
 		{
 			cwd: bsqliteDir,
 			env: { ...process.env, HOME: electronHome },
-			stdio: 'inherit',
+			stdio: 'inherit'
 		}
 	);
 } catch (err) {

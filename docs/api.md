@@ -303,14 +303,14 @@ data: {"type": "annotation_update", "generationId": 3, "audioId": "uuid", "data"
 
 ### Internal Generation Status (stored in SQLite)
 
-| Status          | Description                 |
-| --------------- | --------------------------- |
-| `pending`       | Task queued                 |
-| `processing`    | KIE task created            |
-| `text_success`  | Lyrics processed            |
-| `first_success` | First track ready           |
-| `success`       | All tracks complete         |
-| `error`         | Failed (see error_message)  |
+| Status          | Description                |
+| --------------- | -------------------------- |
+| `pending`       | Task queued                |
+| `processing`    | KIE task created           |
+| `text_success`  | Lyrics processed           |
+| `first_success` | First track ready          |
+| `success`       | All tracks complete        |
+| `error`         | Failed (see error_message) |
 
 ### KIE API Generation Status (returned by KIE API)
 

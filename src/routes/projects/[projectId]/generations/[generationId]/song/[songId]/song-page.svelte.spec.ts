@@ -26,7 +26,8 @@ function createSongPageData(options?: { annotation: ReturnType<typeof createAnno
 		title: `${generation.title} - Track 1`
 	};
 
-	const annotation = options?.annotation ??
+	const annotation =
+		options?.annotation ??
 		createAnnotation({
 			generation_id: generation.id,
 			audio_id: song.id
