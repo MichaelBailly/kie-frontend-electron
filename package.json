@@ -8,7 +8,7 @@
 	"type": "module",
 	"scripts": {
 		"rebuild:node": "npm rebuild better-sqlite3",
-		"rebuild:electron": "electron-rebuild --only better-sqlite3",
+		"rebuild:electron": "node scripts/rebuild-electron.js",
 		"dev": "npm run rebuild:node && vite dev",
 		"dev:electron": "npm run build && npm run rebuild:electron && electron .",
 		"build": "vite build",
@@ -21,7 +21,7 @@
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
-		"postinstall": "npm run rebuild:electron"
+		"postinstall": "npm run rebuild:node"
 	},
 	"dependencies": {
 		"better-sqlite3": "^12.6.2",
@@ -61,6 +61,7 @@
 	"build": {
 		"appId": "com.kie.music",
 		"productName": "KIE Music",
+		"npmRebuild": false,
 		"directories": {
 			"output": "dist-electron",
 			"buildResources": "build-resources"
