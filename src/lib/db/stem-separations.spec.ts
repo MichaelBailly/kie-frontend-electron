@@ -21,7 +21,8 @@ import {
 	setStatus,
 	setErrored,
 	setCompleted,
-	getPendingStemSeparations
+	getPendingStemSeparations,
+	getAllCompletedStemSeparations
 } from './stem-separations.server';
 
 let projectId: number;
@@ -226,6 +227,69 @@ describe('Stem separations repository', () => {
 			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
 			setStatus(sep.id, 'success');
 			expect(getPendingStemSeparations()).toEqual([]);
+		});
+	});
+
+	describe('getAllCompletedStemSeparations', () => {
+		it('returns empty array when no completed separations exist', () => {
+			expect(getAllCompletedStemSeparations()).toEqual([]);
+		});
+
+		it('returns completed separations with project info', () => {
+			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
+			setCompleted(sep.id, { vocalUrl: 'http://vocal', instrumentalUrl: 'http://inst' }, '{}');
+			const results = getAllCompletedStemSeparations();
+			expect(results).toHaveLength(1);
+			expect(results[0].project_id).toBe(projectId);
+			expect(results[0].project_name).toBe('Test Project');
+			expect(results[0].generation_title).toBe('Test Song');
+		});
+
+		it('excludes pending and processing separations', () => {
+			const s1 = createStemSeparation(generationId, audioId, 'separate_vocal');
+			const s2 = createStemSeparation(generationId, 'audio-2', 'split_stem');
+			createStemSeparation(generationId, 'audio-3', 'separate_vocal'); // pending
+
+			setCompleted(s1.id, { vocalUrl: 'http://v' }, '{}');
+			setTaskStarted(s2.id, 'task-2'); // processing
+
+			const results = getAllCompletedStemSeparations();
+			expect(results).toHaveLength(1);
+			expect(results[0].id).toBe(s1.id);
+		});
+
+		it('excludes errored separations', () => {
+			const sep = createStemSeparation(generationId, audioId, 'separate_vocal');
+			setErrored(sep.id, 'Something failed');
+			expect(getAllCompletedStemSeparations()).toEqual([]);
+		});
+
+		it('returns separations across multiple projects', () => {
+			const project2 = createProject('Project 2');
+			const gen2 = createGeneration(project2.id, 'Song 2', 'rock', 'lyrics');
+			const s1 = createStemSeparation(generationId, audioId, 'separate_vocal');
+			const s2 = createStemSeparation(gen2.id, 'audio-2', 'split_stem');
+			setCompleted(s1.id, { vocalUrl: 'http://v1' }, '{}');
+			setCompleted(s2.id, { drumsUrl: 'http://drums' }, '{}');
+
+			const results = getAllCompletedStemSeparations();
+			expect(results).toHaveLength(2);
+			const projectNames = results.map((r) => r.project_name);
+			expect(projectNames).toContain('Test Project');
+			expect(projectNames).toContain('Project 2');
+		});
+
+		it('returns all completed separations', () => {
+			const s1 = createStemSeparation(generationId, audioId, 'separate_vocal');
+			const s2 = createStemSeparation(generationId, 'audio-2', 'split_stem');
+			setCompleted(s1.id, { vocalUrl: 'http://v1' }, '{}');
+			setCompleted(s2.id, { drumsUrl: 'http://drums' }, '{}');
+
+			const results = getAllCompletedStemSeparations();
+			expect(results).toHaveLength(2);
+			const ids = results.map((r) => r.id);
+			expect(ids).toContain(s1.id);
+			expect(ids).toContain(s2.id);
 		});
 	});
 });

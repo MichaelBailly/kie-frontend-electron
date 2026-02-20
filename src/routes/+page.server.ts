@@ -1,5 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { getAllProjects, getGenerationsByProject, getApiKey } from '$lib/db.server';
+import {
+	getAllProjects,
+	getGenerationsByProject,
+	getApiKey,
+	getHighlightsCount
+} from '$lib/db.server';
 
 export const load: PageServerLoad = async () => {
 	const projects = getAllProjects();
@@ -21,6 +26,7 @@ export const load: PageServerLoad = async () => {
 
 	return {
 		projects: projectsWithStats,
-		hasApiKey: !!apiKey && apiKey.length > 0
+		hasApiKey: !!apiKey && apiKey.length > 0,
+		highlightsCount: getHighlightsCount()
 	};
 };

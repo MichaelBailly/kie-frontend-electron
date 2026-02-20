@@ -16,6 +16,9 @@ import {
 	getAnnotationsForGeneration,
 	getAnnotationsByProject,
 	getStarredAnnotationsByProject,
+	getAllNotableAnnotations,
+	getAllAnnotationsWithLabels,
+	getHighlightsCount,
 	toggleStar,
 	updateComment,
 	setAnnotationLabels,
@@ -291,6 +294,132 @@ describe('Annotations repository', () => {
 			]);
 			const suggestions = getLabelSuggestions('');
 			expect(suggestions).toHaveLength(8);
+		});
+	});
+
+	describe('getAllNotableAnnotations', () => {
+		it('returns empty array when no annotations exist', () => {
+			expect(getAllNotableAnnotations()).toEqual([]);
+		});
+
+		it('returns starred annotations across all projects', () => {
+			const project2 = createProject('Project 2');
+			const gen2 = createGeneration(project2.id, 'Song 2', 'rock', 'lyrics');
+			toggleStar(generationId, audioId1);
+			toggleStar(gen2.id, 'audio-gen2');
+			const results = getAllNotableAnnotations();
+			expect(results).toHaveLength(2);
+		});
+
+		it('returns annotations with comments', () => {
+			updateComment(generationId, audioId1, 'A note');
+			const results = getAllNotableAnnotations();
+			expect(results).toHaveLength(1);
+			expect(results[0].comment).toBe('A note');
+		});
+
+		it('includes project_id and project_name', () => {
+			toggleStar(generationId, audioId1);
+			const results = getAllNotableAnnotations();
+			expect(results[0].project_id).toBe(projectId);
+			expect(results[0].project_name).toBe('Test Project');
+		});
+
+		it('excludes annotations with only labels (no star or comment)', () => {
+			setAnnotationLabels(generationId, audioId1, ['tag']);
+			expect(getAllNotableAnnotations()).toEqual([]);
+		});
+
+		it('includes labels in results', () => {
+			toggleStar(generationId, audioId1);
+			setAnnotationLabels(generationId, audioId1, ['rock', 'favorite']);
+			const results = getAllNotableAnnotations();
+			expect(results[0].labels).toEqual(['favorite', 'rock']);
+		});
+
+		it('returns all notable annotations regardless of type', () => {
+			toggleStar(generationId, audioId1);
+			updateComment(generationId, audioId2, 'second');
+			const results = getAllNotableAnnotations();
+			expect(results).toHaveLength(2);
+			const audioIds = results.map((r) => r.audio_id);
+			expect(audioIds).toContain(audioId1);
+			expect(audioIds).toContain(audioId2);
+		});
+	});
+
+	describe('getAllAnnotationsWithLabels', () => {
+		it('returns empty array when no labels exist', () => {
+			expect(getAllAnnotationsWithLabels()).toEqual([]);
+		});
+
+		it('returns annotations that have labels', () => {
+			setAnnotationLabels(generationId, audioId1, ['rock']);
+			const results = getAllAnnotationsWithLabels();
+			expect(results).toHaveLength(1);
+			expect(results[0].labels).toEqual(['rock']);
+		});
+
+		it('excludes annotations without labels', () => {
+			toggleStar(generationId, audioId1); // starred but no labels
+			setAnnotationLabels(generationId, audioId2, ['pop']);
+			const results = getAllAnnotationsWithLabels();
+			expect(results).toHaveLength(1);
+			expect(results[0].audio_id).toBe(audioId2);
+		});
+
+		it('includes project_id and project_name', () => {
+			setAnnotationLabels(generationId, audioId1, ['rock']);
+			const results = getAllAnnotationsWithLabels();
+			expect(results[0].project_id).toBe(projectId);
+			expect(results[0].project_name).toBe('Test Project');
+		});
+
+		it('spans multiple projects', () => {
+			const project2 = createProject('Project 2');
+			const gen2 = createGeneration(project2.id, 'Song 2', 'rock', 'lyrics');
+			setAnnotationLabels(generationId, audioId1, ['rock']);
+			setAnnotationLabels(gen2.id, 'audio-gen2', ['jazz']);
+			const results = getAllAnnotationsWithLabels();
+			expect(results).toHaveLength(2);
+			const projectNames = results.map((r) => r.project_name);
+			expect(projectNames).toContain('Test Project');
+			expect(projectNames).toContain('Project 2');
+		});
+	});
+
+	describe('getHighlightsCount', () => {
+		it('returns 0 when no notable annotations exist', () => {
+			expect(getHighlightsCount()).toBe(0);
+		});
+
+		it('counts starred annotations', () => {
+			toggleStar(generationId, audioId1);
+			expect(getHighlightsCount()).toBe(1);
+		});
+
+		it('counts annotations with comments', () => {
+			updateComment(generationId, audioId1, 'My note');
+			expect(getHighlightsCount()).toBe(1);
+		});
+
+		it('counts starred + commented as one if same annotation', () => {
+			toggleStar(generationId, audioId1);
+			updateComment(generationId, audioId1, 'My note');
+			expect(getHighlightsCount()).toBe(1);
+		});
+
+		it('does not count label-only annotations', () => {
+			setAnnotationLabels(generationId, audioId1, ['tag']);
+			expect(getHighlightsCount()).toBe(0);
+		});
+
+		it('counts across projects', () => {
+			const project2 = createProject('Project 2');
+			const gen2 = createGeneration(project2.id, 'Song 2', 'rock', 'lyrics');
+			toggleStar(generationId, audioId1);
+			toggleStar(gen2.id, 'audio-gen2');
+			expect(getHighlightsCount()).toBe(2);
 		});
 	});
 });

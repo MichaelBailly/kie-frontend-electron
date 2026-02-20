@@ -240,6 +240,23 @@ export function completeGeneration(
 	setCompleted(id, track1, track2, responseData);
 }
 
+export interface ExtendedParentGeneration extends Generation {
+	project_name: string;
+	extension_count: number;
+}
+
+export function getAllExtendedParentGenerations(): ExtendedParentGeneration[] {
+	const stmt = prepareStmt(`
+		SELECT g.*, p.name as project_name,
+		       (SELECT COUNT(*) FROM generations c WHERE c.extends_generation_id = g.id) as extension_count
+		FROM generations g
+		JOIN projects p ON g.project_id = p.id
+		WHERE (SELECT COUNT(*) FROM generations c WHERE c.extends_generation_id = g.id) > 0
+		ORDER BY g.updated_at DESC
+	`);
+	return stmt.all() as ExtendedParentGeneration[];
+}
+
 export function deleteGeneration(id: number): void {
 	const stmt = prepareStmt('DELETE FROM generations WHERE id = ?');
 	stmt.run(id);

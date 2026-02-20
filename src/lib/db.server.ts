@@ -58,7 +58,8 @@ export {
 	completeGeneration,
 	deleteGeneration,
 	getPendingGenerations,
-	createImportedGeneration
+	createImportedGeneration,
+	getAllExtendedParentGenerations
 } from './db/generations.server';
 
 // Stem separation operations
@@ -75,7 +76,8 @@ export {
 	updateStemSeparationTaskId,
 	updateStemSeparationStatus,
 	completeStemSeparation,
-	getPendingStemSeparations
+	getPendingStemSeparations,
+	getAllCompletedStemSeparations
 } from './db/stem-separations.server';
 
 // Variation annotation operations
@@ -85,6 +87,9 @@ export {
 	getAnnotationsForGeneration,
 	getAnnotationsByProject,
 	getStarredAnnotationsByProject,
+	getAllNotableAnnotations,
+	getAllAnnotationsWithLabels,
+	getHighlightsCount,
 	toggleStar,
 	updateComment,
 	setAnnotationLabels

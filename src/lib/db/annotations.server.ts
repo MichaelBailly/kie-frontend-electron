@@ -162,6 +162,75 @@ export function updateComment(
 	return getAnnotation(generationId, audioId)!;
 }
 
+export interface NotableAnnotationRow {
+	id: number;
+	generation_id: number;
+	audio_id: string;
+	starred: number;
+	comment: string | null;
+	created_at: string;
+	updated_at: string;
+	project_id: number;
+	project_name: string;
+}
+
+export function getAllNotableAnnotations(): (VariationAnnotation & {
+	project_id: number;
+	project_name: string;
+})[] {
+	const stmt = prepareStmt(`
+		SELECT va.*, g.project_id, p.name as project_name
+		FROM variation_annotations va
+		JOIN generations g ON va.generation_id = g.id
+		JOIN projects p ON g.project_id = p.id
+		WHERE va.starred = 1
+		   OR (va.comment IS NOT NULL AND va.comment != '')
+		ORDER BY va.updated_at DESC
+	`);
+	const rows = stmt.all() as NotableAnnotationRow[];
+	const withLabels = attachLabelsToAnnotations(rows);
+	return withLabels.map((ann, i) => ({
+		...ann,
+		project_id: rows[i].project_id,
+		project_name: rows[i].project_name
+	}));
+}
+
+export function getAllAnnotationsWithLabels(): (VariationAnnotation & {
+	project_id: number;
+	project_name: string;
+})[] {
+	const stmt = prepareStmt(`
+		SELECT va.*, g.project_id, p.name as project_name
+		FROM variation_annotations va
+		JOIN generations g ON va.generation_id = g.id
+		JOIN projects p ON g.project_id = p.id
+		ORDER BY va.updated_at DESC
+	`);
+	const rows = stmt.all() as NotableAnnotationRow[];
+	const withLabels = attachLabelsToAnnotations(rows);
+	// Only return annotations that have at least one label
+	return withLabels
+		.map((ann, i) => ({
+			...ann,
+			project_id: rows[i].project_id,
+			project_name: rows[i].project_name
+		}))
+		.filter((ann) => ann.labels.length > 0);
+}
+
+export function getHighlightsCount(): number {
+	const stmt = prepareStmt(`
+		SELECT COUNT(DISTINCT va.id) as count
+		FROM variation_annotations va
+		JOIN generations g ON va.generation_id = g.id
+		WHERE va.starred = 1
+		   OR (va.comment IS NOT NULL AND va.comment != '')
+	`);
+	const row = stmt.get() as { count: number };
+	return row.count;
+}
+
 export function setAnnotationLabels(
 	generationId: number,
 	audioId: string,

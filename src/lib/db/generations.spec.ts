@@ -25,7 +25,8 @@ import {
 	setCompleted,
 	deleteGeneration,
 	getPendingGenerations,
-	createImportedGeneration
+	createImportedGeneration,
+	getAllExtendedParentGenerations
 } from './generations.server';
 
 let projectId: number;
@@ -360,6 +361,133 @@ describe('Generations repository', () => {
 			expect(gen.track1_audio_id).toBe('imp-aid1');
 			expect(gen.track2_audio_id).toBe('imp-aid2');
 			expect(gen.response_data).toBe('{"imported":true}');
+		});
+	});
+
+	describe('getAllExtendedParentGenerations', () => {
+		it('returns empty array when no extensions exist', () => {
+			expect(getAllExtendedParentGenerations()).toEqual([]);
+		});
+
+		it('returns parent generations that have extensions', () => {
+			const parent = createGeneration(projectId, 'Parent Song', 'pop', 'lyrics');
+			setCompleted(
+				parent.id,
+				{
+					streamUrl: 'http://s1',
+					audioUrl: 'http://a1',
+					imageUrl: 'http://i1',
+					duration: 180,
+					audioId: 'parent-aid1'
+				},
+				{
+					streamUrl: 'http://s2',
+					audioUrl: 'http://a2',
+					imageUrl: 'http://i2',
+					duration: 180,
+					audioId: 'parent-aid2'
+				},
+				'{}'
+			);
+			createExtendGeneration(
+				projectId,
+				'Extended Song',
+				'pop',
+				'more lyrics',
+				parent.id,
+				'parent-aid1',
+				120
+			);
+
+			const results = getAllExtendedParentGenerations();
+			expect(results).toHaveLength(1);
+			expect(results[0].id).toBe(parent.id);
+			expect(results[0].extension_count).toBe(1);
+			expect(results[0].project_name).toBe('Test Project');
+		});
+
+		it('does not return generations without extensions', () => {
+			createGeneration(projectId, 'No Extensions', 'pop', 'lyrics');
+			expect(getAllExtendedParentGenerations()).toEqual([]);
+		});
+
+		it('counts multiple extensions correctly', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			setCompleted(
+				parent.id,
+				{
+					streamUrl: 'http://s1',
+					audioUrl: 'http://a1',
+					imageUrl: 'http://i1',
+					duration: 180,
+					audioId: 'aid1'
+				},
+				{
+					streamUrl: 'http://s2',
+					audioUrl: 'http://a2',
+					imageUrl: 'http://i2',
+					duration: 180,
+					audioId: 'aid2'
+				},
+				'{}'
+			);
+			createExtendGeneration(projectId, 'Ext 1', 'pop', 'l', parent.id, 'aid1', 60);
+			createExtendGeneration(projectId, 'Ext 2', 'pop', 'l', parent.id, 'aid1', 120);
+			createExtendGeneration(projectId, 'Ext 3', 'pop', 'l', parent.id, 'aid2', 60);
+
+			const results = getAllExtendedParentGenerations();
+			expect(results).toHaveLength(1);
+			expect(results[0].extension_count).toBe(3);
+		});
+
+		it('spans multiple projects', () => {
+			const project2 = createProject('Project 2');
+			const parent1 = createGeneration(projectId, 'Parent 1', 'pop', 'l');
+			const parent2 = createGeneration(project2.id, 'Parent 2', 'rock', 'l');
+			setCompleted(
+				parent1.id,
+				{
+					streamUrl: 'http://s1',
+					audioUrl: 'http://a1',
+					imageUrl: 'http://i1',
+					duration: 180,
+					audioId: 'p1-aid1'
+				},
+				{
+					streamUrl: 'http://s2',
+					audioUrl: 'http://a2',
+					imageUrl: 'http://i2',
+					duration: 180,
+					audioId: 'p1-aid2'
+				},
+				'{}'
+			);
+			setCompleted(
+				parent2.id,
+				{
+					streamUrl: 'http://s3',
+					audioUrl: 'http://a3',
+					imageUrl: 'http://i3',
+					duration: 180,
+					audioId: 'p2-aid1'
+				},
+				{
+					streamUrl: 'http://s4',
+					audioUrl: 'http://a4',
+					imageUrl: 'http://i4',
+					duration: 180,
+					audioId: 'p2-aid2'
+				},
+				'{}'
+			);
+			createExtendGeneration(projectId, 'Ext A', 'pop', 'l', parent1.id, 'p1-aid1', 60);
+			createExtendGeneration(project2.id, 'Ext B', 'rock', 'l', parent2.id, 'p2-aid1', 60);
+
+			const results = getAllExtendedParentGenerations();
+			expect(results).toHaveLength(2);
+			const projectNames = results.map((r) => r.project_name);
+			expect(projectNames).toContain('Test Project');
+			expect(projectNames).toContain('Project 2');
 		});
 	});
 });

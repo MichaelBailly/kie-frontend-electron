@@ -174,6 +174,24 @@ export function completeStemSeparation(
 	setCompleted(id, data, responseData);
 }
 
+export interface StemSeparationWithProject extends StemSeparation {
+	project_id: number;
+	project_name: string;
+	generation_title: string;
+}
+
+export function getAllCompletedStemSeparations(): StemSeparationWithProject[] {
+	const stmt = prepareStmt(`
+		SELECT ss.*, g.project_id, g.title as generation_title, p.name as project_name
+		FROM stem_separations ss
+		JOIN generations g ON ss.generation_id = g.id
+		JOIN projects p ON g.project_id = p.id
+		WHERE ss.status = 'success'
+		ORDER BY ss.updated_at DESC
+	`);
+	return stmt.all() as StemSeparationWithProject[];
+}
+
 export function getPendingStemSeparations(): StemSeparation[] {
 	const stmt = prepareStmt(
 		"SELECT * FROM stem_separations WHERE status IN ('pending', 'processing')"
