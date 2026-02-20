@@ -20,6 +20,8 @@
 - Build: `npm run build`, `npm run build:electron`
 - Quality: `npm run check`, `npm run lint`, `npm run format`
 - Tests: `npm run test`, `npm run test:unit`
+- **When implementing new features or modifying existing code, always write associated tests as part of the same task.** Follow the existing test patterns in `src/lib/db/*.spec.ts` (vi.mock + in-memory SQLite via `$lib/test-utils/db-setup`) and co-located `*.spec.ts` files for route loaders.
+- **After completing any code change, always run `npm run check` and `npm run lint` and fix any errors before considering the task done.**
 
 ## Agent Workflow
 
