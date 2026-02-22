@@ -133,11 +133,14 @@
 								/>
 							{/if}
 						</div>
-						{#if generation.track1_stream_url || generation.track1_audio_url}
+						{#if generation.track1_stream_url || generation.track1_audio_local_url || generation.track1_audio_url}
 							<AudioPlayer
-								src={generation.track1_audio_url || generation.track1_stream_url || ''}
+								src={generation.track1_audio_local_url ||
+									generation.track1_audio_url ||
+									generation.track1_stream_url ||
+									''}
 								title="{generation.title} (V1)"
-								imageUrl={generation.track1_image_url || ''}
+								imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
 								duration={generation.track1_duration || 0}
 								trackId={generation.track1_audio_id || `preview-${generation.id}-1`}
 								generationId={generation.id}
@@ -145,7 +148,7 @@
 							/>
 						{/if}
 					</div>
-					{#if generation.track2_stream_url || generation.track2_audio_url}
+					{#if generation.track2_stream_url || generation.track2_audio_local_url || generation.track2_audio_url}
 						<div>
 							<div class="mb-2 flex items-center gap-2">
 								{#if generation.track2_audio_id}
@@ -169,9 +172,12 @@
 								{/if}
 							</div>
 							<AudioPlayer
-								src={generation.track2_audio_url || generation.track2_stream_url || ''}
+								src={generation.track2_audio_local_url ||
+									generation.track2_audio_url ||
+									generation.track2_stream_url ||
+									''}
 								title="{generation.title} (V2)"
-								imageUrl={generation.track2_image_url || ''}
+								imageUrl={generation.track2_image_local_url || generation.track2_image_url || ''}
 								duration={generation.track2_duration || 0}
 								trackId={generation.track2_audio_id || `preview-${generation.id}-2`}
 								generationId={generation.id}

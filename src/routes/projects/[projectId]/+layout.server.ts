@@ -8,6 +8,7 @@ import {
 	getAnnotationsByProject
 } from '$lib/db.server';
 import { error } from '@sveltejs/kit';
+import { queueTrackAssetCaching } from '$lib/server/assets-cache.server';
 
 export const load: LayoutServerLoad = async ({ params }) => {
 	const projectId = parseInt(params.projectId);
@@ -43,6 +44,15 @@ export const load: LayoutServerLoad = async ({ params }) => {
 	if (!activeProject) {
 		// This shouldn't happen since we just opened the project, but handle it
 		throw error(404, 'Project not found');
+	}
+
+	for (const generation of activeProject.generations) {
+		if (generation.track1_audio_id) {
+			queueTrackAssetCaching(generation, 1);
+		}
+		if (generation.track2_audio_id) {
+			queueTrackAssetCaching(generation, 2);
+		}
 	}
 
 	// Load all annotations for the active project

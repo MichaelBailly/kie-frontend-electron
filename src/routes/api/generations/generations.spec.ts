@@ -34,6 +34,10 @@ vi.mock('$lib/db.server', () => createDbMock());
 vi.mock('$lib/kie-api.server', () => createKieApiMock());
 vi.mock('$lib/sse.server', () => createSseMock());
 vi.mock('$lib/polling.server', () => createPollingMock());
+const deleteGenerationCachedAssets = vi.fn();
+vi.mock('$lib/server/assets-cache.server', () => ({
+	deleteGenerationCachedAssets
+}));
 
 let db: DbMock;
 let kieApi: KieApiMock;
@@ -50,6 +54,7 @@ beforeEach(async () => {
 	kieApi.__reset();
 	sse.__reset();
 	polling.__reset();
+	deleteGenerationCachedAssets.mockReset();
 });
 
 // ---------------------------------------------------------------------------
@@ -573,6 +578,22 @@ describe('DELETE /api/generations/[id]', () => {
 		const data = await response.json();
 
 		expect(data.success).toBe(true);
+		expect(db.deleteGeneration).toHaveBeenCalledWith(7);
+	});
+
+	it('cleans up cached files before deleting generation', async () => {
+		const gen = createGeneration({
+			id: 7,
+			track1_audio_local_url: '/api/assets/g7-t1-audio.mp3'
+		});
+		db.__setGenerations([gen]);
+
+		const { DELETE } = await import('./[id]/+server');
+		const event = createRequestEvent({ method: 'DELETE', params: { id: '7' } });
+
+		await DELETE(event as never);
+
+		expect(deleteGenerationCachedAssets).toHaveBeenCalledWith(expect.objectContaining({ id: 7 }));
 		expect(db.deleteGeneration).toHaveBeenCalledWith(7);
 	});
 

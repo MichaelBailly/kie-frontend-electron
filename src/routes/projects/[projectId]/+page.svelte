@@ -135,7 +135,7 @@
 					trackNumber: 1,
 					generationTitle: generation.title,
 					style: generation.style,
-					imageUrl: generation.track1_image_url,
+					imageUrl: generation.track1_image_local_url || generation.track1_image_url,
 					duration: generation.track1_duration,
 					updatedAt: annotation.updated_at
 				};
@@ -146,7 +146,7 @@
 					trackNumber: 2,
 					generationTitle: generation.title,
 					style: generation.style,
-					imageUrl: generation.track2_image_url,
+					imageUrl: generation.track2_image_local_url || generation.track2_image_url,
 					duration: generation.track2_duration,
 					updatedAt: annotation.updated_at
 				};

@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { getStarredAnnotationsByProject, getGeneration } from '$lib/db.server';
 import type { Generation } from '$lib/types';
+import { getPreferredTrackAssetUrl, queueTrackAssetCaching } from '$lib/server/assets-cache.server';
 
 export interface StarredVariation {
 	annotation: {
@@ -44,22 +45,24 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		let song: StarredVariation['song'] | null = null;
 
 		if (ann.audio_id === generation.track1_audio_id) {
+			queueTrackAssetCaching(generation, 1);
 			song = {
 				id: generation.track1_audio_id || '',
 				title: `${generation.title} - Track 1`,
 				streamUrl: generation.track1_stream_url,
-				audioUrl: generation.track1_audio_url,
-				imageUrl: generation.track1_image_url,
+				audioUrl: getPreferredTrackAssetUrl(generation, 1, 'audio'),
+				imageUrl: getPreferredTrackAssetUrl(generation, 1, 'image'),
 				duration: generation.track1_duration,
 				trackNumber: 1
 			};
 		} else if (ann.audio_id === generation.track2_audio_id) {
+			queueTrackAssetCaching(generation, 2);
 			song = {
 				id: generation.track2_audio_id || '',
 				title: `${generation.title} - Track 2`,
 				streamUrl: generation.track2_stream_url,
-				audioUrl: generation.track2_audio_url,
-				imageUrl: generation.track2_image_url,
+				audioUrl: getPreferredTrackAssetUrl(generation, 2, 'audio'),
+				imageUrl: getPreferredTrackAssetUrl(generation, 2, 'image'),
 				duration: generation.track2_duration,
 				trackNumber: 2
 			};

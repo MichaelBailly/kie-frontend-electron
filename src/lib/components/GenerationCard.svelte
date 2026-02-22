@@ -27,9 +27,9 @@
 >
 	<div class="flex items-start gap-3">
 		<div class="relative shrink-0">
-			{#if generation.track1_image_url}
+			{#if generation.track1_image_local_url || generation.track1_image_url}
 				<img
-					src={generation.track1_image_url}
+					src={generation.track1_image_local_url || generation.track1_image_url || ''}
 					alt={generation.title}
 					class="h-12 w-12 rounded-md object-cover"
 				/>

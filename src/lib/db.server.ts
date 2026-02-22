@@ -55,6 +55,8 @@ export {
 	updateGenerationTaskId,
 	updateGenerationStatus,
 	updateGenerationTracks,
+	setGenerationLocalAssetUrls,
+	clearGenerationLocalAssetUrls,
 	completeGeneration,
 	deleteGeneration,
 	getPendingGenerations,

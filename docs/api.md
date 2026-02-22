@@ -199,6 +199,15 @@ Get generation details.
 
 Delete a generation.
 
+#### GET /api/assets/{assetId}
+
+Serve a locally cached generated asset (MP3 or image). This route is internal and used by server loaders/components after lazy cache population.
+
+Examples:
+
+- `/api/assets/g42-t1-audio.mp3`
+- `/api/assets/g42-t1-image.jpg`
+
 #### POST /api/generations/extend
 
 Extend an existing generated track.

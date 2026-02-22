@@ -20,10 +20,14 @@ export interface Generation {
 	track1_stream_url: string | null;
 	track1_audio_url: string | null;
 	track1_image_url: string | null;
+	track1_audio_local_url?: string | null;
+	track1_image_local_url?: string | null;
 	track1_duration: number | null;
 	track2_stream_url: string | null;
 	track2_audio_url: string | null;
 	track2_image_url: string | null;
+	track2_audio_local_url?: string | null;
+	track2_image_local_url?: string | null;
 	track2_duration: number | null;
 	track1_audio_id: string | null;
 	track2_audio_id: string | null;

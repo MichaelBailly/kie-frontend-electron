@@ -138,7 +138,7 @@
 		<!-- Progress bar (thin line at very top) -->
 		<div class="h-0.5 bg-gray-100 dark:bg-gray-800">
 			<div
-				class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-150"
+				class="h-full bg-linear-to-r from-indigo-500 to-purple-500 transition-all duration-150"
 				style="width: {progressPct}%"
 			></div>
 		</div>
@@ -173,7 +173,7 @@
 					/>
 				{:else}
 					<div
-						class="flex h-11 w-11 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500"
+						class="flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-indigo-400 to-purple-500"
 					>
 						<svg class="h-5 w-5 text-white/60" fill="currentColor" viewBox="0 0 24 24">
 							<path
@@ -188,7 +188,7 @@
 					class="absolute -right-1.5 -bottom-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full shadow-md transition-all duration-200
 						{generationState.starred
 						? 'scale-110 bg-amber-400 text-white shadow-amber-400/50'
-						: 'bg-white/90 text-gray-300 opacity-0 group-hover/art:opacity-100 hover:!bg-white hover:!text-amber-400 dark:bg-gray-800/90 dark:text-gray-500'}"
+						: 'bg-white/90 text-gray-300 opacity-0 group-hover/art:opacity-100 hover:bg-white! hover:text-amber-400! dark:bg-gray-800/90 dark:text-gray-500'}"
 					title={generationState.starred ? 'Unstar' : 'Star'}
 				>
 					<svg
@@ -392,7 +392,7 @@
 			<div class="grid min-h-96 gap-4 lg:grid-cols-[7fr_13fr]">
 				<!-- Left: Notes (full height, scrollable if needed) -->
 				<div
-					class="flex flex-col overflow-hidden rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50 to-amber-100 shadow-sm dark:border-amber-800/30 dark:from-amber-950/40 dark:to-amber-900/20"
+					class="flex flex-col overflow-hidden rounded-2xl border border-amber-200/80 bg-linear-to-b from-amber-50 to-amber-100 shadow-sm dark:border-amber-800/30 dark:from-amber-950/40 dark:to-amber-900/20"
 				>
 					<!-- Sophisticated Notes Header -->
 					<div
@@ -400,7 +400,7 @@
 					>
 						<div class="flex items-center gap-3">
 							<div
-								class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-amber-600"
+								class="flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-amber-400 to-amber-600"
 							>
 								<svg
 									class="h-5 w-5 text-white"
@@ -625,7 +625,7 @@
 				<!-- Stem Separation -->
 				{#if hasStemContent}
 					<div
-						class="overflow-hidden rounded-2xl border border-cyan-200/80 bg-gradient-to-br from-cyan-50 to-white p-5 shadow-sm dark:border-cyan-800/50 dark:from-cyan-950/30 dark:to-gray-900"
+						class="overflow-hidden rounded-2xl border border-cyan-200/80 bg-linear-to-br from-cyan-50 to-white p-5 shadow-sm dark:border-cyan-800/50 dark:from-cyan-950/30 dark:to-gray-900"
 					>
 						<button
 							onclick={() => (stemsCollapsed = !stemsCollapsed)}
@@ -680,7 +680,7 @@
 				<!-- Extended Versions -->
 				{#if hasExtensions}
 					<div
-						class="overflow-hidden rounded-2xl border border-green-200/80 bg-gradient-to-br from-green-50 to-white p-5 shadow-sm dark:border-green-800/50 dark:from-green-950/30 dark:to-gray-900"
+						class="overflow-hidden rounded-2xl border border-green-200/80 bg-linear-to-br from-green-50 to-white p-5 shadow-sm dark:border-green-800/50 dark:from-green-950/30 dark:to-gray-900"
 					>
 						<button
 							onclick={() => (extensionsCollapsed = !extensionsCollapsed)}

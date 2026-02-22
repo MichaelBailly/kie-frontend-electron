@@ -7,6 +7,7 @@ import {
 	getAllExtendedParentGenerations,
 	getGeneration
 } from '$lib/db.server';
+import { getPreferredTrackAssetUrl, queueTrackAssetCaching } from '$lib/server/assets-cache.server';
 
 export interface HighlightSong {
 	id: string;
@@ -46,22 +47,24 @@ export interface HighlightExtension {
 
 function buildSongFromGeneration(generation: Generation, audioId: string): HighlightSong | null {
 	if (audioId === generation.track1_audio_id) {
+		queueTrackAssetCaching(generation, 1);
 		return {
 			id: generation.track1_audio_id || '',
 			title: `${generation.title} - Track 1`,
 			streamUrl: generation.track1_stream_url,
-			audioUrl: generation.track1_audio_url,
-			imageUrl: generation.track1_image_url,
+			audioUrl: getPreferredTrackAssetUrl(generation, 1, 'audio'),
+			imageUrl: getPreferredTrackAssetUrl(generation, 1, 'image'),
 			duration: generation.track1_duration,
 			trackNumber: 1
 		};
 	} else if (audioId === generation.track2_audio_id) {
+		queueTrackAssetCaching(generation, 2);
 		return {
 			id: generation.track2_audio_id || '',
 			title: `${generation.title} - Track 2`,
 			streamUrl: generation.track2_stream_url,
-			audioUrl: generation.track2_audio_url,
-			imageUrl: generation.track2_image_url,
+			audioUrl: getPreferredTrackAssetUrl(generation, 2, 'audio'),
+			imageUrl: getPreferredTrackAssetUrl(generation, 2, 'image'),
 			duration: generation.track2_duration,
 			trackNumber: 2
 		};

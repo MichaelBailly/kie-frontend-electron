@@ -154,6 +154,48 @@ export function updateGenerationTracks(
 	);
 }
 
+export function setGenerationLocalAssetUrls(
+	id: number,
+	updates: {
+		track1AudioLocalUrl?: string | null;
+		track1ImageLocalUrl?: string | null;
+		track2AudioLocalUrl?: string | null;
+		track2ImageLocalUrl?: string | null;
+	}
+): void {
+	const stmt = prepareStmt(`
+		UPDATE generations SET
+			track1_audio_local_url = COALESCE(?, track1_audio_local_url),
+			track1_image_local_url = COALESCE(?, track1_image_local_url),
+			track2_audio_local_url = COALESCE(?, track2_audio_local_url),
+			track2_image_local_url = COALESCE(?, track2_image_local_url),
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`);
+
+	stmt.run(
+		updates.track1AudioLocalUrl ?? null,
+		updates.track1ImageLocalUrl ?? null,
+		updates.track2AudioLocalUrl ?? null,
+		updates.track2ImageLocalUrl ?? null,
+		id
+	);
+}
+
+export function clearGenerationLocalAssetUrls(id: number): void {
+	const stmt = prepareStmt(`
+		UPDATE generations SET
+			track1_audio_local_url = NULL,
+			track1_image_local_url = NULL,
+			track2_audio_local_url = NULL,
+			track2_image_local_url = NULL,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`);
+
+	stmt.run(id);
+}
+
 export function setCompleted(
 	id: number,
 	track1: {

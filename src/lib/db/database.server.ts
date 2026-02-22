@@ -57,12 +57,13 @@ export function getDb(): BetterSqlite3.Database {
 	console.log('Database path:', dbPath);
 
 	_db = new Database(dbPath) as BetterSqlite3.Database;
+	const db = _db;
 
 	// Enable WAL mode for better performance
-	_db.pragma('journal_mode = WAL');
+	db.pragma('journal_mode = WAL');
 
 	// Initialize database schema
-	_db.exec(`
+	db.exec(`
 		CREATE TABLE IF NOT EXISTS projects (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL DEFAULT 'New Project',
@@ -83,10 +84,14 @@ export function getDb(): BetterSqlite3.Database {
 			track1_stream_url TEXT,
 			track1_audio_url TEXT,
 			track1_image_url TEXT,
+			track1_audio_local_url TEXT,
+			track1_image_local_url TEXT,
 			track1_duration REAL,
 			track2_stream_url TEXT,
 			track2_audio_url TEXT,
 			track2_image_url TEXT,
+			track2_audio_local_url TEXT,
+			track2_image_local_url TEXT,
 			track2_duration REAL,
 			track1_audio_id TEXT,
 			track2_audio_id TEXT,
@@ -184,14 +189,38 @@ export function getDb(): BetterSqlite3.Database {
 		CREATE INDEX IF NOT EXISTS idx_variation_label_links_label ON variation_label_links(label_id);
 	`);
 
-	// Migration: Add is_open column to existing projects table
-	try {
-		_db.exec(`ALTER TABLE projects ADD COLUMN is_open INTEGER NOT NULL DEFAULT 0`);
-		// Set all existing projects as open for backwards compatibility
-		_db.exec(`UPDATE projects SET is_open = 1`);
-	} catch {
-		// Column already exists, ignore error
+	function columnExists(tableName: string, columnName: string): boolean {
+		const rows = db.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+		return rows.some((row) => row.name === columnName);
 	}
+
+	function addColumnIfMissing(tableName: string, columnName: string, definition: string): void {
+		if (columnExists(tableName, columnName)) {
+			return;
+		}
+
+		db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`);
+	}
+
+	// Migration: backfill missing columns for existing installations
+	const hasProjectIsOpen = columnExists('projects', 'is_open');
+	addColumnIfMissing('projects', 'is_open', 'INTEGER NOT NULL DEFAULT 0');
+	if (!hasProjectIsOpen) {
+		// Backwards compatibility: legacy projects were effectively open
+		db.exec(`UPDATE projects SET is_open = 1`);
+	}
+
+	// Older installs may be missing columns introduced across later versions.
+	addColumnIfMissing('generations', 'track1_audio_id', 'TEXT');
+	addColumnIfMissing('generations', 'track2_audio_id', 'TEXT');
+	addColumnIfMissing('generations', 'response_data', 'TEXT');
+	addColumnIfMissing('generations', 'extends_generation_id', 'INTEGER');
+	addColumnIfMissing('generations', 'extends_audio_id', 'TEXT');
+	addColumnIfMissing('generations', 'continue_at', 'REAL');
+	addColumnIfMissing('generations', 'track1_audio_local_url', 'TEXT');
+	addColumnIfMissing('generations', 'track1_image_local_url', 'TEXT');
+	addColumnIfMissing('generations', 'track2_audio_local_url', 'TEXT');
+	addColumnIfMissing('generations', 'track2_image_local_url', 'TEXT');
 
 	return _db;
 }

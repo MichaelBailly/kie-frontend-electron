@@ -87,6 +87,7 @@ kie-frontend-electron/
 4. Background poller checks KIE API for status updates
 5. On completion, audio track URLs saved inline to the `generations` row
 6. All connected clients notified via the global SSE stream
+7. On first display/play, image and MP3 URLs are lazily cached to local disk and served from `/api/assets/*`
 
 ### Database Schema
 
@@ -99,6 +100,13 @@ Key tables:
 - **labels** - Reusable tag strings with recency tracking for autocomplete
 - **variation_label_links** - Many-to-many join between annotations and labels
 - **settings** - Key-value store (API key, preferences)
+
+### Local Asset Cache
+
+- Generated MP3 files and cover images are cached under the app data directory (next to the SQLite DB) in an `asset-cache/` folder.
+- Caching is lazy and asynchronous: the first display/play still uses remote URLs while triggering background download.
+- Once cached, loaders/components prefer local URLs (`/api/assets/<asset-id>`) over remote CDN URLs.
+- Deleting a generation removes its cached local files.
 
 ## Electron Integration
 

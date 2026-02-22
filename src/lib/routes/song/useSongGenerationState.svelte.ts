@@ -69,8 +69,8 @@ export function useSongGenerationState(options: {
 			return {
 				id: generation.track1_audio_id || '',
 				streamUrl: generation.track1_stream_url,
-				audioUrl: generation.track1_audio_url,
-				imageUrl: generation.track1_image_url,
+				audioUrl: generation.track1_audio_local_url || generation.track1_audio_url,
+				imageUrl: generation.track1_image_local_url || generation.track1_image_url,
 				duration: generation.track1_duration,
 				title: `${generation.title} - Track 1`
 			};
@@ -80,8 +80,8 @@ export function useSongGenerationState(options: {
 			return {
 				id: generation.track2_audio_id || '',
 				streamUrl: generation.track2_stream_url,
-				audioUrl: generation.track2_audio_url,
-				imageUrl: generation.track2_image_url,
+				audioUrl: generation.track2_audio_local_url || generation.track2_audio_url,
+				imageUrl: generation.track2_image_local_url || generation.track2_image_url,
 				duration: generation.track2_duration,
 				title: `${generation.title} - Track 2`
 			};

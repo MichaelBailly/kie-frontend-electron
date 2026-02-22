@@ -201,7 +201,7 @@
 									{@const isPlaying = audioStore.isTrackPlaying(variation.song.id)}
 									{@const isCurrentTrack = audioStore.isCurrentTrack(variation.song.id)}
 									<div
-										class="group flex items-center gap-4 rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-all hover:border-white/10 hover:bg-white/[0.06] {isCurrentTrack
+										class="group flex items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3 transition-all hover:border-white/10 hover:bg-white/6 {isCurrentTrack
 											? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
 											: ''}"
 									>
@@ -367,7 +367,7 @@
 									{@const isPlaying = audioStore.isTrackPlaying(variation.song.id)}
 									{@const isCurrentTrack = audioStore.isCurrentTrack(variation.song.id)}
 									<div
-										class="group rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-all hover:border-white/10 hover:bg-white/[0.06] {isCurrentTrack
+										class="group rounded-xl border border-white/5 bg-white/3 p-3 transition-all hover:border-white/10 hover:bg-white/6 {isCurrentTrack
 											? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
 											: ''}"
 									>
@@ -533,7 +533,7 @@
 									{@const isPlaying = audioStore.isTrackPlaying(stem.song.id)}
 									{@const isCurrentTrack = audioStore.isCurrentTrack(stem.song.id)}
 									<div
-										class="group flex items-center gap-4 rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-all hover:border-white/10 hover:bg-white/[0.06] {isCurrentTrack
+										class="group flex items-center gap-4 rounded-xl border border-white/5 bg-white/3 p-3 transition-all hover:border-white/10 hover:bg-white/6 {isCurrentTrack
 											? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
 											: ''}"
 									>
@@ -693,14 +693,16 @@
 							<div class="space-y-2 px-6 pb-6">
 								{#each data.extensions as ext (ext.generation.id)}
 									<div
-										class="group rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-all hover:border-white/10 hover:bg-white/[0.06]"
+										class="group rounded-xl border border-white/5 bg-white/3 p-3 transition-all hover:border-white/10 hover:bg-white/6"
 									>
 										<div class="flex items-center gap-4">
 											<!-- Thumbnail -->
 											<div class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-												{#if ext.generation.track1_image_url}
+												{#if ext.generation.track1_image_local_url || ext.generation.track1_image_url}
 													<img
-														src={ext.generation.track1_image_url}
+														src={ext.generation.track1_image_local_url ||
+															ext.generation.track1_image_url ||
+															''}
 														alt={ext.generation.title}
 														class="h-full w-full object-cover"
 													/>
@@ -838,7 +840,7 @@
 									{@const isPlaying = audioStore.isTrackPlaying(variation.song.id)}
 									{@const isCurrentTrack = audioStore.isCurrentTrack(variation.song.id)}
 									<div
-										class="group rounded-xl border border-white/5 bg-white/[0.03] p-3 transition-all hover:border-white/10 hover:bg-white/[0.06] {isCurrentTrack
+										class="group rounded-xl border border-white/5 bg-white/3 p-3 transition-all hover:border-white/10 hover:bg-white/6 {isCurrentTrack
 											? 'border-indigo-500/30 ring-1 ring-indigo-500/20'
 											: ''}"
 									>

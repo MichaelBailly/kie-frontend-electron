@@ -6,6 +6,7 @@ import {
 	getStemSeparationsForSong,
 	getAnnotation
 } from '$lib/db.server';
+import { getPreferredTrackAssetUrl, queueTrackAssetCaching } from '$lib/server/assets-cache.server';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const { activeProject } = await parent();
@@ -30,20 +31,22 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 	} | null = null;
 
 	if (songId === generation.track1_audio_id) {
+		queueTrackAssetCaching(generation, 1);
 		songData = {
 			id: generation.track1_audio_id || '',
 			streamUrl: generation.track1_stream_url,
-			audioUrl: generation.track1_audio_url,
-			imageUrl: generation.track1_image_url,
+			audioUrl: getPreferredTrackAssetUrl(generation, 1, 'audio'),
+			imageUrl: getPreferredTrackAssetUrl(generation, 1, 'image'),
 			duration: generation.track1_duration,
 			title: `${generation.title} - Track 1`
 		};
 	} else if (songId === generation.track2_audio_id) {
+		queueTrackAssetCaching(generation, 2);
 		songData = {
 			id: generation.track2_audio_id || '',
 			streamUrl: generation.track2_stream_url,
-			audioUrl: generation.track2_audio_url,
-			imageUrl: generation.track2_image_url,
+			audioUrl: getPreferredTrackAssetUrl(generation, 2, 'audio'),
+			imageUrl: getPreferredTrackAssetUrl(generation, 2, 'image'),
 			duration: generation.track2_duration,
 			title: `${generation.title} - Track 2`
 		};
