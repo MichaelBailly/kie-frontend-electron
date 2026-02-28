@@ -47,13 +47,12 @@ describe('assets-cache.server', () => {
 
 		mockFsAccess.mockRejectedValue(new Error('not found'));
 		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
-		fetchMock.mockResolvedValue({
-			ok: true,
-			status: 200,
-			statusText: 'OK',
-			headers: { get: () => 'audio/mpeg' },
-			arrayBuffer: async () => new TextEncoder().encode('audio-data').buffer
-		} as Response);
+		fetchMock.mockResolvedValue(
+			new Response(new TextEncoder().encode('audio-data'), {
+				status: 200,
+				headers: { 'content-type': 'audio/mpeg' }
+			})
+		);
 
 		const generation = createCompletedGeneration({
 			id: 42,
@@ -76,7 +75,7 @@ describe('assets-cache.server', () => {
 		const { queueTrackAssetKindCaching } = await import('./assets-cache.server');
 
 		mockFsAccess.mockRejectedValue(new Error('not found'));
-		let resolveFetch: ((value: Response) => void) | null = null;
+		let resolveFetch!: (value: Response) => void;
 		const fetchPromise = new Promise<Response>((resolve) => {
 			resolveFetch = resolve;
 		});
@@ -95,13 +94,12 @@ describe('assets-cache.server', () => {
 
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 
-		resolveFetch?.({
-			ok: true,
-			status: 200,
-			statusText: 'OK',
-			headers: { get: () => 'audio/mpeg' },
-			arrayBuffer: async () => new TextEncoder().encode('audio').buffer
-		} as Response);
+		resolveFetch(
+			new Response(new TextEncoder().encode('audio'), {
+				status: 200,
+				headers: { 'content-type': 'audio/mpeg' }
+			})
+		);
 
 		await flushPromises();
 		await flushPromises();
