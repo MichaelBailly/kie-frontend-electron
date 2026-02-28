@@ -3,7 +3,7 @@ import { render } from 'svelte/server';
 import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
-	it('should render h1', async () => {
+	it('should render as a valid Svelte component', () => {
 		expect(Page).toBeTruthy();
 	});
 
@@ -20,7 +20,7 @@ describe('/+page.svelte', () => {
 					lastGenerationId: 10,
 					lastGenerationTitle: 'Song A',
 					lastGenerationStatus: 'success',
-					lastGenerationImageUrl: 'https://example.com/broken-or-valid.jpg'
+					lastGenerationImageUrl: 'https://example.com/cover.jpg'
 				}
 			],
 			hasApiKey: true,

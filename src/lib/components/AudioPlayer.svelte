@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { formatTime } from '$lib/utils/format';
+	import ArtworkImage from './ArtworkImage.svelte';
 
 	let {
 		src,
@@ -96,22 +97,13 @@
 <div
 	class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
 >
-	{#if imageUrl}
-		<img src={imageUrl} alt={title} class="h-16 w-16 shrink-0 rounded-lg object-cover" />
-	{:else}
-		<div
-			class="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-purple-600"
-		>
-			<svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-				/>
-			</svg>
-		</div>
-	{/if}
+	<ArtworkImage
+		src={imageUrl}
+		alt={title}
+		imageClass="h-16 w-16 shrink-0 rounded-lg object-cover"
+		fallbackClass="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-indigo-500 to-purple-600"
+		iconClass="h-8 w-8 text-white"
+	/>
 
 	<div class="min-w-0 flex-1">
 		<h4 class="truncate font-medium text-gray-900 dark:text-gray-100">{title}</h4>

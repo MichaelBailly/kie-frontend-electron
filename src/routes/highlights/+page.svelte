@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { formatTime, getTimeAgo, formatDate } from '$lib/utils/format';
+	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -210,31 +211,13 @@
 											onclick={() => handlePlayVariation(variation)}
 											class="group/play relative h-12 w-12 shrink-0 cursor-pointer overflow-hidden rounded-lg"
 										>
-											{#if variation.song.imageUrl}
-												<img
-													src={variation.song.imageUrl}
-													alt={variation.song.title}
-													class="h-full w-full object-cover"
-												/>
-											{:else}
-												<div
-													class="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
-												>
-													<svg
-														class="h-5 w-5 text-white"
-														fill="none"
-														stroke="currentColor"
-														viewBox="0 0 24 24"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-														/>
-													</svg>
-												</div>
-											{/if}
+											<ArtworkImage
+												src={variation.song.imageUrl}
+												alt={variation.song.title}
+												imageClass="h-full w-full object-cover"
+												fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
+												iconClass="h-5 w-5 text-white"
+											/>
 											<div
 												class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/play:bg-black/40"
 											>
@@ -377,31 +360,13 @@
 												onclick={() => handlePlayVariation(variation)}
 												class="group/play relative h-12 w-12 shrink-0 cursor-pointer overflow-hidden rounded-lg"
 											>
-												{#if variation.song.imageUrl}
-													<img
-														src={variation.song.imageUrl}
-														alt={variation.song.title}
-														class="h-full w-full object-cover"
-													/>
-												{:else}
-													<div
-														class="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
-													>
-														<svg
-															class="h-5 w-5 text-white"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-															/>
-														</svg>
-													</div>
-												{/if}
+												<ArtworkImage
+													src={variation.song.imageUrl}
+													alt={variation.song.title}
+													imageClass="h-full w-full object-cover"
+													fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
+													iconClass="h-5 w-5 text-white"
+												/>
 												<div
 													class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/play:bg-black/40"
 												>
@@ -542,31 +507,13 @@
 											onclick={() => handlePlayStem(stem)}
 											class="group/play relative h-12 w-12 shrink-0 cursor-pointer overflow-hidden rounded-lg"
 										>
-											{#if stem.song.imageUrl}
-												<img
-													src={stem.song.imageUrl}
-													alt={stem.song.title}
-													class="h-full w-full object-cover"
-												/>
-											{:else}
-												<div
-													class="flex h-full w-full items-center justify-center bg-linear-to-br from-emerald-500 to-teal-600"
-												>
-													<svg
-														class="h-5 w-5 text-white"
-														fill="none"
-														stroke="currentColor"
-														viewBox="0 0 24 24"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-														/>
-													</svg>
-												</div>
-											{/if}
+											<ArtworkImage
+												src={stem.song.imageUrl}
+												alt={stem.song.title}
+												imageClass="h-full w-full object-cover"
+												fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-emerald-500 to-teal-600"
+												iconClass="h-5 w-5 text-white"
+											/>
 											<div
 												class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/play:bg-black/40"
 											>
@@ -698,33 +645,14 @@
 										<div class="flex items-center gap-4">
 											<!-- Thumbnail -->
 											<div class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg">
-												{#if ext.generation.track1_image_local_url || ext.generation.track1_image_url}
-													<img
-														src={ext.generation.track1_image_local_url ||
-															ext.generation.track1_image_url ||
-															''}
-														alt={ext.generation.title}
-														class="h-full w-full object-cover"
-													/>
-												{:else}
-													<div
-														class="flex h-full w-full items-center justify-center bg-linear-to-br from-purple-500 to-pink-600"
-													>
-														<svg
-															class="h-5 w-5 text-white"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M13 5l7 7-7 7M5 5l7 7-7 7"
-															/>
-														</svg>
-													</div>
-												{/if}
+												<ArtworkImage
+													src={ext.generation.track1_image_local_url ||
+														ext.generation.track1_image_url}
+													alt={ext.generation.title}
+													imageClass="h-full w-full object-cover"
+													fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-purple-500 to-pink-600"
+													iconClass="h-5 w-5 text-white"
+												/>
 											</div>
 
 											<!-- Content -->
@@ -850,31 +778,13 @@
 												onclick={() => handlePlayVariation(variation)}
 												class="group/play relative h-12 w-12 shrink-0 cursor-pointer overflow-hidden rounded-lg"
 											>
-												{#if variation.song.imageUrl}
-													<img
-														src={variation.song.imageUrl}
-														alt={variation.song.title}
-														class="h-full w-full object-cover"
-													/>
-												{:else}
-													<div
-														class="flex h-full w-full items-center justify-center bg-linear-to-br from-cyan-500 to-blue-600"
-													>
-														<svg
-															class="h-5 w-5 text-white"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-															/>
-														</svg>
-													</div>
-												{/if}
+												<ArtworkImage
+													src={variation.song.imageUrl}
+													alt={variation.song.title}
+													imageClass="h-full w-full object-cover"
+													fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-cyan-500 to-blue-600"
+													iconClass="h-5 w-5 text-white"
+												/>
 												<div
 													class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/play:bg-black/40"
 												>

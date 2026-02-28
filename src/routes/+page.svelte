@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ImportSongModal from '$lib/components/ImportSongModal.svelte';
+	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { formatDate, getTimeAgo } from '$lib/utils/format';
 
 	type ProjectWithStats = Project & {
@@ -402,21 +403,16 @@
 					>
 						<!-- Cover image or gradient -->
 						<div class="relative h-32 overflow-hidden">
-							{#if project.lastGenerationImageUrl}
-								<img
-									src={project.lastGenerationImageUrl}
-									alt=""
-									class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-								/>
-								<div
-									class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/50 to-transparent"
-								></div>
-							{:else}
-								<div
-									class="h-full w-full bg-linear-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"
-								></div>
-								<div class="absolute inset-0 bg-linear-to-t from-gray-900 to-transparent"></div>
-							{/if}
+							<ArtworkImage
+								src={project.lastGenerationImageUrl}
+								alt=""
+								imageClass="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+								fallbackClass="h-full w-full bg-linear-to-br from-indigo-600/30 via-purple-600/20 to-pink-600/30"
+								iconClass="h-8 w-8 text-white/80"
+							/>
+							<div
+								class="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/50 to-transparent"
+							></div>
 
 							<!-- Status indicator -->
 							{#if project.lastGenerationStatus && project.lastGenerationStatus !== 'success'}

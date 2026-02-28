@@ -8,6 +8,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { formatDate, formatTime, getTimeAgo } from '$lib/utils/format';
+	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -313,31 +314,13 @@
 								onclick={() => handlePlay(variation)}
 								class="group/play relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-lg"
 							>
-								{#if variation.song.imageUrl}
-									<img
-										src={variation.song.imageUrl}
-										alt={variation.song.title}
-										class="h-full w-full object-cover"
-									/>
-								{:else}
-									<div
-										class="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
-									>
-										<svg
-											class="h-7 w-7 text-white"
-											fill="none"
-											stroke="currentColor"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-											/>
-										</svg>
-									</div>
-								{/if}
+								<ArtworkImage
+									src={variation.song.imageUrl}
+									alt={variation.song.title}
+									imageClass="h-full w-full object-cover"
+									fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
+									iconClass="h-7 w-7 text-white"
+								/>
 								<div
 									class="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover/play:bg-black/40"
 								>

@@ -2,6 +2,7 @@
 	import type { Generation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import { formatDate } from '$lib/utils/format';
+	import ArtworkImage from './ArtworkImage.svelte';
 
 	let {
 		generation,
@@ -27,26 +28,13 @@
 >
 	<div class="flex items-start gap-3">
 		<div class="relative shrink-0">
-			{#if generation.track1_image_local_url || generation.track1_image_url}
-				<img
-					src={generation.track1_image_local_url || generation.track1_image_url || ''}
-					alt={generation.title}
-					class="h-12 w-12 rounded-md object-cover"
-				/>
-			{:else}
-				<div
-					class="flex h-12 w-12 items-center justify-center rounded-md bg-linear-to-br from-indigo-500 to-purple-600"
-				>
-					<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-						/>
-					</svg>
-				</div>
-			{/if}
+			<ArtworkImage
+				src={generation.track1_image_local_url || generation.track1_image_url}
+				alt={generation.title}
+				imageClass="h-12 w-12 rounded-md object-cover"
+				fallbackClass="flex h-12 w-12 items-center justify-center rounded-md bg-linear-to-br from-indigo-500 to-purple-600"
+				iconClass="h-6 w-6 text-white"
+			/>
 			{#if hasStarred}
 				<div
 					class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 shadow-sm"

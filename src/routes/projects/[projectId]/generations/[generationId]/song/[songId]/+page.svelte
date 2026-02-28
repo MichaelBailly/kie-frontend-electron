@@ -6,6 +6,7 @@
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import Waveform from '$lib/components/Waveform.svelte';
 	import ExtendedGenerationsList from '$lib/components/ExtendedGenerationsList.svelte';
+	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { useSongGenerationState } from '$lib/routes/song/useSongGenerationState.svelte';
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
 	import { useStemSeparationState } from '$lib/routes/song/useStemSeparationState.svelte';
@@ -165,23 +166,13 @@
 
 			<!-- Cover art mini with star overlay -->
 			<div class="group/art relative shrink-0">
-				{#if generationState.song.imageUrl}
-					<img
-						src={generationState.song.imageUrl}
-						alt=""
-						class="h-11 w-11 rounded-lg object-cover shadow-sm ring-1 ring-black/5"
-					/>
-				{:else}
-					<div
-						class="flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-indigo-400 to-purple-500"
-					>
-						<svg class="h-5 w-5 text-white/60" fill="currentColor" viewBox="0 0 24 24">
-							<path
-								d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-							/>
-						</svg>
-					</div>
-				{/if}
+				<ArtworkImage
+					src={generationState.song.imageUrl}
+					alt=""
+					imageClass="h-11 w-11 rounded-lg object-cover shadow-sm ring-1 ring-black/5"
+					fallbackClass="flex h-11 w-11 items-center justify-center rounded-lg bg-linear-to-br from-indigo-400 to-purple-500"
+					iconClass="h-5 w-5 text-white/60"
+				/>
 				<!-- Star overlay on bottom-right of cover art -->
 				<button
 					onclick={generationState.handleToggleStar}

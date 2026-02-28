@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { SvelteMap } from 'svelte/reactivity';
 	import type { VariationAnnotation } from '$lib/types';
+	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 
 	let { data }: { data: LayoutData } = $props();
 
@@ -285,31 +286,13 @@
 								class="group flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-indigo-200 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-indigo-700"
 							>
 								<div class="h-14 w-14 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-									{#if variation.imageUrl}
-										<img
-											src={variation.imageUrl}
-											alt={variation.generationTitle}
-											class="h-full w-full object-cover"
-										/>
-									{:else}
-										<div
-											class="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
-										>
-											<svg
-												class="h-6 w-6 text-white"
-												fill="none"
-												stroke="currentColor"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-												/>
-											</svg>
-										</div>
-									{/if}
+									<ArtworkImage
+										src={variation.imageUrl}
+										alt={variation.generationTitle}
+										imageClass="h-full w-full object-cover"
+										fallbackClass="flex h-full w-full items-center justify-center bg-linear-to-br from-indigo-500 to-purple-600"
+										iconClass="h-6 w-6 text-white"
+									/>
 								</div>
 								<div class="min-w-0 flex-1">
 									<div class="flex items-center gap-2">
