@@ -8,6 +8,11 @@ vi.mock('$lib/db/database.server', async () => {
 	};
 });
 
+vi.mock('$lib/server/assets-cache.server', () => ({
+	getPreferredTrackAssetUrl: () => null,
+	queueTrackAssetCaching: () => {}
+}));
+
 import { resetTestDb, closeTestDb } from '$lib/test-utils/db-setup';
 import { createProject } from '$lib/db/projects.server';
 import { createGeneration, setCompleted, createExtendGeneration } from '$lib/db/generations.server';
