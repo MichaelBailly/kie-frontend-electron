@@ -21,6 +21,16 @@
 - Quality: `npm run check`, `npm run lint`, `npm run format`
 - Tests: `npm run test`, `npm run test:unit`
 
+## Agent Workflow
+
+After **every** code change, always run the following commands before considering a task done — do not skip any step:
+
+1. `npm run check` — TypeScript and Svelte type checking
+2. `npm run lint` — Prettier formatting check + ESLint
+3. `npm run test` — full unit test suite
+
+Fix any errors or failures before reporting the task as complete.
+
 ## Project Conventions
 
 - DB repository pattern: SQL and data access live under [src/lib/db/](src/lib/db/) and are re-exported via [src/lib/db.server.ts](src/lib/db.server.ts). Examples: [src/lib/db/annotations.server.ts](src/lib/db/annotations.server.ts), [src/lib/db/generations.server.ts](src/lib/db/generations.server.ts).
