@@ -35,6 +35,7 @@ export function createExtendMusicRequest(
 		style: 'pop, upbeat',
 		title: 'Summer Vibes (Extended)',
 		continueAt: 180,
+		instrumental: false,
 		model: 'V4_5',
 		callBackUrl: 'https://example.com/callback',
 		...overrides

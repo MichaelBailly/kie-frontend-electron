@@ -17,6 +17,7 @@
 	let title = $state('');
 	let style = $state('');
 	let lyrics = $state('');
+	let instrumental = $state(false);
 	let labelFilterQuery = $state('');
 	let selectedLabel = $state<string | null>(null);
 
@@ -44,6 +45,7 @@
 					title = parsed.title ?? '';
 					style = parsed.style ?? '';
 					lyrics = parsed.lyrics ?? '';
+					instrumental = parsed.instrumental ?? false;
 					isInitializing = false;
 					return;
 				}
@@ -56,6 +58,7 @@
 		title = latestGeneration?.title || '';
 		style = latestGeneration?.style || '';
 		lyrics = latestGeneration?.lyrics || '';
+		instrumental = !!latestGeneration?.instrumental;
 
 		isInitializing = false;
 	});
@@ -63,10 +66,15 @@
 	// Save form state to sessionStorage on every change (but not during initialization)
 	$effect(() => {
 		if (!browser || isInitializing) return;
-		sessionStorage.setItem(storageKey, JSON.stringify({ title, style, lyrics }));
+		sessionStorage.setItem(storageKey, JSON.stringify({ title, style, lyrics, instrumental }));
 	});
 
-	async function handleNewGeneration(formTitle: string, formStyle: string, formLyrics: string) {
+	async function handleNewGeneration(
+		formTitle: string,
+		formStyle: string,
+		formLyrics: string,
+		formInstrumental: boolean
+	) {
 		const response = await fetch('/api/generations', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -74,7 +82,8 @@
 				projectId: data.activeProject.id,
 				title: formTitle,
 				style: formStyle,
-				lyrics: formLyrics
+				lyrics: formLyrics,
+				instrumental: formInstrumental
 			})
 		});
 
@@ -203,7 +212,13 @@
 	}
 </script>
 
-<GenerationForm bind:title bind:style bind:lyrics onNewGeneration={handleNewGeneration} />
+<GenerationForm
+	bind:title
+	bind:style
+	bind:lyrics
+	bind:instrumental
+	onNewGeneration={handleNewGeneration}
+/>
 
 <section class="mt-10">
 	<div class="mb-4 flex items-center justify-between">

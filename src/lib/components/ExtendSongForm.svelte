@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
 	import Waveform from './Waveform.svelte';
+	import InstrumentalToggle from './InstrumentalToggle.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { formatTime } from '$lib/utils/format';
 	import { untrack } from 'svelte';
@@ -27,6 +28,7 @@
 			style: string;
 			lyrics: string;
 			continueAt: number;
+			instrumental: boolean;
 		}) => Promise<void>;
 		onCancel: () => void;
 	} = $props();
@@ -35,6 +37,7 @@
 	let title = $state(untrack(() => generation.title));
 	let style = $state(untrack(() => generation.style));
 	let lyrics = $state(untrack(() => generation.lyrics));
+	let instrumental = $state(untrack(() => !!generation.instrumental));
 	let continueAt = $state(
 		untrack(() => {
 			const duration = song.duration ?? 0;
@@ -81,12 +84,13 @@
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!title.trim() || !style.trim() || !lyrics.trim()) return;
+		if (!title.trim() || !style.trim()) return;
+		if (!instrumental && !lyrics.trim()) return;
 		if (continueAt <= 0 || continueAt >= duration) return;
 
 		isSubmitting = true;
 		try {
-			await onExtend({ title, style, lyrics, continueAt });
+			await onExtend({ title, style, lyrics, continueAt, instrumental });
 		} finally {
 			isSubmitting = false;
 		}
@@ -232,11 +236,21 @@
 		</div>
 
 		<div>
+			<p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Mode</p>
+			<InstrumentalToggle bind:value={instrumental} id="extend-instrumental" />
+			{#if instrumental}
+				<p class="mt-1.5 text-xs text-indigo-600 dark:text-indigo-400">
+					Instrumental mode — lyrics are optional.
+				</p>
+			{/if}
+		</div>
+
+		<div>
 			<label
 				for="extend-lyrics"
 				class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
 			>
-				Lyrics (how the song should continue)
+				Lyrics {instrumental ? '(optional)' : '(how the song should continue)'}
 			</label>
 			<textarea
 				id="extend-lyrics"
@@ -263,7 +277,7 @@
 				disabled={isSubmitting ||
 					!title.trim() ||
 					!style.trim() ||
-					!lyrics.trim() ||
+					(!instrumental && !lyrics.trim()) ||
 					continueAt <= 0 ||
 					continueAt >= duration}
 				class="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"

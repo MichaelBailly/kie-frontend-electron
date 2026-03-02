@@ -149,7 +149,7 @@ describe('POST /api/generations', () => {
 			lyrics: expect.any(String),
 			status: expect.any(String)
 		});
-		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world');
+		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world', false);
 	});
 
 	it('calls KIE API generateMusic after creating the generation', async () => {
@@ -393,7 +393,8 @@ describe('POST /api/generations/extend', () => {
 			'More lyrics',
 			5,
 			'audio-5-1',
-			30
+			30,
+			false
 		);
 	});
 

@@ -53,6 +53,7 @@ export function createGeneration(overrides: Partial<Generation> = {}): Generatio
 		extends_generation_id: null,
 		extends_audio_id: null,
 		continue_at: null,
+		instrumental: 0,
 		created_at: fixtureTimestamp(),
 		updated_at: fixtureTimestamp(),
 		...overrides

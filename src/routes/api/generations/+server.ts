@@ -16,11 +16,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	const projectId = asPositiveInt(body.projectId, 'projectId');
 	const title = asNonEmptyString(body.title, 'title');
 	const style = asNonEmptyString(body.style, 'style');
-	const lyrics = asNonEmptyString(body.lyrics, 'lyrics');
+	const instrumental = body.instrumental === true;
+	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
 	requireProject(projectId);
 
 	// Create generation record
-	const generation = createGeneration(projectId, title, style, lyrics);
+	const generation = createGeneration(projectId, title, style, lyrics, instrumental);
 
 	// Start async generation process
 	startGenerationTask(generation.id, () =>
@@ -29,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			style,
 			title,
 			customMode: true,
-			instrumental: false,
+			instrumental,
 			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL,
 			negativeTags: ''

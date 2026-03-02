@@ -26,6 +26,7 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		extends_generation_id: null,
 		extends_audio_id: null,
 		continue_at: null,
+		instrumental: 0,
 		created_at: '2026-01-01T00:00:00.000Z',
 		updated_at: '2026-01-01T00:00:00.000Z',
 		...overrides

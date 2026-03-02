@@ -57,6 +57,7 @@ export interface ExtendMusicRequest {
 	style: string;
 	title: string;
 	continueAt: number;
+	instrumental: boolean;
 	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5';
 	callBackUrl: string;
 	negativeTags?: string;

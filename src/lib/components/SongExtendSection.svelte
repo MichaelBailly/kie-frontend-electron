@@ -26,6 +26,7 @@
 			style: string;
 			lyrics: string;
 			continueAt: number;
+			instrumental: boolean;
 		}) => void | Promise<void>;
 		onCancel: () => void;
 	} = $props();
@@ -44,6 +45,7 @@
 		style: string;
 		lyrics: string;
 		continueAt: number;
+		instrumental: boolean;
 	}): Promise<void> {
 		await onExtend(data);
 	}

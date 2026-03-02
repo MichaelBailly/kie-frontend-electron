@@ -27,6 +27,7 @@
 			style: string;
 			lyrics: string;
 			continueAt: number;
+			instrumental: boolean;
 		}) => void | Promise<void>;
 	} = $props();
 
@@ -57,6 +58,7 @@
 		style: string;
 		lyrics: string;
 		continueAt: number;
+		instrumental: boolean;
 	}) {
 		await onExtend(data);
 	}

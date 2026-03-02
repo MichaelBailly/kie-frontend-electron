@@ -504,6 +504,26 @@
 										</svg>
 									</span>
 									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Style</h3>
+									{#if generationState.generation.instrumental}
+										<span
+											class="ml-1 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-indigo-200/60 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-300 dark:ring-indigo-700/40"
+										>
+											<svg
+												class="h-2.5 w-2.5 shrink-0"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2.5"
+												stroke-linecap="round"
+												stroke-linejoin="round"
+											>
+												<path d="M9 18V5l12-2v13" />
+												<circle cx="6" cy="18" r="3" />
+												<circle cx="18" cy="16" r="3" />
+											</svg>
+											Instrumental
+										</span>
+									{/if}
 								</div>
 								<button
 									onclick={() => copyStyle(generationState.generation.style)}

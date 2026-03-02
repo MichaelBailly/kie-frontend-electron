@@ -51,6 +51,7 @@
 		style: string;
 		lyrics: string;
 		continueAt: number;
+		instrumental: boolean;
 	}) {
 		if (!data.retryExtension?.extendsGenerationId || !data.retryExtension.extendsAudioId) {
 			return;
@@ -66,7 +67,8 @@
 				lyrics: retryData.lyrics,
 				extendsGenerationId: data.retryExtension.extendsGenerationId,
 				extendsAudioId: data.retryExtension.extendsAudioId,
-				continueAt: retryData.continueAt
+				continueAt: retryData.continueAt,
+				instrumental: retryData.instrumental
 			})
 		});
 

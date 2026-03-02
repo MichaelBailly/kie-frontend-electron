@@ -100,6 +100,7 @@ export function getDb(): BetterSqlite3.Database {
 			extends_generation_id INTEGER,
 			extends_audio_id TEXT,
 			continue_at REAL,
+			instrumental INTEGER NOT NULL DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -221,6 +222,7 @@ export function getDb(): BetterSqlite3.Database {
 	addColumnIfMissing('generations', 'track1_image_local_url', 'TEXT');
 	addColumnIfMissing('generations', 'track2_audio_local_url', 'TEXT');
 	addColumnIfMissing('generations', 'track2_image_local_url', 'TEXT');
+	addColumnIfMissing('generations', 'instrumental', 'INTEGER NOT NULL DEFAULT 0');
 
 	return _db;
 }

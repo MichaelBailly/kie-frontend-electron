@@ -33,6 +33,7 @@ type ExtendData = {
 	style: string;
 	lyrics: string;
 	continueAt: number;
+	instrumental: boolean;
 };
 
 export function useSongGenerationState(options: {
@@ -141,7 +142,8 @@ export function useSongGenerationState(options: {
 				lyrics: extendData.lyrics,
 				extendsGenerationId: generation.id,
 				extendsAudioId: song.id,
-				continueAt: extendData.continueAt
+				continueAt: extendData.continueAt,
+				instrumental: extendData.instrumental
 			})
 		});
 

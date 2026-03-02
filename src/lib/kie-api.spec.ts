@@ -108,6 +108,7 @@ describe('kie-api.server', () => {
 				style: 'style',
 				title: 'title',
 				continueAt: 10,
+				instrumental: false,
 				model: 'V5',
 				callBackUrl: 'https://example.com/callback',
 				negativeTags: ''

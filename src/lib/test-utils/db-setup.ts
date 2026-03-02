@@ -66,6 +66,7 @@ export const SCHEMA_DDL = `
 		extends_generation_id INTEGER,
 		extends_audio_id TEXT,
 		continue_at REAL,
+		instrumental INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,

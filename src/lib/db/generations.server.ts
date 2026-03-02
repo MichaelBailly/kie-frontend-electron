@@ -5,14 +5,15 @@ export function createGeneration(
 	projectId: number,
 	title: string,
 	style: string,
-	lyrics: string
+	lyrics: string,
+	instrumental: boolean = false
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at)
-		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL)
+		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental)
+		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?)
 		RETURNING *
 	`);
-	const generation = stmt.get(projectId, title, style, lyrics) as Generation;
+	const generation = stmt.get(projectId, title, style, lyrics, instrumental ? 1 : 0) as Generation;
 
 	// Update project's updated_at
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -27,11 +28,12 @@ export function createExtendGeneration(
 	lyrics: string,
 	extendsGenerationId: number,
 	extendsAudioId: string,
-	continueAt: number
+	continueAt: number,
+	instrumental: boolean = false
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)
+		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -41,7 +43,8 @@ export function createExtendGeneration(
 		lyrics,
 		extendsGenerationId,
 		extendsAudioId,
-		continueAt
+		continueAt,
+		instrumental ? 1 : 0
 	) as Generation;
 
 	// Update project's updated_at

@@ -1,25 +1,30 @@
 <script lang="ts">
+	import InstrumentalToggle from './InstrumentalToggle.svelte';
+
 	let {
 		title = $bindable(''),
 		style = $bindable(''),
 		lyrics = $bindable(''),
+		instrumental = $bindable(false),
 		onNewGeneration
 	}: {
 		title: string;
 		style: string;
 		lyrics: string;
-		onNewGeneration: (title: string, style: string, lyrics: string) => void;
+		instrumental: boolean;
+		onNewGeneration: (title: string, style: string, lyrics: string, instrumental: boolean) => void;
 	} = $props();
 
 	let isSubmitting = $state(false);
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
-		if (!title.trim() || !style.trim() || !lyrics.trim()) return;
+		if (!title.trim() || !style.trim()) return;
+		if (!instrumental && !lyrics.trim()) return;
 
 		isSubmitting = true;
 		try {
-			onNewGeneration(title, style, lyrics);
+			onNewGeneration(title, style, lyrics, instrumental);
 		} finally {
 			isSubmitting = false;
 		}
@@ -72,11 +77,21 @@
 			</div>
 
 			<div>
+				<p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Mode</p>
+				<InstrumentalToggle bind:value={instrumental} id="generation-instrumental" />
+				{#if instrumental}
+					<p class="mt-1.5 text-xs text-indigo-600 dark:text-indigo-400">
+						Instrumental mode — lyrics are optional.
+					</p>
+				{/if}
+			</div>
+
+			<div>
 				<label
 					for="lyrics"
 					class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
 				>
-					Lyrics
+					Lyrics {instrumental ? '(optional)' : ''}
 				</label>
 				<textarea
 					id="lyrics"
@@ -98,7 +113,10 @@ The catchy part..."
 			<div class="pt-2">
 				<button
 					type="submit"
-					disabled={isSubmitting || !title.trim() || !style.trim() || !lyrics.trim()}
+					disabled={isSubmitting ||
+						!title.trim() ||
+						!style.trim() ||
+						(!instrumental && !lyrics.trim())}
 					class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 				>
 					{#if isSubmitting}
