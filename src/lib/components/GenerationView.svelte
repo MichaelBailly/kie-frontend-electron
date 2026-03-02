@@ -25,8 +25,28 @@
 <div class="flex h-full flex-col">
 	<!-- Header -->
 	<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
+		<h2 class="flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
 			{generation.title}
+			{#if onRetryExtension && generation.extends_generation_id}
+				<button
+					type="button"
+					onclick={onRetryExtension}
+					disabled={!!retryDisabledReason}
+					title={retryDisabledReason || ''}
+					class="group inline-flex items-center justify-center overflow-hidden whitespace-nowrap rounded-full bg-gray-100/50 p-1.5 text-sm font-medium text-gray-500 transition-all duration-300 hover:cursor-pointer hover:bg-gray-100 hover:text-gray-900 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+				>
+					<svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M4 4v5h.582m14.836 2A8.001 8.001 0 005.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-13.837-2m13.837 2H15"
+						/>
+					</svg>
+					<span class="max-w-0 pr-0 opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:px-1.5 group-hover:opacity-100">
+						Retry song's extension
+					</span>
+				</button>
+			{/if}
 		</h2>
 		{#if parentGeneration && parentSong}
 			<ParentSongBanner
@@ -37,29 +57,6 @@
 				continueAt={generation.continue_at ?? null}
 				variant="compact"
 			/>
-		{/if}
-		{#if onRetryExtension && generation.extends_generation_id}
-			<div class="mt-2">
-				<button
-					type="button"
-					onclick={onRetryExtension}
-					disabled={!!retryDisabledReason}
-					class="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3 py-1.5 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-300 dark:hover:bg-purple-900/20"
-				>
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M4 4v5h.582m14.836 2A8.001 8.001 0 005.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-13.837-2m13.837 2H15"
-						/>
-					</svg>
-					Retry extension
-				</button>
-			</div>
-			{#if retryDisabledReason}
-				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{retryDisabledReason}</p>
-			{/if}
 		{/if}
 		{#if isGenerating(generation.status)}
 			<div class="mt-2 flex items-center gap-2">
