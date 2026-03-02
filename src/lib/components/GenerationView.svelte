@@ -174,6 +174,7 @@
 								title="{generation.title} (V1)"
 								imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
 								duration={generation.track1_duration || 0}
+								continueAt={generation.continue_at}
 								trackId={generation.track1_audio_id || `preview-${generation.id}-1`}
 								generationId={generation.id}
 								projectId={generation.project_id}
@@ -211,6 +212,7 @@
 								title="{generation.title} (V2)"
 								imageUrl={generation.track2_image_local_url || generation.track2_image_url || ''}
 								duration={generation.track2_duration || 0}
+								continueAt={generation.continue_at}
 								trackId={generation.track2_audio_id || `preview-${generation.id}-2`}
 								generationId={generation.id}
 								projectId={generation.project_id}

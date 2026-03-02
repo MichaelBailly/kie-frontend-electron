@@ -75,25 +75,46 @@ function createAudioStore() {
 		/**
 		 * Play a track. If it's the same track, just resume. If different, load and play.
 		 */
-		play(track: AudioTrack) {
+		play(track: AudioTrack, startTime?: number) {
 			if (!audioElement || !browser) return;
+
+			const playbackStart =
+				typeof startTime === 'number' && Number.isFinite(startTime)
+					? Math.max(0, startTime)
+					: undefined;
 
 			const currentSrc = state.currentTrack?.audioUrl || state.currentTrack?.streamUrl;
 			const newSrc = track.audioUrl || track.streamUrl;
 
 			if (state.currentTrack?.id === track.id && currentSrc) {
-				// Same track, just resume
+				// Same track, optionally seek and then resume
+				if (playbackStart !== undefined) {
+					audioElement.currentTime = playbackStart;
+					state.currentTime = playbackStart;
+				}
 				audioElement.play();
 			} else {
 				// Different track, load and play
 				state.currentTrack = track;
-				state.currentTime = 0;
+				state.currentTime = playbackStart ?? 0;
 				state.duration = track.duration || 0;
 
 				if (newSrc) {
 					audioElement.src = newSrc;
 					audioElement.load();
-					audioElement.play();
+
+					if (playbackStart !== undefined) {
+						const handleLoadedMetadata = () => {
+							if (!audioElement) return;
+							audioElement.currentTime = playbackStart;
+							state.currentTime = playbackStart;
+							audioElement.play();
+						};
+
+						audioElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+					} else {
+						audioElement.play();
+					}
 				}
 			}
 		},

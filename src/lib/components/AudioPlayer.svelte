@@ -8,6 +8,7 @@
 		title = 'Audio Track',
 		imageUrl = '',
 		duration = 0,
+		continueAt = null,
 		trackId,
 		generationId,
 		projectId
@@ -16,6 +17,7 @@
 		title?: string;
 		imageUrl?: string;
 		duration?: number;
+		continueAt?: number | null;
 		trackId: string;
 		generationId: number;
 		projectId: number;
@@ -32,24 +34,35 @@
 	let progressBar: HTMLDivElement | undefined = $state();
 	let hoverTime = $state<number | null>(null);
 	let hoverPercent = $state(0);
+	let hasExtensionTime = $derived(continueAt !== null && Number.isFinite(continueAt));
+	let extensionTime = $derived(hasExtensionTime ? Math.max(0, continueAt as number) : 0);
+	let extensionJumpTime = $derived(Math.max(0, extensionTime - 10));
+
+	function buildTrack(): AudioTrack {
+		return {
+			id: trackId,
+			generationId,
+			projectId,
+			title,
+			imageUrl: imageUrl || null,
+			streamUrl: null,
+			audioUrl: src,
+			duration
+		};
+	}
 
 	function handlePlayPause() {
 		if (isCurrentTrack) {
 			audioStore.toggle();
 		} else {
 			// Start playing this track
-			const track: AudioTrack = {
-				id: trackId,
-				generationId,
-				projectId,
-				title,
-				imageUrl: imageUrl || null,
-				streamUrl: null,
-				audioUrl: src,
-				duration
-			};
-			audioStore.play(track);
+			audioStore.play(buildTrack());
 		}
+	}
+
+	function handlePlayFromExtension() {
+		if (!hasExtensionTime) return;
+		audioStore.play(buildTrack(), extensionJumpTime);
 	}
 
 	function handleSeek(e: Event) {
@@ -106,23 +119,48 @@
 	/>
 
 	<div class="min-w-0 flex-1">
-		<h4 class="truncate font-medium text-gray-900 dark:text-gray-100">{title}</h4>
+		<div class="flex items-center gap-2">
+			<h4 class="truncate font-medium text-gray-900 dark:text-gray-100">{title}</h4>
+			{#if hasExtensionTime}
+				<span
+					class="inline-flex shrink-0 items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700 dark:border-indigo-500/40 dark:bg-indigo-500/10 dark:text-indigo-300"
+				>
+					Extended at {formatTime(extensionTime)}
+				</span>
+			{/if}
+		</div>
 		<div class="mt-2 flex items-center gap-3">
-			<!-- Play/Pause button -->
-			<button
-				onclick={handlePlayPause}
-				class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-700"
-			>
-				{#if isPlaying}
-					<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-						<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-					</svg>
-				{:else}
-					<svg class="h-5 w-5 pl-0.5" fill="currentColor" viewBox="0 0 24 24">
-						<path d="M8 5v14l11-7z" />
-					</svg>
+			<div class="flex shrink-0 items-center gap-2">
+				<!-- Play/Pause button -->
+				<button
+					onclick={handlePlayPause}
+					class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-indigo-600 text-white transition-colors hover:bg-indigo-700"
+				>
+					{#if isPlaying}
+						<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+							<path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+						</svg>
+					{:else}
+						<svg class="h-5 w-5 pl-0.5" fill="currentColor" viewBox="0 0 24 24">
+							<path d="M8 5v14l11-7z" />
+						</svg>
+					{/if}
+				</button>
+
+				{#if hasExtensionTime}
+					<button
+						onclick={handlePlayFromExtension}
+						title={`Play from ${formatTime(extensionJumpTime)} (10 seconds before extension point)`}
+						class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 transition-all hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-500/40 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:border-indigo-400/50 dark:hover:bg-indigo-500/20"
+					>
+						<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+							<path
+								d="M11 5v5.5h5.5a.75.75 0 010 1.5h-7A.75.75 0 019 11V5a.75.75 0 011.5 0v3.232A7.25 7.25 0 1110 19.5a7.18 7.18 0 01-5.126-2.126.75.75 0 111.06-1.06A5.75 5.75 0 1010 6.75h-.06l1.28 1.28A.75.75 0 0110.16 9l-2.5-2.5a.75.75 0 010-1.06l2.5-2.5a.75.75 0 011.06 1.06L9.94 5.25h.06c3.997 0 7.25 3.253 7.25 7.25S13.997 19.75 10 19.75 2.75 16.497 2.75 12.5 6.003 5.25 10 5.25z"
+							/>
+						</svg>
+					</button>
 				{/if}
-			</button>
+			</div>
 
 			<!-- Progress bar -->
 			<div class="flex flex-1 items-center gap-2">
