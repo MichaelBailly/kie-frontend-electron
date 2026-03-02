@@ -10,11 +10,15 @@
 	let {
 		generation,
 		parentGeneration = null,
-		parentSong = null
+		parentSong = null,
+		onRetryExtension = null,
+		retryDisabledReason = null
 	}: {
 		generation: Generation;
 		parentGeneration?: { id: number } | null;
 		parentSong?: { id: string; title: string } | null;
+		onRetryExtension?: (() => void) | null;
+		retryDisabledReason?: string | null;
 	} = $props();
 </script>
 
@@ -30,9 +34,32 @@
 				parentGenerationProjectId={generation.project_id}
 				parentSongId={parentSong.id}
 				parentSongTitle={parentSong.title}
-				continueAt={null}
+				continueAt={generation.continue_at ?? null}
 				variant="compact"
 			/>
+		{/if}
+		{#if onRetryExtension && generation.extends_generation_id}
+			<div class="mt-2">
+				<button
+					type="button"
+					onclick={onRetryExtension}
+					disabled={!!retryDisabledReason}
+					class="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-white px-3 py-1.5 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-purple-800 dark:bg-gray-900 dark:text-purple-300 dark:hover:bg-purple-900/20"
+				>
+					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M4 4v5h.582m14.836 2A8.001 8.001 0 005.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-13.837-2m13.837 2H15"
+						/>
+					</svg>
+					Retry extension
+				</button>
+			</div>
+			{#if retryDisabledReason}
+				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{retryDisabledReason}</p>
+			{/if}
 		{/if}
 		{#if isGenerating(generation.status)}
 			<div class="mt-2 flex items-center gap-2">

@@ -8,6 +8,7 @@
 	let {
 		generation,
 		song,
+		initialContinueAt = null,
 		onExtend,
 		onCancel
 	}: {
@@ -20,6 +21,7 @@
 			duration: number | null;
 			title: string;
 		};
+		initialContinueAt?: number | null;
 		onExtend: (data: {
 			title: string;
 			style: string;
@@ -33,7 +35,15 @@
 	let title = $state(untrack(() => generation.title));
 	let style = $state(untrack(() => generation.style));
 	let lyrics = $state(untrack(() => generation.lyrics));
-	let continueAt = $state(untrack(() => (song.duration ? Math.floor(song.duration * 0.75) : 30)));
+	let continueAt = $state(
+		untrack(() => {
+			const duration = song.duration ?? 0;
+			if (typeof initialContinueAt === 'number' && initialContinueAt > 0 && initialContinueAt < duration) {
+				return Math.floor(initialContinueAt);
+			}
+			return song.duration ? Math.floor(song.duration * 0.75) : 30;
+		})
+	);
 	let isSubmitting = $state(false);
 
 	// For preview playback
