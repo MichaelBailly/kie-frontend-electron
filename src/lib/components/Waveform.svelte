@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import * as d3 from 'd3';
+	import type * as D3 from 'd3';
+
+	// d3 is loaded dynamically so it never appears in the SSR server bundle.
+	// (A top-level static import would cause ERR_MODULE_NOT_FOUND in the packaged
+	// Electron AppImage, where node_modules are not present at runtime.)
+	let d3: typeof D3 | undefined;
 
 	let {
 		audioUrl,
@@ -65,16 +70,18 @@
 	}
 
 	function drawWaveform() {
-		if (!container || waveformData.length === 0) return;
+		if (!container || waveformData.length === 0 || !d3) return;
+		// Local alias so TypeScript can narrow the type in nested closures below.
+		const lib = d3;
 
 		// Clear previous SVG
-		d3.select(container).selectAll('svg').remove();
+		lib.select(container).selectAll('svg').remove();
 
 		const containerWidth = container.clientWidth;
 		const margin = { top: 4, right: 0, bottom: 4, left: 0 };
 		const innerHeight = height - margin.top - margin.bottom;
 
-		const svg = d3
+		const svg = lib
 			.select(container)
 			.append('svg')
 			.attr('width', containerWidth)
@@ -84,12 +91,12 @@
 		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
 		// Scales
-		const xScale = d3
+		const xScale = lib
 			.scaleLinear()
 			.domain([0, waveformData.length - 1])
 			.range([0, containerWidth]);
 
-		const yScale = d3
+		const yScale = lib
 			.scaleLinear()
 			.domain([0, 1])
 			.range([innerHeight / 2, 0]);
@@ -113,19 +120,19 @@
 		gradient.append('stop').attr('offset', progress).attr('stop-color', backgroundColor);
 
 		// Create area generators for upper and lower half
-		const upperArea = d3
+		const upperArea = lib
 			.area<number>()
 			.x((_: number, i: number) => xScale(i))
 			.y0(innerHeight / 2)
 			.y1((d: number) => yScale(d))
-			.curve(d3.curveBasis);
+			.curve(lib.curveBasis);
 
-		const lowerArea = d3
+		const lowerArea = lib
 			.area<number>()
 			.x((_: number, i: number) => xScale(i))
 			.y0(innerHeight / 2)
 			.y1((d: number) => innerHeight / 2 + (innerHeight / 2 - yScale(d)))
-			.curve(d3.curveBasis);
+			.curve(lib.curveBasis);
 
 		// Draw background waveform (subtle)
 		g.append('path')
@@ -166,7 +173,7 @@
 		// Click handler for seeking
 		svg.on('click', function (event: MouseEvent) {
 			if (duration === 0) return;
-			const [x] = d3.pointer(event);
+			const [x] = lib.pointer(event);
 			const seekProgress = x / containerWidth;
 			const newTime = seekProgress * duration;
 			onSeek?.(newTime);
@@ -175,15 +182,18 @@
 		// Hover effect
 		svg
 			.on('mouseenter', function (this: SVGSVGElement) {
-				d3.select(this).style('opacity', 0.9);
+				lib.select(this).style('opacity', 0.9);
 			})
 			.on('mouseleave', function (this: SVGSVGElement) {
-				d3.select(this).style('opacity', 1);
+				lib.select(this).style('opacity', 1);
 			});
 	}
 
 	onMount(() => {
-		loadWaveform();
+		import('d3').then((d3module) => {
+			d3 = d3module;
+			loadWaveform();
+		});
 
 		// Redraw on window resize
 		const handleResize = () => {
