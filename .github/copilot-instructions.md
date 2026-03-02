@@ -31,6 +31,8 @@ After **every** code change, always run the following commands before considerin
 
 Fix any errors or failures before reporting the task as complete.
 
+When a change adds behavior or modifies existing behavior, add or update focused tests when necessary to cover that behavior and prevent regressions.
+
 ## Project Conventions
 
 - DB repository pattern: SQL and data access live under [src/lib/db/](src/lib/db/) and are re-exported via [src/lib/db.server.ts](src/lib/db.server.ts). Examples: [src/lib/db/annotations.server.ts](src/lib/db/annotations.server.ts), [src/lib/db/generations.server.ts](src/lib/db/generations.server.ts).
