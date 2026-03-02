@@ -72,21 +72,22 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		retryDisabledReason = 'The original source track is missing duration metadata.';
 	}
 
-	const retryExtension = generation.extends_generation_id && generation.extends_audio_id
-		? {
-				canRetry: !!retrySourceSong && !retryDisabledReason,
-				reason: retryDisabledReason,
-				sourceSong: retrySourceSong,
-				extendsGenerationId: generation.extends_generation_id,
-				extendsAudioId: generation.extends_audio_id,
-				defaults: {
-					title: generation.title,
-					style: generation.style,
-					lyrics: generation.lyrics,
-					continueAt: generation.continue_at
+	const retryExtension =
+		generation.extends_generation_id && generation.extends_audio_id
+			? {
+					canRetry: !!retrySourceSong && !retryDisabledReason,
+					reason: retryDisabledReason,
+					sourceSong: retrySourceSong,
+					extendsGenerationId: generation.extends_generation_id,
+					extendsAudioId: generation.extends_audio_id,
+					defaults: {
+						title: generation.title,
+						style: generation.style,
+						lyrics: generation.lyrics,
+						continueAt: generation.continue_at
+					}
 				}
-			}
-		: null;
+			: null;
 
 	return {
 		generation,

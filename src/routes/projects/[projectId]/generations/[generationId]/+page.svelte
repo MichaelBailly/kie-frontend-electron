@@ -92,7 +92,7 @@
 	parentGeneration={data.parentGeneration}
 	parentSong={data.parentSong}
 	onRetryExtension={openRetryModal}
-	retryDisabledReason={retryDisabledReason}
+	{retryDisabledReason}
 />
 
 {#if data.retryExtension && retrySourceSong}

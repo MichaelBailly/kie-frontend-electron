@@ -74,9 +74,17 @@
 		aria-labelledby="retry-extend-modal-title"
 		tabindex="0"
 	>
-		<div class="relative max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-900" role="document">
-			<div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
-				<h2 id="retry-extend-modal-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+		<div
+			class="relative max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-900"
+			role="document"
+		>
+			<div
+				class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900"
+			>
+				<h2
+					id="retry-extend-modal-title"
+					class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+				>
 					Retry Extension
 				</h2>
 				<button
@@ -98,7 +106,7 @@
 				<ExtendSongForm
 					{generation}
 					song={sourceSong}
-					initialContinueAt={initialContinueAt}
+					{initialContinueAt}
 					onExtend={handleExtend}
 					onCancel={onClose}
 				/>

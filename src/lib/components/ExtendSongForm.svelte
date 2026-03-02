@@ -38,7 +38,11 @@
 	let continueAt = $state(
 		untrack(() => {
 			const duration = song.duration ?? 0;
-			if (typeof initialContinueAt === 'number' && initialContinueAt > 0 && initialContinueAt < duration) {
+			if (
+				typeof initialContinueAt === 'number' &&
+				initialContinueAt > 0 &&
+				initialContinueAt < duration
+			) {
 				return Math.floor(initialContinueAt);
 			}
 			return song.duration ? Math.floor(song.duration * 0.75) : 30;
