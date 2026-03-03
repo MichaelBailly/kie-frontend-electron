@@ -38,6 +38,8 @@ export interface Generation {
 	extends_stem_type: string | null;
 	extends_stem_url: string | null;
 	instrumental: number;
+	generation_type: string;
+	negative_tags: string | null;
 	created_at: string;
 	updated_at: string;
 }

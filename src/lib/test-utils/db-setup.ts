@@ -69,6 +69,8 @@ export const SCHEMA_DDL = `
 		extends_stem_type TEXT,
 		extends_stem_url TEXT,
 		instrumental INTEGER NOT NULL DEFAULT 0,
+		generation_type TEXT NOT NULL DEFAULT 'generate',
+		negative_tags TEXT,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,

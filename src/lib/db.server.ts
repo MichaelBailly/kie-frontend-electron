@@ -43,7 +43,9 @@ export {
 export {
 	createGeneration,
 	createExtendGeneration,
+	createAddInstrumentalGeneration,
 	getExtendedGenerations,
+	getAddInstrumentalGenerations,
 	getGeneration,
 	getGenerationByTaskId,
 	getGenerationsByProject,

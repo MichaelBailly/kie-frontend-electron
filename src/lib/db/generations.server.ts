@@ -9,8 +9,8 @@ export function createGeneration(
 	instrumental: boolean = false
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental)
-		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?)
+		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental, generation_type)
+		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, 'generate')
 		RETURNING *
 	`);
 	const generation = stmt.get(projectId, title, style, lyrics, instrumental ? 1 : 0) as Generation;
@@ -44,9 +44,10 @@ export function createExtendGeneration(
 			continue_at,
 			extends_stem_type,
 			extends_stem_url,
-			instrumental
+			instrumental,
+			generation_type
 		)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 'extend')
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -72,8 +73,67 @@ export function getExtendedGenerations(generationId: number, audioId: string): G
 	const stmt = prepareStmt(`
 		SELECT * FROM generations 
 		WHERE extends_generation_id = ? AND extends_audio_id = ?
+		AND generation_type != 'add_instrumental'
 		ORDER BY created_at ASC
 	`);
+	return stmt.all(generationId, audioId) as Generation[];
+}
+
+export function createAddInstrumentalGeneration(
+	projectId: number,
+	title: string,
+	tags: string,
+	negativeTags: string,
+	sourceGenerationId: number,
+	sourceAudioId: string,
+	stemType: string,
+	stemUrl: string
+): Generation {
+	const stmt = prepareStmt(`
+		INSERT INTO generations (
+			project_id,
+			title,
+			style,
+			lyrics,
+			status,
+			extends_generation_id,
+			extends_audio_id,
+			continue_at,
+			extends_stem_type,
+			extends_stem_url,
+			instrumental,
+			generation_type,
+			negative_tags
+		)
+		VALUES (?, ?, ?, '', 'pending', ?, ?, NULL, ?, ?, 1, 'add_instrumental', ?)
+		RETURNING *
+	`);
+
+	const generation = stmt.get(
+		projectId,
+		title,
+		tags,
+		sourceGenerationId,
+		sourceAudioId,
+		stemType,
+		stemUrl,
+		negativeTags
+	) as Generation;
+
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+
+	return generation;
+}
+
+export function getAddInstrumentalGenerations(generationId: number, audioId: string): Generation[] {
+	const stmt = prepareStmt(`
+		SELECT * FROM generations
+		WHERE extends_generation_id = ?
+		  AND extends_audio_id = ?
+		  AND generation_type = 'add_instrumental'
+		ORDER BY created_at ASC
+	`);
+
 	return stmt.all(generationId, audioId) as Generation[];
 }
 
@@ -308,10 +368,20 @@ export interface ExtendedParentGeneration extends Generation {
 export function getAllExtendedParentGenerations(): ExtendedParentGeneration[] {
 	const stmt = prepareStmt(`
 		SELECT g.*, p.name as project_name,
-		       (SELECT COUNT(*) FROM generations c WHERE c.extends_generation_id = g.id) as extension_count
+		       (
+				   SELECT COUNT(*)
+				   FROM generations c
+				   WHERE c.extends_generation_id = g.id
+				     AND c.generation_type != 'add_instrumental'
+			   ) as extension_count
 		FROM generations g
 		JOIN projects p ON g.project_id = p.id
-		WHERE (SELECT COUNT(*) FROM generations c WHERE c.extends_generation_id = g.id) > 0
+		WHERE (
+			SELECT COUNT(*)
+			FROM generations c
+			WHERE c.extends_generation_id = g.id
+			  AND c.generation_type != 'add_instrumental'
+		) > 0
 		ORDER BY g.updated_at DESC
 	`);
 	return stmt.all() as ExtendedParentGeneration[];
@@ -356,8 +426,8 @@ export function createImportedGeneration(
 			project_id, task_id, title, style, lyrics, status,
 			track1_stream_url, track1_audio_url, track1_image_url, track1_duration, track1_audio_id,
 			track2_stream_url, track2_audio_url, track2_image_url, track2_duration, track2_audio_id,
-			response_data
-		) VALUES (?, ?, ?, ?, ?, 'success', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			response_data, generation_type
+		) VALUES (?, ?, ?, ?, ?, 'success', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'generate')
 		RETURNING *
 	`);
 	const generation = stmt.get(

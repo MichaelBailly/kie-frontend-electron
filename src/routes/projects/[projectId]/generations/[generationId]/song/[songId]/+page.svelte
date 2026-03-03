@@ -2,10 +2,12 @@
 	import type { PageData } from './$types';
 	import ParentSongBanner from '$lib/components/ParentSongBanner.svelte';
 	import SongExtendSection from '$lib/components/SongExtendSection.svelte';
+	import AddInstrumentalSection from '$lib/components/AddInstrumentalSection.svelte';
 	import StemSeparationResults from '$lib/components/StemSeparationResults.svelte';
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import Waveform from '$lib/components/Waveform.svelte';
 	import ExtendedGenerationsList from '$lib/components/ExtendedGenerationsList.svelte';
+	import AddInstrumentalGenerationsList from '$lib/components/AddInstrumentalGenerationsList.svelte';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { useSongGenerationState } from '$lib/routes/song/useSongGenerationState.svelte';
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
@@ -62,11 +64,15 @@
 			!!stemState.pendingStemSeparation
 	);
 	const hasExtensions = $derived((data.extendedGenerations ?? []).length > 0);
+	const hasAddInstrumentalGenerations = $derived(
+		(data.addInstrumentalGenerations ?? []).length > 0
+	);
 	const hasLyrics = $derived(!!generationState.generation.lyrics);
 
 	// Collapsed states for cards
 	let stemsCollapsed = $state(false);
 	let extensionsCollapsed = $state(false);
+	let addInstrumentalCollapsed = $state(false);
 
 	let styleCopied = $state(false);
 	let lyricsCopied = $state(false);
@@ -129,11 +135,21 @@
 		const stemType = generationState.generation.extends_stem_type;
 		if (!stemType) return undefined;
 		const stemDisplay = getStemDisplay(stemType);
+		if (generationState.generation.generation_type === 'add_instrumental') {
+			return `Instrumental added from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
 
 	function handleExtendStem(stemType: string, stemUrl: string) {
 		generationState.openStemExtendForm(stemType, stemUrl);
+		setTimeout(() => {
+			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 0);
+	}
+
+	function handleAddInstrumental(stemType: string, stemUrl: string) {
+		generationState.openAddInstrumentalForm(stemType, stemUrl);
 		setTimeout(() => {
 			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}, 0);
@@ -387,6 +403,15 @@
 					stemUrl={generationState.extendingStemUrl}
 					onExtend={generationState.handleExtend}
 					onCancel={generationState.closeExtendForm}
+				/>
+				<AddInstrumentalSection
+					show={generationState.showAddInstrumentalForm}
+					generation={generationState.generation}
+					song={generationState.song}
+					stemType={generationState.addInstrumentalStemType}
+					stemUrl={generationState.addInstrumentalStemUrl}
+					onSubmit={generationState.handleAddInstrumental}
+					onCancel={generationState.closeAddInstrumentalForm}
 				/>
 			</div>
 
@@ -707,6 +732,59 @@
 									songTitle={generationState.song.title}
 									imageUrl={generationState.song.imageUrl}
 									onExtendStem={handleExtendStem}
+									onAddInstrumental={handleAddInstrumental}
+								/>
+							</div>
+						{/if}
+					</div>
+				{/if}
+
+				{#if hasAddInstrumentalGenerations}
+					<div
+						class="overflow-hidden rounded-2xl border border-teal-200/80 bg-linear-to-br from-teal-50 to-white p-5 shadow-sm dark:border-teal-800/50 dark:from-teal-950/30 dark:to-gray-900"
+					>
+						<button
+							onclick={() => (addInstrumentalCollapsed = !addInstrumentalCollapsed)}
+							class="flex w-full cursor-pointer items-center justify-between"
+						>
+							<h3
+								class="flex items-center gap-2 text-sm font-semibold text-teal-900 dark:text-teal-100"
+							>
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
+									/>
+								</svg>
+								Instrumental Versions
+								<span
+									class="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-semibold text-teal-700 dark:bg-teal-900/50 dark:text-teal-300"
+								>
+									{(data.addInstrumentalGenerations ?? []).length}
+								</span>
+							</h3>
+							<svg
+								class="h-4 w-4 text-teal-400 transition-transform {addInstrumentalCollapsed
+									? ''
+									: 'rotate-180'}"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
+							</svg>
+						</button>
+						{#if !addInstrumentalCollapsed}
+							<div class="mt-4">
+								<AddInstrumentalGenerationsList
+									generations={data.addInstrumentalGenerations ?? []}
 								/>
 							</div>
 						{/if}

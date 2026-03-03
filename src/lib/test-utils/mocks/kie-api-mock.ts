@@ -5,6 +5,7 @@ export interface KieApiMock {
 	generateMusic: MockFn;
 	extendMusic: MockFn;
 	uploadExtendMusic: MockFn;
+	addInstrumental: MockFn;
 	getMusicDetails: MockFn;
 	separateVocals: MockFn;
 	getStemSeparationDetails: MockFn;
@@ -40,6 +41,11 @@ export function createKieApiMock(): KieApiMock {
 			code: 200,
 			msg: 'success',
 			data: { taskId: 'task-mock-003' }
+		}),
+		addInstrumental: vi.fn().mockResolvedValue({
+			code: 200,
+			msg: 'success',
+			data: { taskId: 'task-mock-004' }
 		}),
 		getMusicDetails: vi.fn().mockResolvedValue({
 			code: 200,

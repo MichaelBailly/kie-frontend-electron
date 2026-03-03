@@ -56,6 +56,8 @@ export function createGeneration(overrides: Partial<Generation> = {}): Generatio
 		extends_stem_type: null,
 		extends_stem_url: null,
 		instrumental: 0,
+		generation_type: 'generate',
+		negative_tags: null,
 		created_at: fixtureTimestamp(),
 		updated_at: fixtureTimestamp(),
 		...overrides
@@ -97,9 +99,26 @@ export function createExtendGeneration(overrides: Partial<Generation> = {}): Gen
 	const id = overrides.id ?? nextGenerationFixtureId();
 	return createGeneration({
 		id,
+		generation_type: 'extend',
 		extends_generation_id: 1,
 		extends_audio_id: 'audio-1-1',
 		continue_at: 180,
+		...overrides
+	});
+}
+
+export function createAddInstrumentalGeneration(overrides: Partial<Generation> = {}): Generation {
+	const id = overrides.id ?? nextGenerationFixtureId();
+	return createGeneration({
+		id,
+		generation_type: 'add_instrumental',
+		instrumental: 1,
+		lyrics: '',
+		extends_generation_id: 1,
+		extends_audio_id: 'audio-1-1',
+		extends_stem_type: 'vocal',
+		extends_stem_url: 'https://example.com/stems/vocal.mp3',
+		negative_tags: '',
 		...overrides
 	});
 }

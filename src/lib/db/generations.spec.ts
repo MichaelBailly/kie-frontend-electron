@@ -13,7 +13,9 @@ import { createProject, getProject } from './projects.server';
 import {
 	createGeneration,
 	createExtendGeneration,
+	createAddInstrumentalGeneration,
 	getExtendedGenerations,
+	getAddInstrumentalGenerations,
 	getGeneration,
 	getGenerationByTaskId,
 	getGenerationsByProject,
@@ -117,6 +119,48 @@ describe('Generations repository', () => {
 			expect(ext.extends_stem_type).toBe('vocal');
 			expect(ext.extends_stem_url).toBe('https://example.com/stems/vocal.mp3');
 		});
+
+		it('marks extend generations with generation_type=extend', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const ext = createExtendGeneration(
+				projectId,
+				'Extended',
+				'pop',
+				'more lyrics',
+				parent.id,
+				'audio-123',
+				120.5
+			);
+
+			expect(ext.generation_type).toBe('extend');
+		});
+	});
+
+	describe('createAddInstrumentalGeneration', () => {
+		it('creates add-instrumental generation with lineage fields populated', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const created = createAddInstrumentalGeneration(
+				projectId,
+				'Parent — Instrumental',
+				'cinematic, ambient',
+				'heavy metal',
+				parent.id,
+				'audio-123',
+				'vocal',
+				'https://example.com/stems/vocal.mp3'
+			);
+
+			expect(created.generation_type).toBe('add_instrumental');
+			expect(created.instrumental).toBe(1);
+			expect(created.style).toBe('cinematic, ambient');
+			expect(created.negative_tags).toBe('heavy metal');
+			expect(created.lyrics).toBe('');
+			expect(created.continue_at).toBeNull();
+			expect(created.extends_generation_id).toBe(parent.id);
+			expect(created.extends_audio_id).toBe('audio-123');
+			expect(created.extends_stem_type).toBe('vocal');
+			expect(created.extends_stem_url).toBe('https://example.com/stems/vocal.mp3');
+		});
 	});
 
 	describe('getGeneration', () => {
@@ -201,6 +245,57 @@ describe('Generations repository', () => {
 		it('returns empty array when no extensions exist', () => {
 			const parent = createGeneration(projectId, 'Parent', 'pop', 'l');
 			expect(getExtendedGenerations(parent.id, 'audio-1')).toEqual([]);
+		});
+
+		it('excludes add-instrumental generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'l');
+			createExtendGeneration(projectId, 'Ext1', 'pop', 'l', parent.id, 'audio-1', 60);
+			createAddInstrumentalGeneration(
+				projectId,
+				'Instr1',
+				'ambient',
+				'',
+				parent.id,
+				'audio-1',
+				'vocal',
+				'https://example.com/stems/vocal.mp3'
+			);
+
+			const exts = getExtendedGenerations(parent.id, 'audio-1');
+			expect(exts).toHaveLength(1);
+			expect(exts[0].title).toBe('Ext1');
+		});
+	});
+
+	describe('getAddInstrumentalGenerations', () => {
+		it('returns only add-instrumental children for source song', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			createAddInstrumentalGeneration(
+				projectId,
+				'Instr1',
+				'ambient',
+				'',
+				parent.id,
+				'audio-1',
+				'vocal',
+				'https://example.com/stems/vocal.mp3'
+			);
+			createAddInstrumentalGeneration(
+				projectId,
+				'Instr2',
+				'ambient',
+				'',
+				parent.id,
+				'audio-2',
+				'drums',
+				'https://example.com/stems/drums.mp3'
+			);
+			createExtendGeneration(projectId, 'Ext1', 'pop', 'lyrics', parent.id, 'audio-1', 90);
+
+			const rows = getAddInstrumentalGenerations(parent.id, 'audio-1');
+			expect(rows).toHaveLength(1);
+			expect(rows[0].title).toBe('Instr1');
+			expect(rows[0].generation_type).toBe('add_instrumental');
 		});
 	});
 

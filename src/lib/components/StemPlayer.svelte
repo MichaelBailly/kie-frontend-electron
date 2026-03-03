@@ -16,13 +16,15 @@
 		projectId,
 		songTitle = '',
 		imageUrl = null,
-		onExtendStem
+		onExtendStem,
+		onAddInstrumental
 	}: {
 		separation: StemSeparation;
 		projectId: number;
 		songTitle?: string;
 		imageUrl?: string | null;
 		onExtendStem?: (stemType: string, stemUrl: string) => void;
+		onAddInstrumental?: (stemType: string, stemUrl: string) => void;
 	} = $props();
 
 	// Get all available stems based on separation type
@@ -249,6 +251,23 @@
 									stroke-linejoin="round"
 									stroke-width="2"
 									d="M13 5l7 7-7 7M5 5l7 7-7 7"
+								/>
+							</svg>
+						</button>
+					{/if}
+					{#if onAddInstrumental}
+						<button
+							type="button"
+							onclick={() => onAddInstrumental(stem.key, stem.url!)}
+							class="rounded p-1.5 text-teal-500 transition-colors hover:bg-teal-100 hover:text-teal-700 dark:text-teal-400 dark:hover:bg-teal-900/30 dark:hover:text-teal-200"
+							title="Add instrumental from {stem.name}"
+						>
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
 								/>
 							</svg>
 						</button>

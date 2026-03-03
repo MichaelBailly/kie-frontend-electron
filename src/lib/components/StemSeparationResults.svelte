@@ -10,7 +10,8 @@
 		projectId,
 		songTitle = '',
 		imageUrl = null,
-		onExtendStem
+		onExtendStem,
+		onAddInstrumental
 	}: {
 		vocalSeparation: StemSeparation | undefined;
 		stemSeparation: StemSeparation | undefined;
@@ -20,6 +21,7 @@
 		songTitle?: string;
 		imageUrl?: string | null;
 		onExtendStem?: (stemType: string, stemUrl: string) => void;
+		onAddInstrumental?: (stemType: string, stemUrl: string) => void;
 	} = $props();
 </script>
 
@@ -39,6 +41,7 @@
 					{songTitle}
 					{imageUrl}
 					{onExtendStem}
+					{onAddInstrumental}
 				/>
 			</div>
 		{:else if pendingVocalSeparation}
@@ -73,7 +76,14 @@
 					<span class="text-xl">🎛️</span>
 					Full Stem Split
 				</h3>
-				<StemPlayer separation={stemSeparation} {projectId} {songTitle} {imageUrl} {onExtendStem} />
+				<StemPlayer
+					separation={stemSeparation}
+					{projectId}
+					{songTitle}
+					{imageUrl}
+					{onExtendStem}
+					{onAddInstrumental}
+				/>
 			</div>
 		{:else if pendingStemSeparation}
 			<div

@@ -36,6 +36,12 @@ type ExtendData = {
 	instrumental: boolean;
 };
 
+type AddInstrumentalData = {
+	title: string;
+	tags: string;
+	negativeTags: string;
+};
+
 export function useSongGenerationState(options: {
 	getData: () => SongPageStateData;
 	activeProjectContext: ActiveProjectContext | undefined;
@@ -46,6 +52,9 @@ export function useSongGenerationState(options: {
 	let showExtendForm = $state(false);
 	let extendingStemType = $state<string | null>(null);
 	let extendingStemUrl = $state<string | null>(null);
+	let showAddInstrumentalForm = $state(false);
+	let addInstrumentalStemType = $state<string | null>(null);
+	let addInstrumentalStemUrl = $state<string | null>(null);
 	let starredOverride = $state<boolean | null>(null);
 	let starAnimClass = $state('');
 
@@ -126,6 +135,9 @@ export function useSongGenerationState(options: {
 	}
 
 	function toggleExtendForm() {
+		showAddInstrumentalForm = false;
+		addInstrumentalStemType = null;
+		addInstrumentalStemUrl = null;
 		extendingStemType = null;
 		extendingStemUrl = null;
 		showExtendForm = !showExtendForm;
@@ -138,9 +150,27 @@ export function useSongGenerationState(options: {
 	}
 
 	function openStemExtendForm(stemType: string, stemUrl: string) {
+		showAddInstrumentalForm = false;
+		addInstrumentalStemType = null;
+		addInstrumentalStemUrl = null;
 		extendingStemType = stemType;
 		extendingStemUrl = stemUrl;
 		showExtendForm = true;
+	}
+
+	function closeAddInstrumentalForm() {
+		showAddInstrumentalForm = false;
+		addInstrumentalStemType = null;
+		addInstrumentalStemUrl = null;
+	}
+
+	function openAddInstrumentalForm(stemType: string, stemUrl: string) {
+		showExtendForm = false;
+		extendingStemType = null;
+		extendingStemUrl = null;
+		addInstrumentalStemType = stemType;
+		addInstrumentalStemUrl = stemUrl;
+		showAddInstrumentalForm = true;
 	}
 
 	async function handleExtend(extendData: ExtendData) {
@@ -179,6 +209,45 @@ export function useSongGenerationState(options: {
 		);
 	}
 
+	async function handleAddInstrumental(data: AddInstrumentalData) {
+		if (!addInstrumentalStemType || !addInstrumentalStemUrl) {
+			console.error('No stem selected for add instrumental');
+			return;
+		}
+
+		const response = await fetch('/api/generations/add-instrumental', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				projectId: generation.project_id,
+				sourceGenerationId: generation.id,
+				sourceAudioId: song.id,
+				stemType: addInstrumentalStemType,
+				stemUrl: addInstrumentalStemUrl,
+				title: data.title,
+				tags: data.tags,
+				negativeTags: data.negativeTags
+			})
+		});
+
+		if (!response.ok) {
+			console.error('Failed to create add instrumental generation');
+			return;
+		}
+
+		const newGeneration = await response.json();
+		showAddInstrumentalForm = false;
+		addInstrumentalStemType = null;
+		addInstrumentalStemUrl = null;
+
+		goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
+
 	return {
 		get generation() {
 			return generation;
@@ -195,11 +264,20 @@ export function useSongGenerationState(options: {
 		get showExtendForm() {
 			return showExtendForm;
 		},
+		get showAddInstrumentalForm() {
+			return showAddInstrumentalForm;
+		},
 		get extendingStemType() {
 			return extendingStemType;
 		},
 		get extendingStemUrl() {
 			return extendingStemUrl;
+		},
+		get addInstrumentalStemType() {
+			return addInstrumentalStemType;
+		},
+		get addInstrumentalStemUrl() {
+			return addInstrumentalStemUrl;
 		},
 		get starred() {
 			return starred;
@@ -210,7 +288,10 @@ export function useSongGenerationState(options: {
 		toggleExtendForm,
 		closeExtendForm,
 		openStemExtendForm,
+		openAddInstrumentalForm,
+		closeAddInstrumentalForm,
 		handleToggleStar,
-		handleExtend
+		handleExtend,
+		handleAddInstrumental
 	};
 }

@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import {
 	getExtendedGenerations,
+	getAddInstrumentalGenerations,
 	getGeneration as getGenerationById,
 	getStemSeparationsForSong,
 	getAnnotation
@@ -58,6 +59,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	// Get extended generations for this song (songs that extend from this one)
 	const extendedGenerations = getExtendedGenerations(generationId, songId);
+	const addInstrumentalGenerations = getAddInstrumentalGenerations(generationId, songId);
 
 	// Get stem separations for this song
 	const stemSeparations = getStemSeparationsForSong(generationId, songId);
@@ -91,6 +93,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		song: songData,
 		activeProject,
 		extendedGenerations,
+		addInstrumentalGenerations,
 		stemSeparations,
 		annotation,
 		parentGeneration,

@@ -48,6 +48,7 @@ function createSongPageData(options?: { annotation: ReturnType<typeof createAnno
 			generations: [generation]
 		},
 		extendedGenerations: [],
+		addInstrumentalGenerations: [],
 		stemSeparations: [
 			createCompletedStemSeparation({
 				generation_id: generation.id,

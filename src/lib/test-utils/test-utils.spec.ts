@@ -12,6 +12,7 @@ import {
 	createGeneration,
 	createCompletedGeneration,
 	createErrorGeneration,
+	createAddInstrumentalGeneration,
 	createExtendGeneration,
 	createStemSeparation,
 	createCompletedStemSeparation,
@@ -141,6 +142,16 @@ describe('Fixture factories', () => {
 			expect(gen.extends_generation_id).toBe(1);
 			expect(gen.extends_audio_id).toBeTruthy();
 			expect(gen.continue_at).toBeGreaterThan(0);
+		});
+	});
+
+	describe('createAddInstrumentalGeneration', () => {
+		it('creates an add-instrumental generation fixture', () => {
+			const gen = createAddInstrumentalGeneration();
+
+			expect(gen.generation_type).toBe('add_instrumental');
+			expect(gen.instrumental).toBe(1);
+			expect(gen.extends_stem_type).toBe('vocal');
 		});
 	});
 

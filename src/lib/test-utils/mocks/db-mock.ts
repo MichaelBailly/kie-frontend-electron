@@ -18,7 +18,9 @@ export interface DbMock {
 	deleteProject: MockFn;
 	createGeneration: MockFn;
 	createExtendGeneration: MockFn;
+	createAddInstrumentalGeneration: MockFn;
 	getExtendedGenerations: MockFn;
+	getAddInstrumentalGenerations: MockFn;
 	getGeneration: MockFn;
 	getGenerationByTaskId: MockFn;
 	getGenerationsByProject: MockFn;
@@ -134,11 +136,21 @@ export function createDbMock(): DbMock {
 
 		createGeneration: vi.fn(),
 		createExtendGeneration: vi.fn(),
+		createAddInstrumentalGeneration: vi.fn(),
 		getExtendedGenerations: vi.fn((generationId: number, audioId: string) =>
 			generations.filter(
 				(generation) =>
 					generation.extends_generation_id === generationId &&
-					generation.extends_audio_id === audioId
+					generation.extends_audio_id === audioId &&
+					generation.generation_type !== 'add_instrumental'
+			)
+		),
+		getAddInstrumentalGenerations: vi.fn((generationId: number, audioId: string) =>
+			generations.filter(
+				(generation) =>
+					generation.extends_generation_id === generationId &&
+					generation.extends_audio_id === audioId &&
+					generation.generation_type === 'add_instrumental'
 			)
 		),
 		getGeneration: vi.fn((id: number) => generations.find((generation) => generation.id === id)),

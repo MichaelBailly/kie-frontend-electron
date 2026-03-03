@@ -76,6 +76,15 @@ export interface UploadExtendMusicRequest {
 	negativeTags?: string;
 }
 
+export interface AddInstrumentalRequest {
+	uploadUrl: string;
+	title: string;
+	tags: string;
+	negativeTags: string;
+	model?: 'V4_5PLUS' | 'V5';
+	callBackUrl: string;
+}
+
 export interface GenerateMusicResponse {
 	code: number;
 	msg: string;
@@ -141,6 +150,15 @@ export async function uploadExtendMusic(
 	request: UploadExtendMusicRequest
 ): Promise<GenerateMusicResponse> {
 	return kieRequest<GenerateMusicResponse>('/generate/upload-extend', {
+		method: 'POST',
+		body: request
+	});
+}
+
+export async function addInstrumental(
+	request: AddInstrumentalRequest
+): Promise<GenerateMusicResponse> {
+	return kieRequest<GenerateMusicResponse>('/generate/add-instrumental', {
 		method: 'POST',
 		body: request
 	});

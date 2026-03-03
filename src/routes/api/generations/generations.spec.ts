@@ -21,6 +21,7 @@ import {
 	createRequestEvent,
 	createProject,
 	createGeneration,
+	createAddInstrumentalGeneration,
 	createCompletedGeneration,
 	resetFixtureIds,
 	flushPromises
@@ -597,6 +598,57 @@ describe('POST /api/generations/extend', () => {
 			false,
 			{ stemType: 'vocal', stemUrl: 'https://example.com/stems/vocal.mp3' }
 		);
+	});
+});
+
+describe('POST /api/generations/add-instrumental', () => {
+	it('creates generation and calls addInstrumental API', async () => {
+		const project = createProject({ id: 1 });
+		const sourceGeneration = createCompletedGeneration({ id: 5, project_id: 1 });
+		db.__setProjects([project]);
+		db.__setGenerations([sourceGeneration]);
+
+		const created = createAddInstrumentalGeneration({
+			id: 30,
+			project_id: 1,
+			extends_generation_id: 5,
+			extends_audio_id: sourceGeneration.track1_audio_id,
+			extends_stem_type: 'vocal',
+			extends_stem_url: 'https://example.com/stems/vocal.mp3',
+			style: 'ambient',
+			negative_tags: 'heavy metal'
+		});
+		db.createAddInstrumentalGeneration.mockReturnValue(created);
+
+		const { POST } = await import('./add-instrumental/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				sourceGenerationId: 5,
+				sourceAudioId: sourceGeneration.track1_audio_id,
+				stemType: 'vocal',
+				stemUrl: 'https://example.com/stems/vocal.mp3',
+				title: 'Instrumental Version',
+				tags: 'ambient',
+				negativeTags: 'heavy metal'
+			}
+		});
+
+		const response = await POST(event as never);
+		expect(await response.json()).toMatchObject({ id: 30 });
+
+		await flushPromises();
+
+		expect(kieApi.addInstrumental).toHaveBeenCalledWith({
+			uploadUrl: 'https://example.com/stems/vocal.mp3',
+			title: 'Instrumental Version',
+			tags: 'ambient',
+			negativeTags: 'heavy metal',
+			model: 'V4_5PLUS',
+			callBackUrl: KIE_CALLBACK_URL
+		});
+		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(30, 'task-mock-004');
+		expect(polling.pollForResults).toHaveBeenCalledWith(30, 'task-mock-004');
 	});
 });
 

@@ -171,4 +171,26 @@ describe('kie-api.server', () => {
 			expect.objectContaining({ method: 'GET' })
 		);
 	});
+
+	it('calls add-instrumental endpoint', async () => {
+		const { addInstrumental } = await import('./kie-api.server');
+		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+		fetchMock.mockResolvedValue(
+			createOkResponse({ code: 200, msg: 'success', data: { taskId: 't-instr' } })
+		);
+
+		await addInstrumental({
+			uploadUrl: 'https://example.com/stems/vocal.mp3',
+			title: 'Instrumental Version',
+			tags: 'ambient, cinematic',
+			negativeTags: 'heavy metal',
+			model: 'V4_5PLUS',
+			callBackUrl: 'https://example.com/callback'
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://api.kie.ai/api/v1/generate/add-instrumental',
+			expect.objectContaining({ method: 'POST' })
+		);
+	});
 });
