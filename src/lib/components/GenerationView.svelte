@@ -62,7 +62,9 @@
 					<span
 						class="max-w-0 pr-0 opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:px-1.5 group-hover:opacity-100"
 					>
-						Retry song's extension
+						{generation.generation_type === 'add_instrumental'
+							? 'Retry instrumental creation'
+							: "Retry song's extension"}
 					</span>
 				</button>
 			{/if}
@@ -254,7 +256,10 @@
 			{/if}
 
 			{#if generation.negative_tags?.trim()}
-				<ReadonlyMetadataField label="Negative Tags" valueClass="whitespace-pre-wrap text-rose-700 dark:text-rose-300">
+				<ReadonlyMetadataField
+					label="Negative Tags"
+					valueClass="whitespace-pre-wrap text-rose-700 dark:text-rose-300"
+				>
 					{generation.negative_tags.trim()}
 				</ReadonlyMetadataField>
 			{/if}

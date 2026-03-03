@@ -536,7 +536,11 @@
 					{/if}
 
 					<!-- Style + Lyrics side by side with max-height -->
-						<div class="grid min-h-0 flex-1 gap-4 {hasLyrics || hasNegativeTags ? 'grid-cols-2' : 'grid-cols-1'}">
+					<div
+						class="grid min-h-0 flex-1 gap-4 {hasLyrics || hasNegativeTags
+							? 'grid-cols-2'
+							: 'grid-cols-1'}"
+					>
 						<!-- Style -->
 						<div
 							class="group relative flex max-h-80 flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
@@ -560,7 +564,9 @@
 											/>
 										</svg>
 									</span>
-									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{isAddInstrumental ? 'Tags' : 'Style'}</h3>
+									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+										{isAddInstrumental ? 'Tags' : 'Style'}
+									</h3>
 									{#if generationState.generation.instrumental}
 										<span
 											class="ml-1 inline-flex items-center gap-1 rounded-full bg-linear-to-r from-indigo-50 to-purple-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-indigo-200/60 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-300 dark:ring-indigo-700/40"
@@ -714,8 +720,7 @@
 										</h3>
 									</div>
 									<button
-										onclick={() =>
-											copyNegativeTags(generationState.generation.negative_tags ?? '')}
+										onclick={() => copyNegativeTags(generationState.generation.negative_tags ?? '')}
 										class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
 										title="Copy negative tags"
 									>

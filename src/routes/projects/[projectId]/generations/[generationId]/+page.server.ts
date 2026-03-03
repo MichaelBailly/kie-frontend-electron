@@ -68,8 +68,21 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	}
 
-	if (retrySourceSong && (!retrySourceSong.duration || retrySourceSong.duration <= 1)) {
+	const isAddInstrumental = generation.generation_type === 'add_instrumental';
+
+	// For extend retries: check source track has duration metadata
+	if (
+		!isAddInstrumental &&
+		retrySourceSong &&
+		(!retrySourceSong.duration || retrySourceSong.duration <= 1)
+	) {
 		retryDisabledReason = 'The original source track is missing duration metadata.';
+	}
+
+	// For add_instrumental retries: check that stem URL and type are still available
+	if (isAddInstrumental && (!generation.extends_stem_url || !generation.extends_stem_type)) {
+		retryDisabledReason =
+			'The stem URL or type for this instrumental generation is no longer available.';
 	}
 
 	const retryExtension =
@@ -80,11 +93,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 					sourceSong: retrySourceSong,
 					extendsGenerationId: generation.extends_generation_id,
 					extendsAudioId: generation.extends_audio_id,
+					stemUrl: isAddInstrumental ? (generation.extends_stem_url ?? null) : null,
+					stemType: isAddInstrumental ? (generation.extends_stem_type ?? null) : null,
 					defaults: {
 						title: generation.title,
 						style: generation.style,
 						lyrics: generation.lyrics,
-						continueAt: generation.continue_at
+						continueAt: generation.continue_at,
+						tags: generation.style,
+						negativeTags: generation.negative_tags
 					}
 				}
 			: null;
