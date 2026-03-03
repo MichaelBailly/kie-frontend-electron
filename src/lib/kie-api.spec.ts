@@ -184,7 +184,7 @@ describe('kie-api.server', () => {
 			title: 'Instrumental Version',
 			tags: 'ambient, cinematic',
 			negativeTags: 'heavy metal',
-			model: 'V4_5PLUS',
+			model: 'V5',
 			callBackUrl: 'https://example.com/callback'
 		});
 

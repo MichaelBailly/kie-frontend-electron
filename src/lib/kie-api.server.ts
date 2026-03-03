@@ -81,7 +81,7 @@ export interface AddInstrumentalRequest {
 	title: string;
 	tags: string;
 	negativeTags: string;
-	model?: 'V4_5PLUS' | 'V5';
+	model?: 'V5';
 	callBackUrl: string;
 }
 

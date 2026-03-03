@@ -644,7 +644,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			title: 'Instrumental Version',
 			tags: 'ambient',
 			negativeTags: 'heavy metal',
-			model: 'V4_5PLUS',
+			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(30, 'task-mock-004');

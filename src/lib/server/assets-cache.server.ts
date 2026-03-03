@@ -170,14 +170,7 @@ async function ensureCachedAsset(
 			}
 
 			return buildAssetUrl(fileName);
-		} catch (error) {
-			console.error('[AssetCache] Failed to cache asset', {
-				generationId,
-				track,
-				kind,
-				remoteUrl,
-				error: error instanceof Error ? error.message : String(error)
-			});
+		} catch {
 			return null;
 		} finally {
 			inflightDownloads.delete(inflightKey);

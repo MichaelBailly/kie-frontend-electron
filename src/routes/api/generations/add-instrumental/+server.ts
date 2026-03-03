@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			tags,
 			negativeTags: negativeTagsForApi,
-			model: 'V4_5PLUS',
+			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL
 		})
 	).catch((err) =>

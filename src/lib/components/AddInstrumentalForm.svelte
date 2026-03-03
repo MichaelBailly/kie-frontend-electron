@@ -27,7 +27,9 @@
 	const normalizedStemType = $derived(normalizeStemType(stemType));
 	const stemDisplay = $derived(getStemDisplay(normalizedStemType));
 
-	let title = $state(untrack(() => `${generation.title} — Instrumental`));
+	let title = $state(
+		untrack(() => `${generation.title.replace(/( — Instrumental)+$/, '')} — Instrumental`)
+	);
 	let tags = $state(untrack(() => generation.style ?? ''));
 	let negativeTags = $state(untrack(() => generation.negative_tags ?? ''));
 	let isSubmitting = $state(false);

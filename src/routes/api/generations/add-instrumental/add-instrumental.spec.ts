@@ -139,7 +139,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			title: 'Vocal Instrumental',
 			tags: 'ambient, cinematic',
 			negativeTags: 'heavy metal',
-			model: 'V4_5PLUS',
+			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(created.id, 'task-mock-004');
