@@ -29,7 +29,9 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		instrumental: 0,
 		created_at: '2026-01-01T00:00:00.000Z',
 		updated_at: '2026-01-01T00:00:00.000Z',
-		...overrides
+		...overrides,
+		extends_stem_type: overrides.extends_stem_type ?? null,
+		extends_stem_url: overrides.extends_stem_url ?? null
 	};
 }
 

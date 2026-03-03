@@ -6,12 +6,14 @@
 		vocalSeparation,
 		stemSeparation,
 		pendingVocalSeparation,
-		pendingStemSeparation
+		pendingStemSeparation,
+		onExtendStem
 	}: {
 		vocalSeparation: StemSeparation | undefined;
 		stemSeparation: StemSeparation | undefined;
 		pendingVocalSeparation: StemSeparation | undefined;
 		pendingStemSeparation: StemSeparation | undefined;
+		onExtendStem?: (stemType: string, stemUrl: string) => void;
 	} = $props();
 </script>
 
@@ -25,7 +27,7 @@
 					<span class="text-xl">🎤</span>
 					Vocals + Instrumental
 				</h3>
-				<StemPlayer separation={vocalSeparation} />
+				<StemPlayer separation={vocalSeparation} {onExtendStem} />
 			</div>
 		{:else if pendingVocalSeparation}
 			<div
@@ -59,7 +61,7 @@
 					<span class="text-xl">🎛️</span>
 					Full Stem Split
 				</h3>
-				<StemPlayer separation={stemSeparation} />
+				<StemPlayer separation={stemSeparation} {onExtendStem} />
 			</div>
 		{:else if pendingStemSeparation}
 			<div

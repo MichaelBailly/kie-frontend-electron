@@ -11,6 +11,7 @@
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
 	import { useStemSeparationState } from '$lib/routes/song/useStemSeparationState.svelte';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
+	import { getStemDisplay } from '$lib/utils/stems';
 	import { getContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { Generation, StemSeparation, VariationAnnotation } from '$lib/types';
@@ -69,6 +70,7 @@
 
 	let styleCopied = $state(false);
 	let lyricsCopied = $state(false);
+	let extendSectionEl: HTMLDivElement | null = $state(null);
 	const copyStyle = createCopyWithFeedback((copied) => {
 		styleCopied = copied;
 	});
@@ -122,6 +124,20 @@
 	const progressPct = $derived(
 		playbackState.duration > 0 ? (playbackState.currentTime / playbackState.duration) * 100 : 0
 	);
+
+	const parentStemLabel = $derived.by(() => {
+		const stemType = generationState.generation.extends_stem_type;
+		if (!stemType) return undefined;
+		const stemDisplay = getStemDisplay(stemType);
+		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+	});
+
+	function handleExtendStem(stemType: string, stemUrl: string) {
+		generationState.openStemExtendForm(stemType, stemUrl);
+		setTimeout(() => {
+			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 0);
+	}
 </script>
 
 <!--
@@ -355,19 +371,24 @@
 						parentSongId={data.parentSong.id}
 						parentSongTitle={data.parentSong.title}
 						continueAt={data.continueAt ?? null}
+						label={parentStemLabel}
 						variant="compact"
 					/>
 				</div>
 			{/if}
 
 			<!-- Extend form -->
-			<SongExtendSection
-				show={generationState.showExtendForm}
-				generation={generationState.generation}
-				song={generationState.song}
-				onExtend={generationState.handleExtend}
-				onCancel={generationState.closeExtendForm}
-			/>
+			<div bind:this={extendSectionEl}>
+				<SongExtendSection
+					show={generationState.showExtendForm}
+					generation={generationState.generation}
+					song={generationState.song}
+					stemType={generationState.extendingStemType}
+					stemUrl={generationState.extendingStemUrl}
+					onExtend={generationState.handleExtend}
+					onCancel={generationState.closeExtendForm}
+				/>
+			</div>
 
 			<!-- Labels row -->
 			<div class="mb-5">
@@ -506,7 +527,7 @@
 									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Style</h3>
 									{#if generationState.generation.instrumental}
 										<span
-											class="ml-1 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-indigo-200/60 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-300 dark:ring-indigo-700/40"
+											class="ml-1 inline-flex items-center gap-1 rounded-full bg-linear-to-r from-indigo-50 to-purple-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-indigo-200/60 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-300 dark:ring-indigo-700/40"
 										>
 											<svg
 												class="h-2.5 w-2.5 shrink-0"
@@ -682,6 +703,7 @@
 									stemSeparation={stemState.stemSeparation}
 									pendingVocalSeparation={stemState.pendingVocalSeparation}
 									pendingStemSeparation={stemState.pendingStemSeparation}
+									onExtendStem={handleExtendStem}
 								/>
 							</div>
 						{/if}

@@ -4,11 +4,14 @@
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { formatTime } from '$lib/utils/format';
+	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
 
 	let {
 		generation,
 		song,
+		stemType = null,
+		stemUrl = null,
 		initialContinueAt = null,
 		onExtend,
 		onCancel
@@ -22,6 +25,8 @@
 			duration: number | null;
 			title: string;
 		};
+		stemType?: string | null;
+		stemUrl?: string | null;
 		initialContinueAt?: number | null;
 		onExtend: (data: {
 			title: string;
@@ -54,8 +59,13 @@
 	let isSubmitting = $state(false);
 
 	// For preview playback
-	let isCurrentTrack = $derived(audioStore.isCurrentTrack(song.id));
-	let isPlaying = $derived(audioStore.isTrackPlaying(song.id));
+	let normalizedStemType = $derived(normalizeStemType(stemType));
+	let stemDisplay = $derived(getStemDisplay(normalizedStemType));
+	let isStemExtension = $derived(!!stemUrl && !!normalizedStemType);
+	let extensionAudioUrl = $derived(stemUrl || song.audioUrl || song.streamUrl || '');
+	let previewTrackId = $derived(isStemExtension ? `${song.id}:${normalizedStemType}` : song.id);
+	let isCurrentTrack = $derived(audioStore.isCurrentTrack(previewTrackId));
+	let isPlaying = $derived(audioStore.isTrackPlaying(previewTrackId));
 	let duration = $derived(song.duration || 0);
 
 	function handleWaveformSeek(time: number) {
@@ -64,14 +74,18 @@
 	}
 
 	function handlePlayPreview() {
+		const previewTrackTitle = isStemExtension
+			? `${song.title} — ${stemDisplay.label} Stem`
+			: song.title;
+
 		const track: AudioTrack = {
-			id: song.id,
+			id: previewTrackId,
 			generationId: generation.id,
 			projectId: generation.project_id,
-			title: song.title,
+			title: previewTrackTitle,
 			imageUrl: song.imageUrl,
-			streamUrl: song.streamUrl,
-			audioUrl: song.audioUrl,
+			streamUrl: extensionAudioUrl,
+			audioUrl: extensionAudioUrl,
 			duration: song.duration
 		};
 
@@ -110,11 +124,28 @@
 					d="M13 5l7 7-7 7M5 5l7 7-7 7"
 				/>
 			</svg>
-			Extend This Song
+			{#if isStemExtension}
+				Extend {stemDisplay.label} Stem
+			{:else}
+				Extend This Song
+			{/if}
 		</h3>
+		{#if isStemExtension}
+			<div
+				class="mb-2 inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700 dark:border-purple-700/60 dark:bg-purple-900/40 dark:text-purple-300"
+			>
+				<span>{stemDisplay.icon}</span>
+				<span>{stemDisplay.label} Stem</span>
+			</div>
+		{/if}
 		<p class="text-sm text-indigo-700 dark:text-indigo-300">
-			Create a continuation of this song starting from a specific point. The AI will generate new
-			music that seamlessly continues from where you choose.
+			{#if isStemExtension}
+				Create a continuation from this stem at a precise point. The AI will keep the same sonic
+				identity while extending the selected stem.
+			{:else}
+				Create a continuation of this song starting from a specific point. The AI will generate new
+				music that seamlessly continues from where you choose.
+			{/if}
 		</p>
 	</div>
 
@@ -133,9 +164,9 @@
 
 		<!-- Waveform with marker -->
 		<div class="relative mb-4">
-			{#if song.audioUrl || song.streamUrl}
+			{#if extensionAudioUrl}
 				<Waveform
-					audioUrl={song.audioUrl || song.streamUrl || ''}
+					audioUrl={extensionAudioUrl}
 					height={80}
 					currentTime={continueAt}
 					{duration}
@@ -191,7 +222,7 @@
 					<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
 						<path d="M8 5v14l11-7z" />
 					</svg>
-					Preview Original
+					{#if isStemExtension}Preview Stem{:else}Preview Original{/if}
 				{/if}
 			</button>
 		</div>
@@ -302,7 +333,7 @@
 							d="M13 5l7 7-7 7M5 5l7 7-7 7"
 						/>
 					</svg>
-					Extend Song
+					{#if isStemExtension}Extend Stem{:else}Extend Song{/if}
 				{/if}
 			</button>
 		</div>

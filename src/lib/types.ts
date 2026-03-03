@@ -35,6 +35,8 @@ export interface Generation {
 	extends_generation_id: number | null;
 	extends_audio_id: string | null;
 	continue_at: number | null;
+	extends_stem_type: string | null;
+	extends_stem_url: string | null;
 	instrumental: number;
 	created_at: string;
 	updated_at: string;

@@ -44,6 +44,8 @@ export function useSongGenerationState(options: {
 	const { getData, activeProjectContext, annotationsContext } = options;
 
 	let showExtendForm = $state(false);
+	let extendingStemType = $state<string | null>(null);
+	let extendingStemUrl = $state<string | null>(null);
 	let starredOverride = $state<boolean | null>(null);
 	let starAnimClass = $state('');
 
@@ -124,11 +126,21 @@ export function useSongGenerationState(options: {
 	}
 
 	function toggleExtendForm() {
+		extendingStemType = null;
+		extendingStemUrl = null;
 		showExtendForm = !showExtendForm;
 	}
 
 	function closeExtendForm() {
 		showExtendForm = false;
+		extendingStemType = null;
+		extendingStemUrl = null;
+	}
+
+	function openStemExtendForm(stemType: string, stemUrl: string) {
+		extendingStemType = stemType;
+		extendingStemUrl = stemUrl;
+		showExtendForm = true;
 	}
 
 	async function handleExtend(extendData: ExtendData) {
@@ -143,7 +155,9 @@ export function useSongGenerationState(options: {
 				extendsGenerationId: generation.id,
 				extendsAudioId: song.id,
 				continueAt: extendData.continueAt,
-				instrumental: extendData.instrumental
+				instrumental: extendData.instrumental,
+				stemType: extendingStemType,
+				stemUrl: extendingStemUrl
 			})
 		});
 
@@ -154,6 +168,8 @@ export function useSongGenerationState(options: {
 
 		const newGeneration = await response.json();
 		showExtendForm = false;
+		extendingStemType = null;
+		extendingStemUrl = null;
 
 		goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
@@ -179,6 +195,12 @@ export function useSongGenerationState(options: {
 		get showExtendForm() {
 			return showExtendForm;
 		},
+		get extendingStemType() {
+			return extendingStemType;
+		},
+		get extendingStemUrl() {
+			return extendingStemUrl;
+		},
 		get starred() {
 			return starred;
 		},
@@ -187,6 +209,7 @@ export function useSongGenerationState(options: {
 		},
 		toggleExtendForm,
 		closeExtendForm,
+		openStemExtendForm,
 		handleToggleStar,
 		handleExtend
 	};

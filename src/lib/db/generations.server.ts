@@ -29,11 +29,24 @@ export function createExtendGeneration(
 	extendsGenerationId: number,
 	extendsAudioId: string,
 	continueAt: number,
-	instrumental: boolean = false
+	instrumental: boolean = false,
+	options?: { stemType?: string; stemUrl?: string }
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?)
+		INSERT INTO generations (
+			project_id,
+			title,
+			style,
+			lyrics,
+			status,
+			extends_generation_id,
+			extends_audio_id,
+			continue_at,
+			extends_stem_type,
+			extends_stem_url,
+			instrumental
+		)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -44,6 +57,8 @@ export function createExtendGeneration(
 		extendsGenerationId,
 		extendsAudioId,
 		continueAt,
+		options?.stemType ?? null,
+		options?.stemUrl ?? null,
 		instrumental ? 1 : 0
 	) as Generation;
 

@@ -100,6 +100,8 @@ export function getDb(): BetterSqlite3.Database {
 			extends_generation_id INTEGER,
 			extends_audio_id TEXT,
 			continue_at REAL,
+			extends_stem_type TEXT,
+			extends_stem_url TEXT,
 			instrumental INTEGER NOT NULL DEFAULT 0,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -218,6 +220,8 @@ export function getDb(): BetterSqlite3.Database {
 	addColumnIfMissing('generations', 'extends_generation_id', 'INTEGER');
 	addColumnIfMissing('generations', 'extends_audio_id', 'TEXT');
 	addColumnIfMissing('generations', 'continue_at', 'REAL');
+	addColumnIfMissing('generations', 'extends_stem_type', 'TEXT');
+	addColumnIfMissing('generations', 'extends_stem_url', 'TEXT');
 	addColumnIfMissing('generations', 'track1_audio_local_url', 'TEXT');
 	addColumnIfMissing('generations', 'track1_image_local_url', 'TEXT');
 	addColumnIfMissing('generations', 'track2_audio_local_url', 'TEXT');

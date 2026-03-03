@@ -95,7 +95,27 @@ describe('Generations repository', () => {
 			expect(ext.extends_generation_id).toBe(parent.id);
 			expect(ext.extends_audio_id).toBe('audio-123');
 			expect(ext.continue_at).toBe(120.5);
+			expect(ext.extends_stem_type).toBeNull();
+			expect(ext.extends_stem_url).toBeNull();
 			expect(ext.status).toBe('pending');
+		});
+
+		it('stores optional stem metadata for stem-based extensions', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const ext = createExtendGeneration(
+				projectId,
+				'Extended Stem',
+				'pop',
+				'more lyrics',
+				parent.id,
+				'audio-123',
+				42,
+				false,
+				{ stemType: 'vocal', stemUrl: 'https://example.com/stems/vocal.mp3' }
+			);
+
+			expect(ext.extends_stem_type).toBe('vocal');
+			expect(ext.extends_stem_url).toBe('https://example.com/stems/vocal.mp3');
 		});
 	});
 

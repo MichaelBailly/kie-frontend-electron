@@ -116,6 +116,32 @@ describe('kie-api.server', () => {
 		).rejects.toThrow('KIE API error: 502 Bad Gateway');
 	});
 
+	it('calls upload-extend endpoint for stem URL extensions', async () => {
+		const { uploadExtendMusic } = await import('./kie-api.server');
+		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+		fetchMock.mockResolvedValue(
+			createOkResponse({ code: 200, msg: 'success', data: { taskId: 't-upload' } })
+		);
+
+		await uploadExtendMusic({
+			defaultParamFlag: true,
+			uploadUrl: 'https://example.com/stems/vocal.mp3',
+			prompt: 'prompt',
+			style: 'style',
+			title: 'title',
+			continueAt: 10,
+			instrumental: false,
+			model: 'V5',
+			callBackUrl: 'https://example.com/callback',
+			negativeTags: ''
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://api.kie.ai/api/v1/generate/upload-extend',
+			expect.objectContaining({ method: 'POST' })
+		);
+	});
+
 	it('hits stem details endpoint via shared wrapper', async () => {
 		const { getStemSeparationDetails } = await import('./kie-api.server');
 		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;

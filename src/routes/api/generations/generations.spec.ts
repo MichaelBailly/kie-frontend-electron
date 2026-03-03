@@ -394,7 +394,8 @@ describe('POST /api/generations/extend', () => {
 			5,
 			'audio-5-1',
 			30,
-			false
+			false,
+			{ stemType: undefined, stemUrl: undefined }
 		);
 	});
 
@@ -425,6 +426,29 @@ describe('POST /api/generations/extend', () => {
 		});
 
 		await expect(POST(event as never)).rejects.toMatchObject({ status: 400 });
+	});
+
+	it('throws 400 when only stemUrl is provided', async () => {
+		seedExtendScenario();
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended',
+				style: 'rock',
+				lyrics: 'More',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30,
+				stemUrl: 'https://example.com/stems/vocal.mp3'
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'stemUrl and stemType must be provided together' }
+		});
 	});
 
 	it('throws 400 when continueAt is missing', async () => {
@@ -523,6 +547,55 @@ describe('POST /api/generations/extend', () => {
 				model: 'V5',
 				callBackUrl: KIE_CALLBACK_URL
 			})
+		);
+	});
+
+	it('calls uploadExtendMusic when stem URL is provided', async () => {
+		seedExtendScenario();
+
+		const extendGen = createGeneration({ id: 20, project_id: 1 });
+		db.createExtendGeneration.mockReturnValue(extendGen);
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended Stem',
+				style: 'rock',
+				lyrics: 'More',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30,
+				stemType: 'vocal',
+				stemUrl: 'https://example.com/stems/vocal.mp3'
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(kieApi.uploadExtendMusic).toHaveBeenCalledWith(
+			expect.objectContaining({
+				uploadUrl: 'https://example.com/stems/vocal.mp3',
+				prompt: 'More',
+				style: 'rock',
+				title: 'Extended Stem',
+				continueAt: 30,
+				model: 'V5',
+				callBackUrl: KIE_CALLBACK_URL
+			})
+		);
+		expect(kieApi.extendMusic).not.toHaveBeenCalled();
+		expect(db.createExtendGeneration).toHaveBeenCalledWith(
+			1,
+			'Extended Stem',
+			'rock',
+			'More',
+			5,
+			'audio-5-1',
+			30,
+			false,
+			{ stemType: 'vocal', stemUrl: 'https://example.com/stems/vocal.mp3' }
 		);
 	});
 });

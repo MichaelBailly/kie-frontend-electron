@@ -66,6 +66,8 @@ export const SCHEMA_DDL = `
 		extends_generation_id INTEGER,
 		extends_audio_id TEXT,
 		continue_at REAL,
+		extends_stem_type TEXT,
+		extends_stem_url TEXT,
 		instrumental INTEGER NOT NULL DEFAULT 0,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

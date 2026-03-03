@@ -4,6 +4,7 @@ import type { MockFn } from './types';
 export interface KieApiMock {
 	generateMusic: MockFn;
 	extendMusic: MockFn;
+	uploadExtendMusic: MockFn;
 	getMusicDetails: MockFn;
 	separateVocals: MockFn;
 	getStemSeparationDetails: MockFn;
@@ -34,6 +35,11 @@ export function createKieApiMock(): KieApiMock {
 			code: 200,
 			msg: 'success',
 			data: { taskId: 'task-mock-002' }
+		}),
+		uploadExtendMusic: vi.fn().mockResolvedValue({
+			code: 200,
+			msg: 'success',
+			data: { taskId: 'task-mock-003' }
 		}),
 		getMusicDetails: vi.fn().mockResolvedValue({
 			code: 200,
