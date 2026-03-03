@@ -27,11 +27,11 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		extends_audio_id: null,
 		continue_at: null,
 		instrumental: 0,
+		extends_stem_type: null,
+		extends_stem_url: null,
 		created_at: '2026-01-01T00:00:00.000Z',
 		updated_at: '2026-01-01T00:00:00.000Z',
-		...overrides,
-		extends_stem_type: overrides.extends_stem_type ?? null,
-		extends_stem_url: overrides.extends_stem_url ?? null
+		...overrides
 	};
 }
 

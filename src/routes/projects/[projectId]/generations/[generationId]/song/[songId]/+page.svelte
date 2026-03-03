@@ -703,6 +703,9 @@
 									stemSeparation={stemState.stemSeparation}
 									pendingVocalSeparation={stemState.pendingVocalSeparation}
 									pendingStemSeparation={stemState.pendingStemSeparation}
+									projectId={generationState.generation.project_id}
+									songTitle={generationState.song.title}
+									imageUrl={generationState.song.imageUrl}
 									onExtendStem={handleExtendStem}
 								/>
 							</div>

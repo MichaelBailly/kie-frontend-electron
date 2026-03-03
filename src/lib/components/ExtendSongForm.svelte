@@ -66,19 +66,15 @@
 	let previewTrackId = $derived(isStemExtension ? `${song.id}:${normalizedStemType}` : song.id);
 	let isCurrentTrack = $derived(audioStore.isCurrentTrack(previewTrackId));
 	let isPlaying = $derived(audioStore.isTrackPlaying(previewTrackId));
+	let playbackCurrentTime = $derived(isCurrentTrack ? audioStore.currentTime : 0);
 	let duration = $derived(song.duration || 0);
 
-	function handleWaveformSeek(time: number) {
-		// When clicking on waveform, set the continueAt point instead of playing
-		continueAt = Math.floor(time);
-	}
-
-	function handlePlayPreview() {
+	function buildPreviewTrack(): AudioTrack {
 		const previewTrackTitle = isStemExtension
 			? `${song.title} — ${stemDisplay.label} Stem`
 			: song.title;
 
-		const track: AudioTrack = {
+		return {
 			id: previewTrackId,
 			generationId: generation.id,
 			projectId: generation.project_id,
@@ -88,11 +84,23 @@
 			audioUrl: extensionAudioUrl,
 			duration: song.duration
 		};
+	}
 
+	function handleWaveformSeek(time: number) {
+		// Clicking on waveform seeks the audio playback position
+		if (isCurrentTrack) {
+			audioStore.seek(time);
+		} else {
+			audioStore.play(buildPreviewTrack(), time);
+		}
+	}
+
+	function handlePlayPreview() {
 		if (isCurrentTrack) {
 			audioStore.toggle();
 		} else {
-			audioStore.play(track);
+			// Play starting from the continueAt position so user hears what the AI continues from
+			audioStore.play(buildPreviewTrack(), continueAt);
 		}
 	}
 
@@ -153,14 +161,25 @@
 	<div
 		class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800"
 	>
-		<label
-			for="continue-at-slider"
-			class="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300"
-		>
-			Continue From: <span class="font-bold text-indigo-600 dark:text-indigo-400"
-				>{formatTime(continueAt)}</span
+		<!-- Header row: label + playback time -->
+		<div class="mb-3 flex items-center justify-between">
+			<label
+				for="continue-at-slider"
+				class="block text-sm font-medium text-gray-700 dark:text-gray-300"
 			>
-		</label>
+				Continue From: <span class="font-bold text-red-500 dark:text-red-400"
+					>{formatTime(continueAt)}</span
+				>
+			</label>
+			{#if isCurrentTrack}
+				<span class="text-xs text-gray-500 dark:text-gray-400">
+					Playing: <span class="font-medium text-indigo-600 dark:text-indigo-400"
+						>{formatTime(playbackCurrentTime)}</span
+					>
+					/ {formatTime(duration)}
+				</span>
+			{/if}
+		</div>
 
 		<!-- Waveform with marker -->
 		<div class="relative mb-4">
@@ -168,19 +187,20 @@
 				<Waveform
 					audioUrl={extensionAudioUrl}
 					height={80}
-					currentTime={continueAt}
+					currentTime={playbackCurrentTime}
 					{duration}
+					markerTime={continueAt}
 					color="#6366f1"
 					backgroundColor="#e5e7eb"
 					onSeek={handleWaveformSeek}
 				/>
-				<!-- Continue point marker -->
+				<!-- Continue point marker badge (above waveform) -->
 				<div
-					class="pointer-events-none absolute top-0 h-full w-0.5 bg-red-500"
+					class="pointer-events-none absolute -top-1 z-10"
 					style="left: {(continueAt / duration) * 100}%"
 				>
 					<div
-						class="absolute -top-1 left-1/2 -translate-x-1/2 rounded bg-red-500 px-1.5 py-0.5 text-xs font-medium text-white"
+						class="-translate-x-1/2 rounded bg-red-500 px-1.5 py-0.5 text-xs font-medium text-white shadow-sm"
 					>
 						{formatTime(continueAt)}
 					</div>
@@ -192,7 +212,7 @@
 			{/if}
 		</div>
 
-		<!-- Slider for precise control -->
+		<!-- Slider for continue-at control -->
 		<div class="flex items-center gap-3">
 			<span class="text-sm text-gray-500 dark:text-gray-400">0:00</span>
 			<input
@@ -201,7 +221,7 @@
 				min="1"
 				max={Math.floor(duration) - 1}
 				bind:value={continueAt}
-				class="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-gray-200 accent-indigo-600 dark:bg-gray-700"
+				class="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-gray-200 accent-red-500 dark:bg-gray-700"
 			/>
 			<span class="text-sm text-gray-500 dark:text-gray-400">{formatTime(duration)}</span>
 		</div>
@@ -222,7 +242,7 @@
 					<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
 						<path d="M8 5v14l11-7z" />
 					</svg>
-					{#if isStemExtension}Preview Stem{:else}Preview Original{/if}
+					Preview from {formatTime(continueAt)}
 				{/if}
 			</button>
 		</div>

@@ -118,3 +118,102 @@ describe('audioStore play startTime support', () => {
 		expect(audioElement.play).toHaveBeenCalledTimes(1);
 	});
 });
+
+describe('audioStore single-audio-at-a-time', () => {
+	beforeEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it('replaces the current track when playing a different stem track', async () => {
+		const { audioStore } = await loadStoreWithBrowserEnabled();
+		const { audioElement } = createMockAudioElement();
+		audioStore.setAudioElement(audioElement as unknown as HTMLAudioElement);
+
+		const stemA = {
+			id: 'audio-1:vocal',
+			generationId: 10,
+			projectId: 5,
+			title: 'Song — Vocals Stem',
+			imageUrl: null,
+			streamUrl: 'https://example.com/vocal.mp3',
+			audioUrl: 'https://example.com/vocal.mp3',
+			duration: null
+		};
+		const stemB = {
+			id: 'audio-1:drums',
+			generationId: 10,
+			projectId: 5,
+			title: 'Song — Drums Stem',
+			imageUrl: null,
+			streamUrl: 'https://example.com/drums.mp3',
+			audioUrl: 'https://example.com/drums.mp3',
+			duration: null
+		};
+
+		audioStore.play(stemA);
+		expect(audioStore.currentTrack?.id).toBe('audio-1:vocal');
+
+		audioStore.play(stemB);
+		expect(audioStore.currentTrack?.id).toBe('audio-1:drums');
+		expect(audioElement.src).toBe('https://example.com/drums.mp3');
+	});
+
+	it('replaces stem playback when playing a full track', async () => {
+		const { audioStore } = await loadStoreWithBrowserEnabled();
+		const { audioElement } = createMockAudioElement();
+		audioStore.setAudioElement(audioElement as unknown as HTMLAudioElement);
+
+		const stemTrack = {
+			id: 'audio-1:vocal',
+			generationId: 10,
+			projectId: 5,
+			title: 'Song — Vocals Stem',
+			imageUrl: null,
+			streamUrl: 'https://example.com/vocal.mp3',
+			audioUrl: 'https://example.com/vocal.mp3',
+			duration: null
+		};
+		const fullTrack = {
+			id: 'audio-1',
+			generationId: 10,
+			projectId: 5,
+			title: 'Song',
+			imageUrl: null,
+			streamUrl: null,
+			audioUrl: 'https://example.com/song.mp3',
+			duration: 180
+		};
+
+		audioStore.play(stemTrack);
+		expect(audioStore.currentTrack?.id).toBe('audio-1:vocal');
+
+		audioStore.play(fullTrack);
+		expect(audioStore.currentTrack?.id).toBe('audio-1');
+		expect(audioElement.src).toBe('https://example.com/song.mp3');
+		expect(audioStore.isTrackPlaying('audio-1:vocal')).toBe(false);
+	});
+
+	it('plays preview from continueAt position for a new track', async () => {
+		const { audioStore } = await loadStoreWithBrowserEnabled();
+		const { audioElement, dispatch } = createMockAudioElement();
+		audioStore.setAudioElement(audioElement as unknown as HTMLAudioElement);
+
+		const previewTrack = {
+			id: 'audio-1:vocal',
+			generationId: 10,
+			projectId: 5,
+			title: 'Song — Vocals Stem',
+			imageUrl: null,
+			streamUrl: 'https://example.com/vocal.mp3',
+			audioUrl: 'https://example.com/vocal.mp3',
+			duration: 199
+		};
+
+		audioStore.play(previewTrack, 149);
+		expect(audioStore.currentTime).toBe(149);
+
+		dispatch('loadedmetadata');
+		expect(audioElement.currentTime).toBe(149);
+		expect(audioElement.play).toHaveBeenCalled();
+	});
+});

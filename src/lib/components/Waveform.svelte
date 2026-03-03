@@ -14,6 +14,8 @@
 		backgroundColor = '#e5e7eb',
 		currentTime = 0,
 		duration = 0,
+		markerTime,
+		markerColor = '#ef4444',
 		onSeek
 	}: {
 		audioUrl: string;
@@ -22,6 +24,8 @@
 		backgroundColor?: string;
 		currentTime?: number;
 		duration?: number;
+		markerTime?: number;
+		markerColor?: string;
 		onSeek?: (time: number) => void;
 	} = $props();
 
@@ -170,6 +174,21 @@
 				.attr('opacity', 0.8);
 		}
 
+		// Draw marker line (e.g. "Continue From" point)
+		if (markerTime !== undefined && duration > 0) {
+			const markerProgress = markerTime / duration;
+			const markerX = markerProgress * containerWidth;
+
+			g.append('line')
+				.attr('x1', markerX)
+				.attr('x2', markerX)
+				.attr('y1', 0)
+				.attr('y2', innerHeight)
+				.attr('stroke', markerColor)
+				.attr('stroke-width', 2)
+				.attr('opacity', 0.9);
+		}
+
 		// Click handler for seeking
 		svg.on('click', function (event: MouseEvent) {
 			if (duration === 0) return;
@@ -205,9 +224,9 @@
 		return () => window.removeEventListener('resize', handleResize);
 	});
 
-	// Redraw when currentTime changes
+	// Redraw when currentTime or markerTime changes
 	$effect(() => {
-		if (currentTime !== undefined && !isLoading) {
+		if ((currentTime !== undefined || markerTime !== undefined) && !isLoading) {
 			drawWaveform();
 		}
 	});
