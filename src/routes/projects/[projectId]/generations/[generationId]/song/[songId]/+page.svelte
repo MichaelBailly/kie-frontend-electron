@@ -67,7 +67,13 @@
 	const hasAddInstrumentalGenerations = $derived(
 		(data.addInstrumentalGenerations ?? []).length > 0
 	);
-	const hasLyrics = $derived(!!generationState.generation.lyrics);
+	const isAddInstrumental = $derived(
+		generationState.generation.generation_type === 'add_instrumental'
+	);
+	const hasLyrics = $derived(!!generationState.generation.lyrics && !isAddInstrumental);
+	const hasNegativeTags = $derived(
+		isAddInstrumental && !!generationState.generation.negative_tags?.trim()
+	);
 
 	// Collapsed states for cards
 	let stemsCollapsed = $state(false);
@@ -76,12 +82,16 @@
 
 	let styleCopied = $state(false);
 	let lyricsCopied = $state(false);
+	let negativeTagsCopied = $state(false);
 	let extendSectionEl: HTMLDivElement | null = $state(null);
 	const copyStyle = createCopyWithFeedback((copied) => {
 		styleCopied = copied;
 	});
 	const copyLyrics = createCopyWithFeedback((copied) => {
 		lyricsCopied = copied;
+	});
+	const copyNegativeTags = createCopyWithFeedback((copied) => {
+		negativeTagsCopied = copied;
 	});
 
 	// Notes state
@@ -389,6 +399,7 @@
 						continueAt={data.continueAt ?? null}
 						label={parentStemLabel}
 						variant="compact"
+						generationType={generationState.generation.generation_type}
 					/>
 				</div>
 			{/if}
@@ -525,7 +536,7 @@
 					{/if}
 
 					<!-- Style + Lyrics side by side with max-height -->
-					<div class="grid min-h-0 flex-1 gap-4 {hasLyrics ? 'grid-cols-2' : 'grid-cols-1'}">
+						<div class="grid min-h-0 flex-1 gap-4 {hasLyrics || hasNegativeTags ? 'grid-cols-2' : 'grid-cols-1'}">
 						<!-- Style -->
 						<div
 							class="group relative flex max-h-80 flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900"
@@ -549,7 +560,7 @@
 											/>
 										</svg>
 									</span>
-									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Style</h3>
+									<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{isAddInstrumental ? 'Tags' : 'Style'}</h3>
 									{#if generationState.generation.instrumental}
 										<span
 											class="ml-1 inline-flex items-center gap-1 rounded-full bg-linear-to-r from-indigo-50 to-purple-50 px-2 py-0.5 text-[11px] font-semibold tracking-wide text-indigo-600 ring-1 ring-indigo-200/60 dark:from-indigo-900/40 dark:to-purple-900/40 dark:text-indigo-300 dark:ring-indigo-700/40"
@@ -670,6 +681,74 @@
 									class="min-h-0 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap text-gray-600 dark:text-gray-300"
 								>
 									{(generationState.generation.lyrics ?? '').trim()}
+								</p>
+							</div>
+						{/if}
+
+						<!-- Negative Tags (add_instrumental only) -->
+						{#if hasNegativeTags}
+							<div
+								class="group relative flex max-h-80 flex-col overflow-hidden rounded-2xl border border-rose-200/80 bg-white p-5 shadow-sm dark:border-rose-800/50 dark:bg-gray-900"
+							>
+								<div class="mb-3 flex shrink-0 items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span
+											class="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 dark:bg-rose-900/30"
+										>
+											<svg
+												class="h-4 w-4 text-rose-500"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+												/>
+											</svg>
+										</span>
+										<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+											Negative Tags
+										</h3>
+									</div>
+									<button
+										onclick={() =>
+											copyNegativeTags(generationState.generation.negative_tags ?? '')}
+										class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
+										title="Copy negative tags"
+									>
+										{#if negativeTagsCopied}
+											<svg
+												class="h-4 w-4 text-green-500"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M5 13l4 4L19 7"
+												/>
+											</svg>
+										{:else}
+											<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+												/>
+											</svg>
+										{/if}
+									</button>
+								</div>
+								<p
+									class="min-h-0 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap text-rose-700 dark:text-rose-300"
+								>
+									{(generationState.generation.negative_tags ?? '').trim()}
 								</p>
 							</div>
 						{/if}

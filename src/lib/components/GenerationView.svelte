@@ -5,6 +5,7 @@
 	import AnnotationActions from './AnnotationActions.svelte';
 	import ParentSongBanner from './ParentSongBanner.svelte';
 	import ReadonlyMetadataField from './ReadonlyMetadataField.svelte';
+	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { resolve } from '$app/paths';
 
 	let {
@@ -20,6 +21,16 @@
 		onRetryExtension?: (() => void) | null;
 		retryDisabledReason?: string | null;
 	} = $props();
+
+	const parentBannerLabel = $derived.by(() => {
+		const stemType = generation.extends_stem_type;
+		if (!stemType) return undefined;
+		const stemDisplay = getStemDisplay(normalizeStemType(stemType));
+		if (generation.generation_type === 'add_instrumental') {
+			return `Instrumental from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+		}
+		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+	});
 </script>
 
 <div class="flex h-full flex-col">
@@ -64,6 +75,8 @@
 				parentSongTitle={parentSong.title}
 				continueAt={generation.continue_at ?? null}
 				variant="compact"
+				generationType={generation.generation_type}
+				label={parentBannerLabel}
 			/>
 		{/if}
 		{#if isGenerating(generation.status)}
@@ -227,13 +240,24 @@
 		<div class="space-y-5">
 			<ReadonlyMetadataField label="Title">{generation.title}</ReadonlyMetadataField>
 
-			<ReadonlyMetadataField label="Style Prompt" valueClass="whitespace-pre-wrap">
+			<ReadonlyMetadataField
+				label={generation.generation_type === 'add_instrumental' ? 'Tags' : 'Style Prompt'}
+				valueClass="whitespace-pre-wrap"
+			>
 				{generation.style.trim()}
 			</ReadonlyMetadataField>
 
-			<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
-				{generation.lyrics?.trim()}
-			</ReadonlyMetadataField>
+			{#if generation.generation_type !== 'add_instrumental'}
+				<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
+					{generation.lyrics?.trim()}
+				</ReadonlyMetadataField>
+			{/if}
+
+			{#if generation.negative_tags?.trim()}
+				<ReadonlyMetadataField label="Negative Tags" valueClass="whitespace-pre-wrap text-rose-700 dark:text-rose-300">
+					{generation.negative_tags.trim()}
+				</ReadonlyMetadataField>
+			{/if}
 		</div>
 	</div>
 </div>
