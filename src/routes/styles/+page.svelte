@@ -413,82 +413,30 @@
 					<div
 						class="group relative flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/4 shadow-lg backdrop-blur-sm transition-all duration-200 hover:border-white/15 hover:bg-white/7 hover:shadow-xl"
 					>
-						{#if editingId === s.id}
-							<!-- Edit form -->
-							<form onsubmit={saveEdit} class="flex flex-col gap-3 p-5">
-								<div>
-									<label
-										class="mb-1 block text-xs font-semibold tracking-wider text-gray-400 uppercase"
-										for="edit-name-{s.id}"
-									>
-										Name
-									</label>
-									<input
-										id="edit-name-{s.id}"
-										type="text"
-										bind:value={editName}
-										maxlength="100"
-										required
-										class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-indigo-500/60 focus:bg-white/10 focus:outline-none"
-									/>
+						<!-- View mode -->
+						<div class="flex flex-1 flex-col p-5">
+							<!-- Card header -->
+							<div class="mb-3 flex items-start justify-between gap-2">
+								<div class="min-w-0">
+									<h3 class="truncate text-base font-bold text-white">{s.name}</h3>
+									{#if s.description}
+										<p class="mt-0.5 text-xs text-gray-400">{s.description}</p>
+									{/if}
 								</div>
-								<div>
-									<label
-										class="mb-1 block text-xs font-semibold tracking-wider text-gray-400 uppercase"
-										for="edit-desc-{s.id}"
-									>
-										Description
-									</label>
-									<input
-										id="edit-desc-{s.id}"
-										type="text"
-										bind:value={editDescription}
-										maxlength="500"
-										class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-indigo-500/60 focus:bg-white/10 focus:outline-none"
-									/>
-								</div>
-								<div>
-									<label
-										class="mb-1 block text-xs font-semibold tracking-wider text-gray-400 uppercase"
-										for="edit-style-{s.id}"
-									>
-										Style prompt
-									</label>
-									<textarea
-										id="edit-style-{s.id}"
-										bind:value={editStyle}
-										rows="4"
-										maxlength="2000"
-										required
-										class="w-full resize-y rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-indigo-500/60 focus:bg-white/10 focus:outline-none"
-									></textarea>
-									<p class="mt-0.5 text-right text-xs text-gray-600">{editStyle.length}/2000</p>
-								</div>
-								<div class="flex gap-2">
+								<!-- Action buttons — show on hover -->
+								<div
+									class="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100"
+								>
+									<!-- Copy -->
 									<button
-										type="submit"
-										disabled={editSaving}
-										class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600 py-2 text-xs font-semibold text-white transition-colors hover:bg-indigo-500 disabled:opacity-50"
+										type="button"
+										onclick={() => copyStyle(s)}
+										class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
+										title="Copy style"
 									>
-										{#if editSaving}
-											<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-												<circle
-													class="opacity-25"
-													cx="12"
-													cy="12"
-													r="10"
-													stroke="currentColor"
-													stroke-width="4"
-												></circle>
-												<path
-													class="opacity-75"
-													fill="currentColor"
-													d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-												></path>
-											</svg>
-										{:else}
+										{#if copiedId === s.id}
 											<svg
-												class="h-3.5 w-3.5"
+												class="h-3.5 w-3.5 text-emerald-400"
 												fill="none"
 												stroke="currentColor"
 												viewBox="0 0 24 24"
@@ -496,80 +444,77 @@
 												<path
 													stroke-linecap="round"
 													stroke-linejoin="round"
-													stroke-width="2"
+													stroke-width="2.5"
 													d="M5 13l4 4L19 7"
 												/>
 											</svg>
+										{:else}
+											<svg
+												class="h-3.5 w-3.5"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+												/>
+											</svg>
 										{/if}
-										Save
 									</button>
+									<!-- Edit -->
 									<button
 										type="button"
-										onclick={cancelEdit}
-										class="rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-white/20 hover:text-white"
+										onclick={() => startEdit(s)}
+										class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
+										title="Edit style"
 									>
-										Cancel
+										<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+											/>
+										</svg>
 									</button>
-								</div>
-							</form>
-						{:else}
-							<!-- View mode -->
-							<div class="flex flex-1 flex-col p-5">
-								<!-- Card header -->
-								<div class="mb-3 flex items-start justify-between gap-2">
-									<div class="min-w-0">
-										<h3 class="truncate text-base font-bold text-white">{s.name}</h3>
-										{#if s.description}
-											<p class="mt-0.5 text-xs text-gray-400">{s.description}</p>
-										{/if}
-									</div>
-									<!-- Action buttons — show on hover -->
-									<div
-										class="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100"
-									>
-										<!-- Copy -->
+									<!-- Delete -->
+									{#if deleteConfirmId === s.id}
 										<button
 											type="button"
-											onclick={() => copyStyle(s)}
-											class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
-											title="Copy style"
+											onclick={() => confirmDelete(s.id)}
+											disabled={deletingId === s.id}
+											class="flex h-7 items-center gap-1 rounded-lg bg-red-500/20 px-2 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/30"
+											title="Confirm delete"
 										>
-											{#if copiedId === s.id}
-												<svg
-													class="h-3.5 w-3.5 text-emerald-400"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
+											{#if deletingId === s.id}
+												<svg class="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
+													<circle
+														class="opacity-25"
+														cx="12"
+														cy="12"
+														r="10"
+														stroke="currentColor"
+														stroke-width="4"
+													></circle>
 													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2.5"
-														d="M5 13l4 4L19 7"
-													/>
+														class="opacity-75"
+														fill="currentColor"
+														d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+													></path>
 												</svg>
 											{:else}
-												<svg
-													class="h-3.5 w-3.5"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-													/>
-												</svg>
+												Confirm
 											{/if}
 										</button>
-										<!-- Edit -->
+									{:else}
 										<button
 											type="button"
-											onclick={() => startEdit(s)}
-											class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-white/10 hover:text-white"
-											title="Edit style"
+											onclick={() => (deleteConfirmId = s.id)}
+											class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-400"
+											title="Delete style"
 										>
 											<svg
 												class="h-3.5 w-3.5"
@@ -581,87 +526,189 @@
 													stroke-linecap="round"
 													stroke-linejoin="round"
 													stroke-width="2"
-													d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+													d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
 												/>
 											</svg>
 										</button>
-										<!-- Delete -->
-										{#if deleteConfirmId === s.id}
-											<button
-												type="button"
-												onclick={() => confirmDelete(s.id)}
-												disabled={deletingId === s.id}
-												class="flex h-7 items-center gap-1 rounded-lg bg-red-500/20 px-2 text-xs font-semibold text-red-400 transition-colors hover:bg-red-500/30"
-												title="Confirm delete"
-											>
-												{#if deletingId === s.id}
-													<svg class="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
-														<circle
-															class="opacity-25"
-															cx="12"
-															cy="12"
-															r="10"
-															stroke="currentColor"
-															stroke-width="4"
-														></circle>
-														<path
-															class="opacity-75"
-															fill="currentColor"
-															d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-														></path>
-													</svg>
-												{:else}
-													Confirm
-												{/if}
-											</button>
-										{:else}
-											<button
-												type="button"
-												onclick={() => (deleteConfirmId = s.id)}
-												class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-red-500/20 hover:text-red-400"
-												title="Delete style"
-											>
-												<svg
-													class="h-3.5 w-3.5"
-													fill="none"
-													stroke="currentColor"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-													/>
-												</svg>
-											</button>
-										{/if}
-									</div>
-								</div>
-
-								<!-- Style text -->
-								<div class="relative flex-1 overflow-hidden rounded-xl bg-black/30 p-3.5">
-									<p class="line-clamp-6 font-mono text-xs leading-relaxed text-gray-300">
-										{s.style}
-									</p>
-									<!-- Fade at bottom if long -->
-									<div
-										class="pointer-events-none absolute right-0 bottom-0 left-0 h-8 bg-linear-to-t from-black/30 to-transparent"
-									></div>
+									{/if}
 								</div>
 							</div>
 
-							<!-- Card footer -->
-							<div class="shrink-0 border-t border-white/5 px-5 py-3">
-								<p class="text-xs text-gray-600">Saved {formatDate(s.created_at)}</p>
+							<!-- Style text -->
+							<div class="relative flex-1 overflow-hidden rounded-xl bg-black/30 p-3.5">
+								<p class="line-clamp-6 font-mono text-xs leading-relaxed text-gray-300">
+									{s.style}
+								</p>
+								<!-- Fade at bottom if long -->
+								<div
+									class="pointer-events-none absolute right-0 bottom-0 left-0 h-8 bg-linear-to-t from-black/30 to-transparent"
+								></div>
 							</div>
-						{/if}
+						</div>
+
+						<!-- Card footer -->
+						<div class="shrink-0 border-t border-white/5 px-5 py-3">
+							<p class="text-xs text-gray-600">Saved {formatDate(s.created_at)}</p>
+						</div>
 					</div>
 				{/each}
 			</div>
 		{/if}
 	</main>
 </div>
+
+<!-- Edit Modal -->
+{#if editingId !== null}
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md transition-all"
+		onclick={cancelEdit}
+	>
+		<!-- Modal content -->
+		<div
+			class="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-indigo-500/40 bg-gray-900/95 shadow-2xl shadow-indigo-500/20"
+			onclick={(e) => e.stopPropagation()}
+		>
+			<div
+				class="flex shrink-0 items-center justify-between border-b border-white/10 bg-indigo-600/10 px-6 py-4"
+			>
+				<div class="flex items-center gap-3">
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400"
+					>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+							/>
+						</svg>
+					</div>
+					<h2 class="text-lg font-semibold text-white">Edit Style</h2>
+				</div>
+				<button
+					type="button"
+					aria-label="Close"
+					onclick={cancelEdit}
+					class="rounded-xl p-2 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
+				>
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
+			</div>
+
+			<form onsubmit={saveEdit} class="flex flex-1 flex-col overflow-hidden">
+				<div class="flex-1 overflow-y-auto p-6">
+					<div class="grid gap-6 sm:grid-cols-2">
+						<div class="space-y-1.5">
+							<label
+								class="text-xs font-semibold tracking-wider text-gray-400 uppercase"
+								for="edit-name"
+							>
+								Name <span class="text-red-400">*</span>
+							</label>
+							<input
+								id="edit-name"
+								type="text"
+								bind:value={editName}
+								required
+								maxlength="100"
+								class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+							/>
+						</div>
+						<div class="space-y-1.5">
+							<label
+								class="text-xs font-semibold tracking-wider text-gray-400 uppercase"
+								for="edit-desc"
+							>
+								Description
+							</label>
+							<input
+								id="edit-desc"
+								type="text"
+								bind:value={editDescription}
+								maxlength="500"
+								class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+							/>
+						</div>
+					</div>
+
+					<div class="mt-6 flex h-full min-h-[400px] flex-col space-y-1.5">
+						<label
+							class="text-xs font-semibold tracking-wider text-gray-400 uppercase"
+							for="edit-style"
+						>
+							Style prompt <span class="text-red-400">*</span>
+						</label>
+						<textarea
+							id="edit-style"
+							bind:value={editStyle}
+							required
+							maxlength="2000"
+							class="w-full flex-1 resize-y rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
+						></textarea>
+						<div class="flex justify-end">
+							<span class="text-xs text-gray-500">{editStyle.length}/2000</span>
+						</div>
+					</div>
+				</div>
+
+				<div
+					class="mt-2 flex shrink-0 justify-end gap-3 border-t border-white/10 bg-gray-900/50 p-6"
+				>
+					<button
+						type="button"
+						onclick={cancelEdit}
+						class="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:bg-white/5 hover:text-white"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={editSaving}
+						class="flex min-w-[140px] items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 disabled:cursor-not-allowed disabled:opacity-50"
+					>
+						{#if editSaving}
+							<svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+								<circle
+									class="opacity-25"
+									cx="12"
+									cy="12"
+									r="10"
+									stroke="currentColor"
+									stroke-width="4"
+								></circle>
+								<path
+									class="opacity-75"
+									fill="currentColor"
+									d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+								></path>
+							</svg>
+						{:else}
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+						{/if}
+						Save Changes
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
 
 <!-- Click outside to dismiss delete confirm -->
 {#if deleteConfirmId !== null}
