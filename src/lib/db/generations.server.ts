@@ -73,7 +73,7 @@ export function getExtendedGenerations(generationId: number, audioId: string): G
 	const stmt = prepareStmt(`
 		SELECT * FROM generations 
 		WHERE extends_generation_id = ? AND extends_audio_id = ?
-		AND generation_type != 'add_instrumental'
+		AND generation_type NOT IN ('add_instrumental', 'upload_instrumental')
 		ORDER BY created_at ASC
 	`);
 	return stmt.all(generationId, audioId) as Generation[];
@@ -130,11 +130,58 @@ export function getAddInstrumentalGenerations(generationId: number, audioId: str
 		SELECT * FROM generations
 		WHERE extends_generation_id = ?
 		  AND extends_audio_id = ?
-		  AND generation_type = 'add_instrumental'
+		  AND generation_type IN ('add_instrumental', 'upload_instrumental')
 		ORDER BY created_at ASC
 	`);
 
 	return stmt.all(generationId, audioId) as Generation[];
+}
+
+export function createUploadInstrumentalGeneration(
+	projectId: number,
+	title: string,
+	tags: string,
+	negativeTags: string,
+	sourceAudioLocalUrl: string | null = null
+): Generation {
+	const stmt = prepareStmt(`
+		INSERT INTO generations (
+			project_id,
+			title,
+			style,
+			lyrics,
+			status,
+			instrumental,
+			generation_type,
+			negative_tags,
+			source_audio_local_url
+		)
+		VALUES (?, ?, ?, '', 'pending', 1, 'upload_instrumental', ?, ?)
+		RETURNING *
+	`);
+
+	const generation = stmt.get(
+		projectId,
+		title,
+		tags,
+		negativeTags,
+		sourceAudioLocalUrl
+	) as Generation;
+
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+
+	return generation;
+}
+
+export function setGenerationSourceAudioLocalUrl(id: number, sourceAudioLocalUrl: string): void {
+	const stmt = prepareStmt(`
+		UPDATE generations SET
+			source_audio_local_url = ?,
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`);
+
+	stmt.run(sourceAudioLocalUrl, id);
 }
 
 export function getGeneration(id: number): Generation | undefined {
@@ -372,7 +419,7 @@ export function getAllExtendedParentGenerations(): ExtendedParentGeneration[] {
 				   SELECT COUNT(*)
 				   FROM generations c
 				   WHERE c.extends_generation_id = g.id
-				     AND c.generation_type != 'add_instrumental'
+				     AND c.generation_type NOT IN ('add_instrumental', 'upload_instrumental')
 			   ) as extension_count
 		FROM generations g
 		JOIN projects p ON g.project_id = p.id
@@ -380,7 +427,7 @@ export function getAllExtendedParentGenerations(): ExtendedParentGeneration[] {
 			SELECT COUNT(*)
 			FROM generations c
 			WHERE c.extends_generation_id = g.id
-			  AND c.generation_type != 'add_instrumental'
+			  AND c.generation_type NOT IN ('add_instrumental', 'upload_instrumental')
 		) > 0
 		ORDER BY g.updated_at DESC
 	`);

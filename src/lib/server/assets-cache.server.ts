@@ -1,4 +1,5 @@
 import { setGenerationLocalAssetUrls, type Generation } from '$lib/db.server';
+import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -96,6 +97,22 @@ function getFilePathForName(fileName: string): string {
 	return path.join(getAssetCacheDir(), fileName);
 }
 
+function sanitizeExtension(extension: string): string {
+	if (/^[.][a-z0-9]{1,6}$/i.test(extension)) {
+		return extension.toLowerCase();
+	}
+
+	return '.mp3';
+}
+
+function getTemporaryUploadPath(fileName: string): string {
+	if (!isValidTemporaryUploadFileName(fileName)) {
+		throw new Error('Invalid temporary upload file name');
+	}
+
+	return getFilePathForName(fileName);
+}
+
 export function getAssetFileNameFromLocalUrl(localUrl: string | null | undefined): string | null {
 	if (!localUrl || !localUrl.startsWith(ASSET_URL_PREFIX)) {
 		return null;
@@ -110,7 +127,11 @@ export function getAssetFileNameFromLocalUrl(localUrl: string | null | undefined
 }
 
 export function isValidAssetFileName(fileName: string): boolean {
-	return /^g\d+-t[12]-(audio|image)\.[a-z0-9]{1,6}$/i.test(fileName);
+	return /^g\d+-(t[12]|source)-(audio|image)\.[a-z0-9]{1,6}$/i.test(fileName);
+}
+
+export function isValidTemporaryUploadFileName(fileName: string): boolean {
+	return /^upload-[a-f0-9-]+\.[a-z0-9]{1,6}$/i.test(fileName);
 }
 
 export function getAssetFilePath(fileName: string): string {
@@ -119,6 +140,42 @@ export function getAssetFilePath(fileName: string): string {
 	}
 
 	return getFilePathForName(fileName);
+}
+
+export async function createTemporaryUploadedAudio(
+	fileBuffer: Buffer,
+	extension: string
+): Promise<string> {
+	await fs.mkdir(getAssetCacheDir(), { recursive: true });
+	const safeExtension = sanitizeExtension(extension);
+	const fileName = `upload-${randomUUID()}${safeExtension}`;
+	const filePath = getTemporaryUploadPath(fileName);
+	await fs.writeFile(filePath, fileBuffer);
+	return fileName;
+}
+
+export async function finalizeTemporaryUploadedAudio(
+	generationId: number,
+	temporaryFileName: string
+): Promise<string> {
+	const temporaryPath = getTemporaryUploadPath(temporaryFileName);
+	const extension = sanitizeExtension(path.extname(temporaryFileName));
+	const finalFileName = `g${generationId}-source-audio${extension}`;
+	const finalPath = getFilePathForName(finalFileName);
+
+	await fs.mkdir(getAssetCacheDir(), { recursive: true });
+	await fs.rename(temporaryPath, finalPath);
+
+	return buildAssetUrl(finalFileName);
+}
+
+export async function removeTemporaryUploadedAudio(temporaryFileName: string): Promise<void> {
+	try {
+		const temporaryPath = getTemporaryUploadPath(temporaryFileName);
+		await fs.rm(temporaryPath, { force: true });
+	} catch {
+		// Ignore invalid names and missing files
+	}
 }
 
 async function ensureCachedAsset(
@@ -266,7 +323,8 @@ export async function deleteGenerationCachedAssets(generation: Generation): Prom
 		generation.track1_audio_local_url,
 		generation.track1_image_local_url,
 		generation.track2_audio_local_url,
-		generation.track2_image_local_url
+		generation.track2_image_local_url,
+		generation.source_audio_local_url
 	];
 
 	for (const localUrl of candidates) {

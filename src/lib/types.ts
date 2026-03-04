@@ -40,6 +40,7 @@ export interface Generation {
 	instrumental: number;
 	generation_type: string;
 	negative_tags: string | null;
+	source_audio_local_url?: string | null;
 	created_at: string;
 	updated_at: string;
 }

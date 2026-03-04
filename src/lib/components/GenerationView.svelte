@@ -31,6 +31,11 @@
 		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
+
+	const isInstrumentalGeneration = $derived(
+		generation.generation_type === 'add_instrumental' ||
+			generation.generation_type === 'upload_instrumental'
+	);
 </script>
 
 <div class="flex h-full flex-col">
@@ -243,13 +248,13 @@
 			<ReadonlyMetadataField label="Title">{generation.title}</ReadonlyMetadataField>
 
 			<ReadonlyMetadataField
-				label={generation.generation_type === 'add_instrumental' ? 'Tags' : 'Style Prompt'}
+				label={isInstrumentalGeneration ? 'Tags' : 'Style Prompt'}
 				valueClass="whitespace-pre-wrap"
 			>
 				{generation.style.trim()}
 			</ReadonlyMetadataField>
 
-			{#if generation.generation_type !== 'add_instrumental'}
+			{#if !isInstrumentalGeneration}
 				<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
 					{generation.lyrics?.trim()}
 				</ReadonlyMetadataField>
@@ -262,6 +267,31 @@
 				>
 					{generation.negative_tags.trim()}
 				</ReadonlyMetadataField>
+			{/if}
+
+			{#if generation.generation_type === 'upload_instrumental' && generation.source_audio_local_url}
+				<div class="overflow-hidden rounded-xl border border-teal-200/80 dark:border-teal-800/50">
+					<div class="h-1 bg-linear-to-r from-teal-500 via-emerald-500 to-cyan-500"></div>
+					<div class="bg-teal-50/70 p-4 dark:bg-teal-950/20">
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<p
+								class="text-xs font-semibold tracking-wider text-teal-600 uppercase dark:text-teal-400"
+							>
+								Source Audio
+							</p>
+						</div>
+						<AudioPlayer
+							src={generation.source_audio_local_url}
+							title={`${generation.title} (Source Upload)`}
+							imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
+							duration={0}
+							continueAt={null}
+							trackId={`source-upload-${generation.id}`}
+							generationId={generation.id}
+							projectId={generation.project_id}
+						/>
+					</div>
+				</div>
 			{/if}
 		</div>
 	</div>

@@ -31,7 +31,10 @@
 
 	let showRetryModal = $state(false);
 
-	const isAddInstrumental = $derived(generation.generation_type === 'add_instrumental');
+	const isAddInstrumental = $derived(
+		generation.generation_type === 'add_instrumental' ||
+			generation.generation_type === 'upload_instrumental'
+	);
 	const retrySourceSong = $derived(data.retryExtension?.sourceSong ?? null);
 	const retryDisabledReason = $derived(
 		data.retryExtension && !data.retryExtension.canRetry ? data.retryExtension.reason : null

@@ -68,7 +68,8 @@
 		(data.addInstrumentalGenerations ?? []).length > 0
 	);
 	const isAddInstrumental = $derived(
-		generationState.generation.generation_type === 'add_instrumental'
+		generationState.generation.generation_type === 'add_instrumental' ||
+			generationState.generation.generation_type === 'upload_instrumental'
 	);
 	const hasLyrics = $derived(!!generationState.generation.lyrics && !isAddInstrumental);
 	const hasNegativeTags = $derived(

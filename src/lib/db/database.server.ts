@@ -105,6 +105,7 @@ export function getDb(): BetterSqlite3.Database {
 			instrumental INTEGER NOT NULL DEFAULT 0,
 			generation_type TEXT NOT NULL DEFAULT 'generate',
 			negative_tags TEXT,
+			source_audio_local_url TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -231,6 +232,7 @@ export function getDb(): BetterSqlite3.Database {
 	addColumnIfMissing('generations', 'instrumental', 'INTEGER NOT NULL DEFAULT 0');
 	addColumnIfMissing('generations', 'generation_type', "TEXT NOT NULL DEFAULT 'generate'");
 	addColumnIfMissing('generations', 'negative_tags', 'TEXT');
+	addColumnIfMissing('generations', 'source_audio_local_url', 'TEXT');
 	db.exec(`
 		UPDATE generations
 		SET generation_type = 'extend'

@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import ImportSongModal from '$lib/components/ImportSongModal.svelte';
+	import UploadInstrumentalModal from '$lib/components/UploadInstrumentalModal.svelte';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { formatDate, getTimeAgo } from '$lib/utils/format';
 
@@ -23,6 +24,7 @@
 	let sortField = $state<'name' | 'updated_at'>('updated_at');
 	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let showImportModal = $state(false);
+	let showUploadInstrumentalModal = $state(false);
 	let isCreating = $state(false);
 
 	// Filtered and sorted projects
@@ -166,6 +168,20 @@
 							/>
 						</svg>
 					</a>
+					<button
+						onclick={() => (showUploadInstrumentalModal = true)}
+						class="flex items-center gap-2 rounded-xl border border-teal-400/30 bg-teal-500/10 px-5 py-2.5 text-sm font-medium text-teal-200 backdrop-blur-sm transition-all hover:border-teal-400/50 hover:bg-teal-500/20"
+					>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
+							/>
+						</svg>
+						Upload Instrumental
+					</button>
 					<button
 						onclick={() => (showImportModal = true)}
 						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10"
@@ -485,3 +501,9 @@
 
 <!-- Import Song Modal -->
 <ImportSongModal bind:isOpen={showImportModal} onClose={() => (showImportModal = false)} />
+
+<!-- Upload Instrumental Modal -->
+<UploadInstrumentalModal
+	bind:isOpen={showUploadInstrumentalModal}
+	onClose={() => (showUploadInstrumentalModal = false)}
+/>
