@@ -87,7 +87,7 @@
 
 	{#if isOpen}
 		<div
-			class="absolute top-full left-0 z-50 mt-1.5 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-gray-700 dark:bg-gray-900"
+			class="absolute top-full right-0 z-50 mt-1.5 w-md overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl shadow-black/10 dark:border-gray-700 dark:bg-gray-900"
 			onkeydown={handleKeydown}
 			role="dialog"
 			tabindex="-1"
@@ -116,7 +116,7 @@
 						onkeydown={handleKeydown}
 						type="text"
 						placeholder="Search styles…"
-						class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-3 pl-9 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-indigo-500"
+						class="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 pr-3 pl-9 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-400/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-indigo-500 dark:focus:bg-gray-700"
 					/>
 				</div>
 			</div>

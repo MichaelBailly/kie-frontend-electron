@@ -28,6 +28,19 @@
 	let showUploadInstrumentalModal = $state(false);
 	let showUploadVocalsModal = $state(false);
 	let isCreating = $state(false);
+	let showNewProjectMenu = $state(false);
+
+	$effect(() => {
+		if (!showNewProjectMenu) return;
+		function handleOutsideClick(e: MouseEvent) {
+			const menu = document.getElementById('new-project-menu');
+			if (menu && !menu.contains(e.target as Node)) {
+				showNewProjectMenu = false;
+			}
+		}
+		document.addEventListener('click', handleOutsideClick);
+		return () => document.removeEventListener('click', handleOutsideClick);
+	});
 
 	// Filtered and sorted projects
 	let filteredProjects = $derived.by(() => {
@@ -126,14 +139,13 @@
 
 <div class="min-h-screen bg-linear-to-br from-gray-900 via-gray-900 to-indigo-950">
 	<!-- Header -->
-	<header class="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+	<header class="relative z-10 border-b border-white/10 bg-black/20 backdrop-blur-sm">
 		<div class="mx-auto max-w-6xl px-6 py-8">
 			<div class="flex items-center justify-between">
 				<div>
 					<h1 class="text-3xl font-bold text-white">Your Projects</h1>
 					<p class="mt-2 text-gray-400">
-						{projects.length} project{projects.length !== 1 ? 's' : ''} • Create and manage your AI music
-						generations
+						{projects.length} project{projects.length !== 1 ? 's' : ''}
 					</p>
 				</div>
 				<div class="flex gap-3">
@@ -184,63 +196,121 @@
 							/>
 						</svg>
 					</a>
-					<button
-						onclick={() => (showUploadVocalsModal = true)}
-						class="flex items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/10 px-5 py-2.5 text-sm font-medium text-violet-200 backdrop-blur-sm transition-all hover:border-violet-400/50 hover:bg-violet-500/20"
-					>
-						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 18.5c4.142 0 7.5-3.134 7.5-7s-3.358-7-7.5-7-7.5 3.134-7.5 7 3.358 7 7.5 7zM12 18.5v3"
-							/>
-						</svg>
-						Upload Vocals
-					</button>
-					<button
-						onclick={() => (showUploadInstrumentalModal = true)}
-						class="flex items-center gap-2 rounded-xl border border-teal-400/30 bg-teal-500/10 px-5 py-2.5 text-sm font-medium text-teal-200 backdrop-blur-sm transition-all hover:border-teal-400/50 hover:bg-teal-500/20"
-					>
-						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
-							/>
-						</svg>
-						Upload Instrumental
-					</button>
-					<button
-						onclick={() => (showImportModal = true)}
-						class="flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/10"
-					>
-						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-							/>
-						</svg>
-						Import
-					</button>
-					<button
-						onclick={createNewProject}
-						disabled={isCreating}
-						class="flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:scale-[1.02] hover:shadow-indigo-500/40 disabled:opacity-50 disabled:hover:scale-100"
-					>
-						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 4v16m8-8H4"
-							/>
-						</svg>
-						{isCreating ? 'Creating...' : 'New Project'}
-					</button>
+					<!-- Split button: primary = New Project, dropdown = other actions -->
+					<div id="new-project-menu" class="relative">
+						<div class="flex">
+							<button
+								onclick={createNewProject}
+								disabled={isCreating}
+								class="flex items-center gap-2 rounded-l-xl bg-linear-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-indigo-500/25 transition-all hover:brightness-110 disabled:opacity-50"
+							>
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 4v16m8-8H4"
+									/>
+								</svg>
+								{isCreating ? 'Creating...' : 'New Project'}
+							</button>
+							<button
+								onclick={(e) => {
+									e.stopPropagation();
+									showNewProjectMenu = !showNewProjectMenu;
+								}}
+								class="flex cursor-pointer items-center rounded-r-xl border-l border-white/20 bg-linear-to-r from-purple-600 to-purple-700 px-2.5 py-2.5 text-white shadow-lg shadow-indigo-500/25 transition-all hover:brightness-110"
+								aria-label="More actions"
+							>
+								<svg
+									class="h-4 w-4 transition-transform {showNewProjectMenu ? 'rotate-180' : ''}"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M19 9l-7 7-7-7"
+									/>
+								</svg>
+							</button>
+						</div>
+						{#if showNewProjectMenu}
+							<div
+								class="absolute top-full right-0 z-50 mt-2 w-64 overflow-hidden rounded-xl border border-white/10 bg-gray-900 shadow-xl shadow-black/40"
+							>
+								<button
+									onclick={() => {
+										showUploadInstrumentalModal = true;
+										showNewProjectMenu = false;
+									}}
+									class="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-teal-300 transition-colors hover:bg-white/5"
+								>
+									<svg
+										class="h-4 w-4 shrink-0"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+									</svg>
+									Generate Instrumental
+								</button>
+								<button
+									onclick={() => {
+										showUploadVocalsModal = true;
+										showNewProjectMenu = false;
+									}}
+									class="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-violet-300 transition-colors hover:bg-white/5"
+								>
+									<svg
+										class="h-4 w-4 shrink-0"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 18.5c4.142 0 7.5-3.134 7.5-7s-3.358-7-7.5-7-7.5 3.134-7.5 7 3.358 7 7.5 7zM12 18.5v3"
+										/>
+									</svg>
+									Generate Vocals
+								</button>
+								<div class="mx-3 border-t border-white/10"></div>
+								<button
+									onclick={() => {
+										showImportModal = true;
+										showNewProjectMenu = false;
+									}}
+									class="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-sm text-gray-300 transition-colors hover:bg-white/5"
+								>
+									<svg
+										class="h-4 w-4 shrink-0"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+										/>
+									</svg>
+									Import Project
+								</button>
+							</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>

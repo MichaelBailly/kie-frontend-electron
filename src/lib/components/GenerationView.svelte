@@ -43,10 +43,6 @@
 		generation.generation_type === 'add_instrumental' ||
 			generation.generation_type === 'upload_instrumental'
 	);
-
-	const isAddVocalsGeneration = $derived(
-		generation.generation_type === 'add_vocals' || generation.generation_type === 'upload_vocals'
-	);
 </script>
 
 <div class="flex h-full flex-col">
@@ -325,7 +321,7 @@
 						</div>
 						<AudioPlayer
 							src={generation.source_audio_local_url}
-							title={`${generation.title} (${isAddVocalsGeneration ? 'Vocal' : 'Instrumental'} Source Upload)`}
+							title="Audio Source Upload"
 							imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
 							duration={0}
 							continueAt={null}
