@@ -124,7 +124,9 @@ describe('POST /api/import', () => {
 	});
 
 	it('returns 404 when task is not found on KIE API', async () => {
-		kieApi.getMusicDetails.mockRejectedValue(new Error('404 Not Found'));
+		kieApi.getMusicDetails.mockRejectedValue(
+			Object.assign(new Error('Not Found'), { status: 404 })
+		);
 
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({ body: { taskId: 'missing-task' } });
@@ -136,7 +138,9 @@ describe('POST /api/import', () => {
 	});
 
 	it('returns 502 when KIE API returns unauthorized', async () => {
-		kieApi.getMusicDetails.mockRejectedValue(new Error('401 Unauthorized'));
+		kieApi.getMusicDetails.mockRejectedValue(
+			Object.assign(new Error('Unauthorized'), { status: 401 })
+		);
 
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({ body: { taskId: 'unauthorized-task' } });

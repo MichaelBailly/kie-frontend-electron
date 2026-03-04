@@ -2,7 +2,12 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getAnnotation, setAnnotationLabels, toggleStar, updateComment } from '$lib/db.server';
 import { notifyAnnotationClients } from '$lib/sse.server';
-import { parseIntParam, requireGeneration } from '$lib/api-helpers.server';
+import {
+	asNonEmptyString,
+	parseIntParam,
+	parseJsonBody,
+	requireGeneration
+} from '$lib/api-helpers.server';
 
 export const GET: RequestHandler = async ({ params, url }) => {
 	const generationId = parseIntParam(params.id);
@@ -28,17 +33,10 @@ export const GET: RequestHandler = async ({ params, url }) => {
 
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const generationId = parseIntParam(params.id);
-	const body = await request.json();
-	const { audioId, action, comment } = body as {
-		audioId: string;
-		action?: 'toggle_star' | 'set_labels';
-		comment?: string;
-		labels?: string[];
-	};
-
-	if (!audioId) {
-		throw error(400, 'audioId is required');
-	}
+	const body = await parseJsonBody(request);
+	const audioId = asNonEmptyString(body.audioId, 'audioId');
+	const action = body.action;
+	const comment = body.comment;
 
 	const generation = requireGeneration(generationId);
 
@@ -55,7 +53,8 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		if (!Array.isArray(body.labels)) {
 			throw error(400, 'labels must be an array');
 		}
-		for (const label of body.labels) {
+		const labels = body.labels as unknown[];
+		for (const label of labels) {
 			if (typeof label !== 'string') {
 				throw error(400, 'labels must be strings');
 			}
@@ -63,8 +62,11 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 				throw error(400, 'labels must be 128 characters or less');
 			}
 		}
-		annotation = setAnnotationLabels(generationId, audioId, body.labels);
+		annotation = setAnnotationLabels(generationId, audioId, labels as string[]);
 	} else if (comment !== undefined) {
+		if (typeof comment !== 'string') {
+			throw error(400, 'comment must be a string');
+		}
 		annotation = updateComment(generationId, audioId, comment);
 	} else {
 		throw error(400, 'Must provide action or comment');

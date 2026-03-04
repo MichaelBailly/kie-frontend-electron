@@ -15,13 +15,27 @@ interface ImportServiceResult {
 	};
 }
 
-function mapKieFetchErrorToHttpError(message: string): never {
+type ErrorWithStatus = {
+	status: number;
+};
+
+function hasStatus(error: unknown): error is ErrorWithStatus {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'status' in error &&
+		typeof error.status === 'number'
+	);
+}
+
+function mapKieFetchErrorToHttpError(err: unknown): never {
+	const message = err instanceof Error ? err.message : 'Unknown error';
 	console.error('Failed to fetch music details from KIE:', message);
 
-	if (message.includes('404')) {
+	if (hasStatus(err) && err.status === 404) {
 		throw error(404, 'Task ID not found. Please verify the ID is correct.');
 	}
-	if (message.includes('401') || message.includes('403')) {
+	if (hasStatus(err) && [401, 403].includes(err.status)) {
 		throw error(502, 'API authentication failed. Please check server configuration.');
 	}
 	throw error(502, 'Failed to fetch song data from KIE API. Please try again later.');
@@ -32,8 +46,7 @@ export async function importSongFromTask(input: ImportRequestInput): Promise<Imp
 	try {
 		details = await getMusicDetails(input.taskId);
 	} catch (err) {
-		const message = err instanceof Error ? err.message : 'Unknown error';
-		mapKieFetchErrorToHttpError(message);
+		mapKieFetchErrorToHttpError(err);
 	}
 
 	const { responseData, track1, track2 } = validateImportableMusicDetails(details);

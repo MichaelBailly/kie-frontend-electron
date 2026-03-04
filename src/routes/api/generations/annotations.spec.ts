@@ -304,7 +304,45 @@ describe('PATCH /api/generations/[id]/annotations — validation', () => {
 
 		await expect(PATCH(event as never)).rejects.toMatchObject({
 			status: 400,
-			body: { message: 'audioId is required' }
+			body: { message: 'Invalid audioId: must be a string' }
+		});
+	});
+
+	it('throws 400 for invalid JSON body', async () => {
+		const { PATCH } = await import('./[id]/annotations/+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: { id: '1' },
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(PATCH(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
+	it('throws 400 when comment is not a string', async () => {
+		const gen = createCompletedGeneration({
+			id: 1,
+			track1_audio_id: 'audio-1-1'
+		});
+		db.__setGenerations([gen]);
+
+		const { PATCH } = await import('./[id]/annotations/+server');
+		const event = createRequestEvent({
+			method: 'PATCH',
+			params: { id: '1' },
+			body: { audioId: 'audio-1-1', comment: 123 }
+		});
+
+		await expect(PATCH(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'comment must be a string' }
 		});
 	});
 

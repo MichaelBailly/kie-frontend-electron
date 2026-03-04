@@ -1,12 +1,13 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getApiKey } from '$lib/db.server';
-
-const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+import { asOptionalString, parseJsonBody } from '$lib/api-helpers.server';
+import { KIE_API_BASE } from '$lib/kie-api.server';
 
 export const POST: RequestHandler = async ({ request }) => {
-	const body = await request.json();
-	const apiKey = body.apiKey || getApiKey();
+	const body = await parseJsonBody(request);
+	const providedApiKey = asOptionalString(body.apiKey, 'apiKey').trim();
+	const apiKey = providedApiKey || getApiKey();
 
 	if (!apiKey) {
 		return json({

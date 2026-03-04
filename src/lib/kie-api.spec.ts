@@ -91,7 +91,7 @@ describe('kie-api.server', () => {
 	});
 
 	it('throws descriptive error on non-ok response', async () => {
-		const { extendMusic } = await import('./kie-api.server');
+		const { extendMusic, KieApiError } = await import('./kie-api.server');
 		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
 		fetchMock.mockResolvedValue({
 			ok: false,
@@ -100,6 +100,21 @@ describe('kie-api.server', () => {
 			json: async () => ({})
 		} as Response);
 
+		const call = extendMusic({
+			defaultParamFlag: true,
+			audioId: 'audio-1',
+			prompt: 'prompt',
+			style: 'style',
+			title: 'title',
+			continueAt: 10,
+			instrumental: false,
+			model: 'V5',
+			callBackUrl: 'https://example.com/callback',
+			negativeTags: ''
+		});
+
+		await expect(call).rejects.toBeInstanceOf(KieApiError);
+		await expect(call).rejects.toMatchObject({ status: 502 });
 		await expect(
 			extendMusic({
 				defaultParamFlag: true,

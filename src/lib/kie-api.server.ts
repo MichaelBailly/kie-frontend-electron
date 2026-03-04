@@ -1,7 +1,17 @@
 import { getApiKey } from './db.server';
 import { KIE_API_KEY } from './constants.server';
 
-const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+export const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+
+export class KieApiError extends Error {
+	status: number;
+
+	constructor(status: number, statusText: string) {
+		super(`KIE API error: ${status} ${statusText}`);
+		this.name = 'KieApiError';
+		this.status = status;
+	}
+}
 
 // Get API key from database first, fallback to environment variable
 function getEffectiveApiKey(): string {
@@ -33,7 +43,7 @@ async function kieRequest<T>(path: string, options: KieRequestOptions = {}): Pro
 	});
 
 	if (!response.ok) {
-		throw new Error(`KIE API error: ${response.status} ${response.statusText}`);
+		throw new KieApiError(response.status, response.statusText);
 	}
 
 	return response.json() as Promise<T>;

@@ -75,6 +75,24 @@ describe('GET /api/projects', () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/projects', () => {
+	it('throws 400 for invalid JSON body', async () => {
+		const { POST } = await import('./+server');
+		const event = {
+			request: new Request('http://localhost/test', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: '{invalid-json'
+			}),
+			params: {},
+			url: new URL('http://localhost/test')
+		};
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid JSON body' }
+		});
+	});
+
 	it('creates a project with the given name', async () => {
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({ body: { name: 'My Album' } });
@@ -102,6 +120,16 @@ describe('POST /api/projects', () => {
 		const data = await response.json();
 
 		expect(data.name).toBe('New Project');
+	});
+
+	it('throws 400 when name is not a string', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({ body: { name: 123 } });
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid name: must be a string, null, or undefined' }
+		});
 	});
 });
 
