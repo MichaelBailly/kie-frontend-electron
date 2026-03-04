@@ -5,6 +5,8 @@
 	import RetryExtendModal from '$lib/components/RetryExtendModal.svelte';
 	import RetryAddInstrumentalModal from '$lib/components/RetryAddInstrumentalModal.svelte';
 	import RetryAddVocalsModal from '$lib/components/RetryAddVocalsModal.svelte';
+	import RetryUploadInstrumentalModal from '$lib/components/RetryUploadInstrumentalModal.svelte';
+	import RetryUploadVocalsModal from '$lib/components/RetryUploadVocalsModal.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getContext } from 'svelte';
@@ -31,6 +33,7 @@
 	});
 
 	let showRetryModal = $state(false);
+	let showRetryUploadModal = $state(false);
 
 	const isAddInstrumental = $derived(
 		generation.generation_type === 'add_instrumental' ||
@@ -39,9 +42,16 @@
 	const isAddVocals = $derived(
 		generation.generation_type === 'add_vocals' || generation.generation_type === 'upload_vocals'
 	);
+	const isUploadBased = $derived(
+		generation.generation_type === 'upload_instrumental' ||
+			generation.generation_type === 'upload_vocals'
+	);
 	const retrySourceSong = $derived(data.retryExtension?.sourceSong ?? null);
 	const retryDisabledReason = $derived(
 		data.retryExtension && !data.retryExtension.canRetry ? data.retryExtension.reason : null
+	);
+	const retryUploadDisabledReason = $derived(
+		data.retryUpload && !data.retryUpload.canRetry ? data.retryUpload.reason : null
 	);
 
 	function openRetryModal() {
@@ -53,6 +63,17 @@
 
 	function closeRetryModal() {
 		showRetryModal = false;
+	}
+
+	function openRetryUploadModal() {
+		if (!data.retryUpload?.canRetry) {
+			return;
+		}
+		showRetryUploadModal = true;
+	}
+
+	function closeRetryUploadModal() {
+		showRetryUploadModal = false;
 	}
 
 	async function handleRetryExtend(retryData: {
@@ -188,6 +209,82 @@
 			})
 		);
 	}
+
+	async function handleRetryUploadInstrumental(retryData: {
+		title: string;
+		tags: string;
+		negativeTags: string;
+	}) {
+		if (!data.retryUpload?.sourceGenerationId) {
+			return;
+		}
+
+		const response = await fetch('/api/generations/retry-upload-instrumental', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				projectId: generation.project_id,
+				title: retryData.title,
+				tags: retryData.tags,
+				negativeTags: retryData.negativeTags,
+				sourceGenerationId: data.retryUpload.sourceGenerationId
+			})
+		});
+
+		if (!response.ok) {
+			console.error('Failed to create retry upload instrumental generation');
+			return;
+		}
+
+		const newGeneration = await response.json();
+		showRetryUploadModal = false;
+
+		goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
+
+	async function handleRetryUploadVocals(retryData: {
+		title: string;
+		prompt: string;
+		style: string;
+		negativeTags: string;
+	}) {
+		if (!data.retryUpload?.sourceGenerationId) {
+			return;
+		}
+
+		const response = await fetch('/api/generations/retry-upload-vocals', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				projectId: generation.project_id,
+				title: retryData.title,
+				prompt: retryData.prompt,
+				style: retryData.style,
+				negativeTags: retryData.negativeTags,
+				sourceGenerationId: data.retryUpload.sourceGenerationId
+			})
+		});
+
+		if (!response.ok) {
+			console.error('Failed to create retry upload vocals generation');
+			return;
+		}
+
+		const newGeneration = await response.json();
+		showRetryUploadModal = false;
+
+		goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
 </script>
 
 <GenerationView
@@ -196,6 +293,8 @@
 	parentSong={data.parentSong}
 	onRetryExtension={openRetryModal}
 	{retryDisabledReason}
+	onRetryUpload={isUploadBased ? openRetryUploadModal : null}
+	{retryUploadDisabledReason}
 />
 
 {#if data.retryExtension && retrySourceSong}
@@ -227,6 +326,26 @@
 			sourceSong={retrySourceSong}
 			initialContinueAt={data.retryExtension.defaults.continueAt}
 			onExtend={handleRetryExtend}
+		/>
+	{/if}
+{/if}
+
+{#if data.retryUpload && data.retryUpload.sourceAudioLocalUrl}
+	{#if generation.generation_type === 'upload_instrumental'}
+		<RetryUploadInstrumentalModal
+			bind:isOpen={showRetryUploadModal}
+			onClose={closeRetryUploadModal}
+			{generation}
+			sourceAudioLocalUrl={data.retryUpload.sourceAudioLocalUrl}
+			onRetry={handleRetryUploadInstrumental}
+		/>
+	{:else if generation.generation_type === 'upload_vocals'}
+		<RetryUploadVocalsModal
+			bind:isOpen={showRetryUploadModal}
+			onClose={closeRetryUploadModal}
+			{generation}
+			sourceAudioLocalUrl={data.retryUpload.sourceAudioLocalUrl}
+			onRetry={handleRetryUploadVocals}
 		/>
 	{/if}
 {/if}

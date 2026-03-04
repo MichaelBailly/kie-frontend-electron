@@ -107,11 +107,38 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 				}
 			: null;
 
+	// Retry for upload-based generations (upload_instrumental / upload_vocals)
+	const isUploadBasedGeneration =
+		generation.generation_type === 'upload_instrumental' ||
+		generation.generation_type === 'upload_vocals';
+
+	let uploadRetryDisabledReason: string | null = null;
+	if (isUploadBasedGeneration && !generation.source_audio_local_url) {
+		uploadRetryDisabledReason = 'The source audio file for this generation is no longer available.';
+	}
+
+	const retryUpload = isUploadBasedGeneration
+		? {
+				canRetry: !uploadRetryDisabledReason,
+				reason: uploadRetryDisabledReason,
+				sourceGenerationId: generation.id,
+				sourceAudioLocalUrl: generation.source_audio_local_url ?? null,
+				defaults: {
+					title: generation.title,
+					tags: generation.style ?? '',
+					negativeTags: generation.negative_tags ?? '',
+					prompt: generation.lyrics ?? '',
+					style: generation.style ?? ''
+				}
+			}
+		: null;
+
 	return {
 		generation,
 		activeProject, // Pass through so page can access live data
 		parentGeneration,
 		parentSong,
-		retryExtension
+		retryExtension,
+		retryUpload
 	};
 };
