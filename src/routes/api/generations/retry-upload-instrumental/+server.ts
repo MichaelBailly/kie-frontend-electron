@@ -7,7 +7,13 @@ import {
 } from '$lib/db.server';
 import { addInstrumental } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
-import { asNonEmptyString, parseJsonBody, startGenerationTask } from '$lib/api-helpers.server';
+import {
+	asNonEmptyString,
+	asOptionalString,
+	normalizeNegativeTags,
+	parseJsonBody,
+	startGenerationTask
+} from '$lib/api-helpers.server';
 import {
 	createTemporaryUploadedAudio,
 	finalizeTemporaryUploadedAudio,
@@ -18,18 +24,6 @@ import {
 import { uploadToTemporaryHost } from '$lib/server/file-upload.server';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-
-function asOptionalString(value: unknown, fieldName: string): string {
-	if (value === undefined || value === null) {
-		return '';
-	}
-
-	if (typeof value !== 'string') {
-		throw error(400, `Invalid ${fieldName}: must be a string, null, or undefined`);
-	}
-
-	return value;
-}
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await parseJsonBody(request);
@@ -46,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const title = asNonEmptyString(body.title, 'title');
 	const tags = asNonEmptyString(body.tags, 'tags');
 	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
-	const negativeTagsForApi = negativeTags || 'none';
+	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
 
 	// Retrieve source generation and verify it has local audio
 	const sourceGeneration = getGeneration(sourceGenerationId);

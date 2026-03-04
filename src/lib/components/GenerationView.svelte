@@ -1,6 +1,11 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
-	import { getStatusLabel, isGenerating } from '$lib/types';
+	import {
+		getGenerationTypeLabel,
+		getStatusLabel,
+		isGenerating,
+		isGenerationTypeOneOf
+	} from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import GenerationVariationTrack from './GenerationVariationTrack.svelte';
 	import ParentSongBanner from './ParentSongBanner.svelte';
@@ -31,18 +36,21 @@
 		const stemType = generation.extends_stem_type;
 		if (!stemType) return undefined;
 		const stemDisplay = getStemDisplay(normalizeStemType(stemType));
-		if (generation.generation_type === 'add_instrumental') {
+		if (isGenerationTypeOneOf(generation.generation_type, ['add_instrumental'])) {
 			return `Instrumental from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
-		if (generation.generation_type === 'add_vocals') {
+		if (isGenerationTypeOneOf(generation.generation_type, ['add_vocals'])) {
 			return `Vocals from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
 
 	const isInstrumentalGeneration = $derived(
-		generation.generation_type === 'add_instrumental' ||
-			generation.generation_type === 'upload_instrumental'
+		isGenerationTypeOneOf(generation.generation_type, ['add_instrumental', 'upload_instrumental'])
+	);
+
+	const isUploadGeneration = $derived(
+		isGenerationTypeOneOf(generation.generation_type, ['upload_instrumental', 'upload_vocals'])
 	);
 
 	let showSaveStyleModal = $state(false);
@@ -93,15 +101,15 @@
 					<span
 						class="max-w-0 pr-0 opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:px-1.5 group-hover:opacity-100"
 					>
-						{generation.generation_type === 'add_instrumental'
+						{isGenerationTypeOneOf(generation.generation_type, ['add_instrumental'])
 							? 'Retry instrumental creation'
-							: generation.generation_type === 'add_vocals'
+							: isGenerationTypeOneOf(generation.generation_type, ['add_vocals'])
 								? 'Retry vocals creation'
 								: "Retry song's extension"}
 					</span>
 				</button>
 			{/if}
-			{#if onRetryUpload && (generation.generation_type === 'upload_instrumental' || generation.generation_type === 'upload_vocals')}
+			{#if onRetryUpload && isUploadGeneration}
 				<button
 					type="button"
 					onclick={onRetryUpload}
@@ -125,8 +133,8 @@
 					<span
 						class="max-w-0 pr-0 opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:px-1.5 group-hover:opacity-100"
 					>
-						{generation.generation_type === 'upload_instrumental'
-							? 'Retry generate instrumental'
+						{isInstrumentalGeneration
+							? `Retry generate ${getGenerationTypeLabel(generation.generation_type).replace('Upload ', '').toLowerCase()}`
 							: 'Retry add vocals'}
 					</span>
 				</button>

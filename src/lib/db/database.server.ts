@@ -54,7 +54,6 @@ export function getDb(): BetterSqlite3.Database {
 	const require = createRequire(modulePath);
 	const Database = require('better-sqlite3');
 	const dbPath = getDatabasePath();
-	console.log('Database path:', dbPath);
 
 	_db = new Database(dbPath) as BetterSqlite3.Database;
 	const db = _db;

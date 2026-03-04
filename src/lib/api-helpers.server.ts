@@ -128,26 +128,23 @@ export function asNullableString(value: unknown, name: string): string | null {
 	return value;
 }
 
-// ============================================================================
-// Required-field validation
-// ============================================================================
-
 /**
- * Validate that all specified fields are present (truthy) in the request body.
- * Throws a 400 error listing the missing fields if any are falsy.
- *
- * @example
- * const body = await request.json();
- * requireFields(body, ['projectId', 'title', 'style']);
+ * Validate and return an optional string, coercing null/undefined to ''.
  */
-export function requireFields<T extends Record<string, unknown>>(
-	body: T,
-	fields: (keyof T & string)[]
-): void {
-	const missing = fields.filter((f) => !body[f]);
-	if (missing.length > 0) {
-		throw error(400, `Missing required fields: ${missing.join(', ')}`);
+export function asOptionalString(value: unknown, name: string): string {
+	if (value === undefined || value === null) {
+		return '';
 	}
+
+	if (typeof value !== 'string') {
+		throw error(400, `Invalid ${name}: must be a string, null, or undefined`);
+	}
+
+	return value;
+}
+
+export function normalizeNegativeTags(value: string | null | undefined): string {
+	return value?.trim() || 'none';
 }
 
 // ============================================================================

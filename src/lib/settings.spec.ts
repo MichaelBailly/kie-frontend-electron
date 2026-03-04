@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { maskApiKey } from '$lib/utils/mask-api-key';
 
 type DbMockModule = typeof import('$lib/db.server') & {
 	__resetMock: () => void;
@@ -81,13 +82,6 @@ describe('Settings Database Operations', () => {
 });
 
 describe('API Key Masking', () => {
-	function maskApiKey(apiKey: string): string {
-		if (apiKey.length <= 8) {
-			return '*'.repeat(apiKey.length);
-		}
-		return apiKey.slice(0, 4) + '*'.repeat(apiKey.length - 8) + apiKey.slice(-4);
-	}
-
 	it('should mask short API keys completely', () => {
 		expect(maskApiKey('12345')).toBe('*****');
 		expect(maskApiKey('12345678')).toBe('********');

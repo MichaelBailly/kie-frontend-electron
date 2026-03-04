@@ -2,6 +2,7 @@ import type { PageServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 import { getGeneration as getGenerationById } from '$lib/db.server';
 import { getPreferredTrackAssetUrl, queueTrackAssetCaching } from '$lib/server/assets-cache.server';
+import { isGenerationTypeOneOf } from '$lib/types';
 
 export const load: PageServerLoad = async ({ params, parent }) => {
 	const { activeProject } = await parent();
@@ -68,9 +69,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		}
 	}
 
-	const isStemBasedRemix =
-		generation.generation_type === 'add_instrumental' ||
-		generation.generation_type === 'add_vocals';
+	const isStemBasedRemix = isGenerationTypeOneOf(generation.generation_type, [
+		'add_instrumental',
+		'add_vocals'
+	]);
 
 	// For extend retries: check source track has duration metadata
 	if (
@@ -108,9 +110,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			: null;
 
 	// Retry for upload-based generations (upload_instrumental / upload_vocals)
-	const isUploadBasedGeneration =
-		generation.generation_type === 'upload_instrumental' ||
-		generation.generation_type === 'upload_vocals';
+	const isUploadBasedGeneration = isGenerationTypeOneOf(generation.generation_type, [
+		'upload_instrumental',
+		'upload_vocals'
+	]);
 
 	let uploadRetryDisabledReason: string | null = null;
 	if (isUploadBasedGeneration && !generation.source_audio_local_url) {

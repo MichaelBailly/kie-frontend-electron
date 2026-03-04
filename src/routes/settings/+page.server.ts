@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { getApiKey } from '$lib/db.server';
+import { maskApiKey } from '$lib/utils/mask-api-key';
 
 export const load: PageServerLoad = async () => {
 	const apiKey = getApiKey();
@@ -9,10 +10,3 @@ export const load: PageServerLoad = async () => {
 		maskedApiKey: apiKey ? maskApiKey(apiKey) : null
 	};
 };
-
-function maskApiKey(apiKey: string): string {
-	if (apiKey.length <= 8) {
-		return '*'.repeat(apiKey.length);
-	}
-	return apiKey.slice(0, 4) + '*'.repeat(apiKey.length - 8) + apiKey.slice(-4);
-}

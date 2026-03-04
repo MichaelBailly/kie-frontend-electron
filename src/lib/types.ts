@@ -132,6 +132,42 @@ export type GenerationStatus =
 	| 'success'
 	| 'error';
 
+export type GenerationType =
+	| 'generate'
+	| 'extend'
+	| 'add_instrumental'
+	| 'add_vocals'
+	| 'upload_instrumental'
+	| 'upload_vocals';
+
+const generationTypeLabels: Record<GenerationType, string> = {
+	generate: 'Generated',
+	extend: 'Extended',
+	add_instrumental: 'Instrumental',
+	add_vocals: 'Vocals',
+	upload_instrumental: 'Upload Instrumental',
+	upload_vocals: 'Upload Vocals'
+};
+
+export function isGenerationType(value: string): value is GenerationType {
+	return value in generationTypeLabels;
+}
+
+export function isGenerationTypeOneOf(
+	value: string,
+	allowed: readonly GenerationType[]
+): value is GenerationType {
+	return isGenerationType(value) && allowed.includes(value);
+}
+
+export function getGenerationTypeLabel(value: string): string {
+	if (!isGenerationType(value)) {
+		return value;
+	}
+
+	return generationTypeLabels[value];
+}
+
 export function getStatusLabel(status: string): string {
 	const labels: Record<string, string> = {
 		pending: 'Pending',

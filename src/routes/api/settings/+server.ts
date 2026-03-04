@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getApiKey, setApiKey, setSetting } from '$lib/db.server';
 import { asNullableString, parseJsonBody } from '$lib/api-helpers.server';
+import { maskApiKey } from '$lib/utils/mask-api-key';
 
 export const GET: RequestHandler = async () => {
 	const apiKey = getApiKey();
@@ -34,10 +35,3 @@ export const PUT: RequestHandler = async ({ request }) => {
 		success: true
 	});
 };
-
-function maskApiKey(apiKey: string): string {
-	if (apiKey.length <= 8) {
-		return '*'.repeat(apiKey.length);
-	}
-	return apiKey.slice(0, 4) + '*'.repeat(apiKey.length - 8) + apiKey.slice(-4);
-}

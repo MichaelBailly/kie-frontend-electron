@@ -4,8 +4,10 @@ import { createAddInstrumentalGeneration } from '$lib/db.server';
 import { addInstrumental } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
+	asOptionalString,
 	asNonEmptyString,
 	asPositiveInt,
+	normalizeNegativeTags,
 	parseJsonBody,
 	requireGeneration,
 	requireProject,
@@ -21,8 +23,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	const stemUrl = asNonEmptyString(body.stemUrl, 'stemUrl');
 	const title = asNonEmptyString(body.title, 'title');
 	const tags = asNonEmptyString(body.tags, 'tags');
-	const negativeTags = typeof body.negativeTags === 'string' ? body.negativeTags.trim() : '';
-	const negativeTagsForApi = negativeTags || 'none';
+	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
+	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');

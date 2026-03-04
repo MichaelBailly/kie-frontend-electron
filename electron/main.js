@@ -46,13 +46,17 @@ function findAvailablePort(startPort = 3000) {
 async function startServer() {
 	// Find an available port
 	serverPort = await findAvailablePort(3000);
-	console.log('Using port:', serverPort);
+	if (isDev) {
+		console.log('Using port:', serverPort);
+	}
 
 	const dbPath = isDev
 		? path.join(__dirname, '..', 'kie-music.db')
 		: path.join(app.getPath('userData'), 'kie-music.db');
 
-	console.log('Database path:', dbPath);
+	if (isDev) {
+		console.log('Database path:', dbPath);
+	}
 
 	// Set environment variables before importing the handler
 	process.env.PORT = serverPort.toString();
@@ -73,7 +77,9 @@ async function startServer() {
 
 	// Import the SvelteKit handler
 	const handlerPath = getResourcePath('build', 'handler.js');
-	console.log('Loading handler from:', handlerPath);
+	if (isDev) {
+		console.log('Loading handler from:', handlerPath);
+	}
 
 	const { handler } = await import(`file://${handlerPath}`);
 
@@ -86,7 +92,9 @@ async function startServer() {
 		});
 
 		server.listen(serverPort, '127.0.0.1', () => {
-			console.log(`Server listening on http://127.0.0.1:${serverPort}`);
+			if (isDev) {
+				console.log(`Server listening on http://127.0.0.1:${serverPort}`);
+			}
 			resolve();
 		});
 	});
@@ -94,7 +102,9 @@ async function startServer() {
 
 function stopServer() {
 	if (server) {
-		console.log('Stopping server...');
+		if (isDev) {
+			console.log('Stopping server...');
+		}
 		server.close();
 		server = null;
 	}
@@ -123,7 +133,9 @@ function createWindow() {
 
 	// Load the app from the local server
 	const serverUrl = `http://127.0.0.1:${serverPort}`;
-	console.log('Loading URL:', serverUrl);
+	if (isDev) {
+		console.log('Loading URL:', serverUrl);
+	}
 	mainWindow.loadURL(serverUrl);
 
 	// Open external links in default browser

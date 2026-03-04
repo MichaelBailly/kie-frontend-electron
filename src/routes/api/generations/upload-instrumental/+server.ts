@@ -1,4 +1,4 @@
-import { error, json } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
 	createProject,
@@ -7,7 +7,13 @@ import {
 } from '$lib/db.server';
 import { addInstrumental } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
-import { asNonEmptyString, parseJsonBody, startGenerationTask } from '$lib/api-helpers.server';
+import {
+	asNonEmptyString,
+	asOptionalString,
+	normalizeNegativeTags,
+	parseJsonBody,
+	startGenerationTask
+} from '$lib/api-helpers.server';
 import {
 	finalizeTemporaryUploadedAudio,
 	removeTemporaryUploadedAudio
@@ -15,18 +21,6 @@ import {
 
 function buildProjectName(title: string): string {
 	return `Instrumental: ${title}`;
-}
-
-function asOptionalString(value: unknown, fieldName: string): string {
-	if (value === undefined || value === null) {
-		return '';
-	}
-
-	if (typeof value !== 'string') {
-		throw error(400, `Invalid ${fieldName}: must be a string, null, or undefined`);
-	}
-
-	return value;
 }
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -38,7 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
 	const projectNameRaw = asOptionalString(body.projectName, 'projectName').trim();
 	const projectName = projectNameRaw || buildProjectName(title);
-	const negativeTagsForApi = negativeTags || 'none';
+	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
 
 	const project = createProject(projectName);
 	const generation = createUploadInstrumentalGeneration(project.id, title, tags, negativeTags);

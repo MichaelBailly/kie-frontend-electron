@@ -1,6 +1,11 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
-	import { getStatusLabel, isGenerating } from '$lib/types';
+	import {
+		getGenerationTypeLabel,
+		getStatusLabel,
+		isGenerating,
+		isGenerationTypeOneOf
+	} from '$lib/types';
 	import { formatDate } from '$lib/utils/format';
 	import ArtworkImage from './ArtworkImage.svelte';
 
@@ -19,6 +24,14 @@
 			minute: '2-digit'
 		} satisfies Intl.DateTimeFormatOptions
 	};
+
+	const isInstrumentalGeneration = $derived(
+		isGenerationTypeOneOf(generation.generation_type, ['add_instrumental', 'upload_instrumental'])
+	);
+
+	const isUploadGeneration = $derived(
+		isGenerationTypeOneOf(generation.generation_type, ['upload_instrumental', 'upload_vocals'])
+	);
 </script>
 
 <div
@@ -56,7 +69,7 @@
 			</p>
 			<div class="mt-1 flex flex-wrap items-center gap-2">
 				{#if generation.extends_generation_id && typeof generation.extends_generation_id === 'number'}
-					{#if generation.generation_type === 'add_instrumental'}
+					{#if isInstrumentalGeneration}
 						<span
 							class="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-400"
 							title="Instrumental generated from a stem"
@@ -87,7 +100,7 @@
 							Extended
 						</span>
 					{/if}
-				{:else if generation.generation_type === 'upload_instrumental'}
+				{:else if isUploadGeneration && isInstrumentalGeneration}
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/30 dark:text-teal-400"
 						title="Instrumental generated from uploaded audio"
@@ -100,7 +113,7 @@
 								d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-2a3 3 0 11-6 0 3 3 0 016 0z"
 							/>
 						</svg>
-						Upload Instrumental
+						{getGenerationTypeLabel(generation.generation_type)}
 					</span>
 				{/if}
 				{#if isGenerating(generation.status)}

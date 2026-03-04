@@ -10,6 +10,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getContext } from 'svelte';
+	import { isGenerationTypeOneOf } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -36,15 +37,13 @@
 	let showRetryUploadModal = $state(false);
 
 	const isAddInstrumental = $derived(
-		generation.generation_type === 'add_instrumental' ||
-			generation.generation_type === 'upload_instrumental'
+		isGenerationTypeOneOf(generation.generation_type, ['add_instrumental', 'upload_instrumental'])
 	);
 	const isAddVocals = $derived(
-		generation.generation_type === 'add_vocals' || generation.generation_type === 'upload_vocals'
+		isGenerationTypeOneOf(generation.generation_type, ['add_vocals', 'upload_vocals'])
 	);
 	const isUploadBased = $derived(
-		generation.generation_type === 'upload_instrumental' ||
-			generation.generation_type === 'upload_vocals'
+		isGenerationTypeOneOf(generation.generation_type, ['upload_instrumental', 'upload_vocals'])
 	);
 	const retrySourceSong = $derived(data.retryExtension?.sourceSong ?? null);
 	const retryDisabledReason = $derived(
@@ -331,7 +330,7 @@
 {/if}
 
 {#if data.retryUpload && data.retryUpload.sourceAudioLocalUrl}
-	{#if generation.generation_type === 'upload_instrumental'}
+	{#if isGenerationTypeOneOf(generation.generation_type, ['upload_instrumental'])}
 		<RetryUploadInstrumentalModal
 			bind:isOpen={showRetryUploadModal}
 			onClose={closeRetryUploadModal}
@@ -339,7 +338,7 @@
 			sourceAudioLocalUrl={data.retryUpload.sourceAudioLocalUrl}
 			onRetry={handleRetryUploadInstrumental}
 		/>
-	{:else if generation.generation_type === 'upload_vocals'}
+	{:else if isGenerationTypeOneOf(generation.generation_type, ['upload_vocals'])}
 		<RetryUploadVocalsModal
 			bind:isOpen={showRetryUploadModal}
 			onClose={closeRetryUploadModal}

@@ -9,6 +9,7 @@ import type {
 	StemSeparation,
 	VariationAnnotation
 } from '$lib/types';
+import { isGenerating } from '$lib/types';
 import { SvelteMap } from 'svelte/reactivity';
 import { showCompletionNotification } from './notifications';
 
@@ -19,10 +20,6 @@ type ProjectLayoutData = {
 	activeProject: ProjectWithGenerations;
 	annotations?: VariationAnnotation[];
 };
-
-function isGenerationInProgress(status: string) {
-	return ['pending', 'processing', 'text_success', 'first_success'].includes(status);
-}
 
 export function useProjectState(getData: () => ProjectLayoutData) {
 	let projects = $state<ProjectWithGenerations[]>([]);
@@ -208,7 +205,7 @@ export function useProjectState(getData: () => ProjectLayoutData) {
 		hasAnyGenerationInProgress(projectId: number) {
 			const project = projects.find((candidate) => candidate.id === projectId);
 			if (!project) return false;
-			return project.generations.some((generation) => isGenerationInProgress(generation.status));
+			return project.generations.some((generation) => isGenerating(generation.status));
 		},
 		handleSseMessage,
 		createNewProject,

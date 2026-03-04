@@ -4,8 +4,10 @@ import { createAddVocalsGeneration } from '$lib/db.server';
 import { addVocals } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
+	asOptionalString,
 	asNonEmptyString,
 	asPositiveInt,
+	normalizeNegativeTags,
 	parseJsonBody,
 	requireGeneration,
 	requireProject,
@@ -22,8 +24,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	const title = asNonEmptyString(body.title, 'title');
 	const prompt = asNonEmptyString(body.prompt, 'prompt');
 	const style = asNonEmptyString(body.style, 'style');
-	const negativeTags = typeof body.negativeTags === 'string' ? body.negativeTags.trim() : '';
-	const negativeTagsForApi = negativeTags || 'none';
+	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
+	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');
