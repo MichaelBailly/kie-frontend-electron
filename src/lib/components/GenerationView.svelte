@@ -2,11 +2,12 @@
 	import type { Generation } from '$lib/types';
 	import { getStatusLabel, isGenerating } from '$lib/types';
 	import AudioPlayer from './AudioPlayer.svelte';
-	import AnnotationActions from './AnnotationActions.svelte';
+	import GenerationVariationTrack from './GenerationVariationTrack.svelte';
 	import ParentSongBanner from './ParentSongBanner.svelte';
 	import ReadonlyMetadataField from './ReadonlyMetadataField.svelte';
+	import SaveStyleModal from './SaveStyleModal.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
-	import { resolve } from '$app/paths';
+	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 
 	let {
 		generation,
@@ -43,6 +44,24 @@
 		generation.generation_type === 'add_instrumental' ||
 			generation.generation_type === 'upload_instrumental'
 	);
+
+	let showSaveStyleModal = $state(false);
+	let saveStyleSuccess = $state(false);
+
+	let styleCopied = $state(false);
+	const copyStyle = createCopyWithFeedback((copied) => {
+		styleCopied = copied;
+	});
+
+	let lyricsCopied = $state(false);
+	const copyLyrics = createCopyWithFeedback((copied) => {
+		lyricsCopied = copied;
+	});
+
+	function handleStyleSaved() {
+		saveStyleSuccess = true;
+		setTimeout(() => (saveStyleSuccess = false), 3000);
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -203,80 +222,9 @@
 					{/if}
 				</div>
 				<div class="space-y-3">
-					<div>
-						<div class="mb-2 flex items-center gap-2">
-							{#if generation.track1_audio_id}
-								<a
-									href={resolve(
-										`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track1_audio_id}`
-									)}
-									class="shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-								>
-									Variation 1
-								</a>
-							{:else}
-								<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 1</p>
-							{/if}
-							{#if generation.track1_audio_id}
-								<AnnotationActions
-									generationId={generation.id}
-									audioId={generation.track1_audio_id}
-								/>
-							{/if}
-						</div>
-						{#if generation.track1_stream_url || generation.track1_audio_local_url || generation.track1_audio_url}
-							<AudioPlayer
-								src={generation.track1_audio_local_url ||
-									generation.track1_audio_url ||
-									generation.track1_stream_url ||
-									''}
-								title="{generation.title} (V1)"
-								imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
-								duration={generation.track1_duration || 0}
-								continueAt={generation.continue_at}
-								trackId={generation.track1_audio_id || `preview-${generation.id}-1`}
-								generationId={generation.id}
-								projectId={generation.project_id}
-							/>
-						{/if}
-					</div>
+					<GenerationVariationTrack {generation} variation={1} />
 					{#if generation.track2_stream_url || generation.track2_audio_local_url || generation.track2_audio_url}
-						<div>
-							<div class="mb-2 flex items-center gap-2">
-								{#if generation.track2_audio_id}
-									<a
-										href={resolve(
-											`/projects/${generation.project_id}/generations/${generation.id}/song/${generation.track2_audio_id}`
-										)}
-										class="shrink-0 text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-									>
-										Variation 2
-									</a>
-								{:else}
-									<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 2</p>
-								{/if}
-								{#if generation.track2_audio_id}
-									<!-- LabelPicker removed -->
-									<AnnotationActions
-										generationId={generation.id}
-										audioId={generation.track2_audio_id}
-									/>
-								{/if}
-							</div>
-							<AudioPlayer
-								src={generation.track2_audio_local_url ||
-									generation.track2_audio_url ||
-									generation.track2_stream_url ||
-									''}
-								title="{generation.title} (V2)"
-								imageUrl={generation.track2_image_local_url || generation.track2_image_url || ''}
-								duration={generation.track2_duration || 0}
-								continueAt={generation.continue_at}
-								trackId={generation.track2_audio_id || `preview-${generation.id}-2`}
-								generationId={generation.id}
-								projectId={generation.project_id}
-							/>
-						</div>
+						<GenerationVariationTrack {generation} variation={2} />
 					{/if}
 				</div>
 			</div>
@@ -290,11 +238,105 @@
 				label={isInstrumentalGeneration ? 'Tags' : 'Style Prompt'}
 				valueClass="whitespace-pre-wrap"
 			>
+				{#snippet HeaderRight()}
+					<div class="flex items-center gap-2">
+						<button
+							onclick={() => copyStyle(generation.style)}
+							class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+							title="Copy style"
+						>
+							{#if styleCopied}
+								<svg
+									class="h-4 w-4 text-green-500"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+							{:else}
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+									/>
+								</svg>
+							{/if}
+						</button>
+						{#if saveStyleSuccess}
+							<span
+								class="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+							>
+								<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+									><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2.5"
+										d="M5 13l4 4L19 7"
+									/></svg
+								>Saved!
+							</span>
+						{:else}
+							<button
+								onclick={() => (showSaveStyleModal = true)}
+								class="flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+								title="Save to style collection"
+							>
+								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+									><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+									/></svg
+								>Save
+							</button>
+						{/if}
+					</div>
+				{/snippet}
 				{generation.style.trim()}
 			</ReadonlyMetadataField>
 
 			{#if !isInstrumentalGeneration}
 				<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
+					{#snippet HeaderRight()}
+						<button
+							onclick={() => copyLyrics(generation.lyrics ?? '')}
+							class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+							title="Copy lyrics"
+						>
+							{#if lyricsCopied}
+								<svg
+									class="h-4 w-4 text-green-500"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+									><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/></svg
+								>
+							{:else}
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+									><path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+									/></svg
+								>
+							{/if}
+						</button>
+					{/snippet}
 					{generation.lyrics?.trim()}
 				</ReadonlyMetadataField>
 			{/if}
@@ -335,3 +377,11 @@
 		</div>
 	</div>
 </div>
+
+{#if showSaveStyleModal}
+	<SaveStyleModal
+		style={generation.style}
+		onClose={() => (showSaveStyleModal = false)}
+		onSaved={handleStyleSaved}
+	/>
+{/if}

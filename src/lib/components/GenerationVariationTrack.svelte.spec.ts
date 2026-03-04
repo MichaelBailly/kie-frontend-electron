@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 import type { Generation } from '$lib/types';
-import GenerationView from './GenerationView.svelte';
+import GenerationVariationTrack from './GenerationVariationTrack.svelte';
 
 function createGeneration(overrides: Partial<Generation> = {}): Generation {
 	return {
@@ -25,8 +25,8 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		track2_audio_local_url: null,
 		track2_image_local_url: null,
 		track2_duration: 118,
-		track1_audio_id: null,
-		track2_audio_id: null,
+		track1_audio_id: 'audio-1',
+		track2_audio_id: 'audio-2',
 		response_data: null,
 		extends_generation_id: null,
 		extends_audio_id: null,
@@ -43,24 +43,26 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 	};
 }
 
-describe('GenerationView', () => {
-	it('renders both variation tracks when track1 and track2 sources exist', () => {
+describe('GenerationVariationTrack', () => {
+	it('renders link to song page when audio id is available', () => {
 		const generation = createGeneration();
-		const { body } = render(GenerationView, { props: { generation } });
+		const { body } = render(GenerationVariationTrack, {
+			props: { generation, variation: 1 }
+		});
 
 		expect(body).toContain('Variation 1');
-		expect(body).toContain('Variation 2');
+		expect(body).toContain('/projects/1/generations/10/song/audio-1');
 	});
 
-	it('renders only variation 1 when no variation 2 source exists', () => {
-		const generation = createGeneration({
-			track2_stream_url: null,
-			track2_audio_url: null,
-			track2_audio_local_url: null
+	it('renders plain variation label when audio id is missing', () => {
+		const generation = createGeneration({ track1_audio_id: null });
+		const { body } = render(GenerationVariationTrack, {
+			props: { generation, variation: 1 }
 		});
-		const { body } = render(GenerationView, { props: { generation } });
 
-		expect(body).toContain('Variation 1');
-		expect(body).not.toContain('Variation 2');
+		expect(body).toContain(
+			'<p class="text-sm font-medium text-gray-600 dark:text-gray-400">Variation 1</p>'
+		);
+		expect(body).not.toContain('/song/audio-1');
 	});
 });
