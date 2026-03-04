@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type * as D3 from 'd3';
 
 	// d3 is loaded dynamically so it never appears in the SSR server bundle.
@@ -34,13 +33,13 @@
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 
-	async function loadWaveform() {
+	async function loadWaveform(sourceUrl: string = audioUrl) {
 		try {
 			isLoading = true;
 			error = null;
 
 			const audioContext = new AudioContext();
-			const response = await fetch(audioUrl);
+			const response = await fetch(sourceUrl);
 			const arrayBuffer = await response.arrayBuffer();
 			const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
@@ -208,20 +207,35 @@
 			});
 	}
 
-	onMount(() => {
-		import('d3').then((d3module) => {
-			d3 = d3module;
-			loadWaveform();
-		});
+	$effect(() => {
+		let cancelled = false;
 
-		// Redraw on window resize
+		if (!d3) {
+			void import('d3').then((d3module) => {
+				if (cancelled) return;
+				d3 = d3module;
+				void loadWaveform();
+			});
+		}
+
 		const handleResize = () => {
 			if (!isLoading && waveformData.length > 0) {
 				drawWaveform();
 			}
 		};
 		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
+
+		return () => {
+			cancelled = true;
+			window.removeEventListener('resize', handleResize);
+		};
+	});
+
+	$effect(() => {
+		const sourceUrl = audioUrl;
+		if (d3) {
+			void loadWaveform(sourceUrl);
+		}
 	});
 
 	// Redraw when currentTime or markerTime changes

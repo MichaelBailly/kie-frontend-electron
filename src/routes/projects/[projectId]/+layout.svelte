@@ -4,7 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import type { StemSeparation, VariationAnnotation } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
-	import { onDestroy, onMount, setContext } from 'svelte';
+	import { setContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { useProjectState } from '$lib/routes/project/useProjectState.svelte';
 	import { useSSEConnection } from '$lib/routes/project/useSSEConnection.svelte';
@@ -60,12 +60,11 @@
 	});
 
 	// SSE connection for real-time updates
-	onMount(() => {
+	$effect(() => {
 		sseConnection.connect();
-	});
-
-	onDestroy(() => {
-		sseConnection.disconnect();
+		return () => {
+			sseConnection.disconnect();
+		};
 	});
 
 	async function createNewProject() {

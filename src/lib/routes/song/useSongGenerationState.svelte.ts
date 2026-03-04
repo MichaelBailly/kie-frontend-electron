@@ -238,7 +238,7 @@ export function useSongGenerationState(options: {
 		extendingStemType = null;
 		extendingStemUrl = null;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -277,7 +277,7 @@ export function useSongGenerationState(options: {
 		addInstrumentalStemType = null;
 		addInstrumentalStemUrl = null;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -317,7 +317,7 @@ export function useSongGenerationState(options: {
 		addVocalsStemType = null;
 		addVocalsStemUrl = null;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)

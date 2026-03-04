@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { StyleCollection } from '$lib/types';
-	import { onMount } from 'svelte';
+	import { tick } from 'svelte';
 
 	let {
 		onSelect
@@ -32,10 +32,11 @@
 		}
 	}
 
-	function open() {
+	async function open() {
 		isOpen = true;
-		fetchStyles(query);
-		setTimeout(() => inputEl?.focus(), 0);
+		void fetchStyles(query);
+		await tick();
+		inputEl?.focus();
 	}
 
 	function close() {
@@ -61,9 +62,17 @@
 		if (panelEl && !panelEl.contains(e.target as Node)) close();
 	}
 
-	onMount(() => {
+	$effect(() => {
 		document.addEventListener('mousedown', handleOutsideClick);
 		return () => document.removeEventListener('mousedown', handleOutsideClick);
+	});
+
+	$effect(() => {
+		return () => {
+			if (debounceTimer) {
+				clearTimeout(debounceTimer);
+			}
+		};
 	});
 </script>
 

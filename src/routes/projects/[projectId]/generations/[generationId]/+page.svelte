@@ -109,7 +109,7 @@
 		const newGeneration = await response.json();
 		showRetryModal = false;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -154,7 +154,7 @@
 		const newGeneration = await response.json();
 		showRetryModal = false;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -201,7 +201,7 @@
 		const newGeneration = await response.json();
 		showRetryModal = false;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -238,7 +238,7 @@
 		const newGeneration = await response.json();
 		showRetryUploadModal = false;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)
@@ -277,7 +277,7 @@
 		const newGeneration = await response.json();
 		showRetryUploadModal = false;
 
-		goto(
+		await goto(
 			resolve('/projects/[projectId]/generations/[generationId]', {
 				projectId: String(generation.project_id),
 				generationId: String(newGeneration.id)

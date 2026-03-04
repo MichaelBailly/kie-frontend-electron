@@ -1,17 +1,14 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
 	import { audioStore } from '$lib/stores/audio.svelte';
 
 	let audio: HTMLAudioElement | undefined = $state();
 
-	onMount(() => {
-		if (audio) {
-			audioStore.setAudioElement(audio);
-		}
-	});
+	$effect(() => {
+		audioStore.setAudioElement(audio ?? null);
 
-	onDestroy(() => {
-		audioStore.setAudioElement(null);
+		return () => {
+			audioStore.setAudioElement(null);
+		};
 	});
 
 	function handleTimeUpdate() {

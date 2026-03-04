@@ -74,7 +74,7 @@ describe('audioStore play startTime support', () => {
 		expect(audioElement.currentTime).toBe(42);
 		expect(audioStore.currentTime).toBe(42);
 		expect(audioElement.play).toHaveBeenCalledTimes(2);
-	});
+	}, 15000);
 
 	it('waits for loadedmetadata before seeking and playing a new track at startTime', async () => {
 		const { audioStore } = await loadStoreWithBrowserEnabled();

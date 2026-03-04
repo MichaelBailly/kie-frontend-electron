@@ -28,8 +28,7 @@ export function useSongPlaybackState(options: {
 			return;
 		}
 
-		audioStore.play(buildAudioTrack(getGeneration(), getSong()));
-		setTimeout(() => audioStore.seek(time), 100);
+		audioStore.play(buildAudioTrack(getGeneration(), getSong()), time);
 	}
 
 	function handlePlayPause() {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { tick } from 'svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -19,7 +20,7 @@
 	// Focus input when modal opens
 	$effect(() => {
 		if (isOpen) {
-			setTimeout(() => inputElement?.focus(), 100);
+			void tick().then(() => inputElement?.focus());
 		}
 	});
 

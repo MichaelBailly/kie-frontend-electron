@@ -4,6 +4,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
+	import { tick } from 'svelte';
 
 	let {
 		project,
@@ -21,11 +22,11 @@
 	let editedName = $state('');
 	let inputElement: HTMLInputElement | undefined = $state();
 
-	function startEditing() {
+	async function startEditing() {
 		isEditing = true;
 		editedName = project.name;
-		// Focus input after it's rendered
-		setTimeout(() => inputElement?.focus(), 0);
+		await tick();
+		inputElement?.focus();
 	}
 
 	function cancelEditing() {
