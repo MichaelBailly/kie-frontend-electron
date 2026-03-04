@@ -100,6 +100,15 @@ export interface Setting {
 	updated_at: string;
 }
 
+export interface StyleCollection {
+	id: number;
+	name: string;
+	description: string;
+	style: string;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface SSEMessage {
 	type:
 		| 'generation_update'

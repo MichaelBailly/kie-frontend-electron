@@ -155,6 +155,23 @@
 			<span class="hidden sm:inline">Projects</span>
 		</a>
 
+		<!-- Styles link -->
+		<a
+			href={resolve('/styles')}
+			class="flex h-full shrink-0 items-center gap-1.5 border-l border-gray-200 px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+			title="Style Collection"
+		>
+			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+				/>
+			</svg>
+			<span class="hidden sm:inline">Styles</span>
+		</a>
+
 		<!-- New tab button -->
 		<button
 			onclick={createNewProject}

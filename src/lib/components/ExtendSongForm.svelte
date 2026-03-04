@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
+	import StylePicker from './StylePicker.svelte';
 	import Waveform from './Waveform.svelte';
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
@@ -269,12 +270,19 @@
 		</div>
 
 		<div>
-			<label
-				for="extend-style"
-				class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-			>
-				Style Prompt
-			</label>
+			<div class="mb-1.5 flex items-center justify-between">
+				<label
+					for="extend-style"
+					class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>
+					Style Prompt
+				</label>
+				<StylePicker
+					onSelect={(s) => {
+						style = s.style;
+					}}
+				/>
+			</div>
 			<textarea
 				id="extend-style"
 				bind:value={style}

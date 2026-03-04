@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import ParentSongBanner from '$lib/components/ParentSongBanner.svelte';
+	import SaveStyleModal from '$lib/components/SaveStyleModal.svelte';
 	import SongExtendSection from '$lib/components/SongExtendSection.svelte';
 	import AddInstrumentalSection from '$lib/components/AddInstrumentalSection.svelte';
 	import StemSeparationResults from '$lib/components/StemSeparationResults.svelte';
@@ -85,6 +86,13 @@
 	let lyricsCopied = $state(false);
 	let negativeTagsCopied = $state(false);
 	let extendSectionEl: HTMLDivElement | null = $state(null);
+	let showSaveStyleModal = $state(false);
+	let saveStyleSuccess = $state(false);
+
+	function handleStyleSaved() {
+		saveStyleSuccess = true;
+		setTimeout(() => (saveStyleSuccess = false), 3000);
+	}
 	const copyStyle = createCopyWithFeedback((copied) => {
 		styleCopied = copied;
 	});
@@ -589,6 +597,38 @@
 										</span>
 									{/if}
 								</div>
+								<!-- Save to collection -->
+								{#if saveStyleSuccess}
+									<span
+										class="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+									>
+										<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2.5"
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+										Saved!
+									</span>
+								{:else}
+									<button
+										onclick={() => (showSaveStyleModal = true)}
+										class="flex shrink-0 cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-600 opacity-0 transition-all group-hover:opacity-100 hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+										title="Save to style collection"
+									>
+										<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+											/>
+										</svg>
+										Save
+									</button>
+								{/if}
 								<button
 									onclick={() => copyStyle(generationState.generation.style)}
 									class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-300 opacity-0 transition-all group-hover:opacity-100 hover:bg-gray-100 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
@@ -930,3 +970,11 @@
 		</div>
 	</div>
 </div>
+
+{#if showSaveStyleModal}
+	<SaveStyleModal
+		style={generationState.generation.style}
+		onClose={() => (showSaveStyleModal = false)}
+		onSaved={handleStyleSaved}
+	/>
+{/if}

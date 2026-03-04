@@ -1,5 +1,7 @@
 <script lang="ts">
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
+	import StylePicker from './StylePicker.svelte';
+	import type { StyleCollection } from '$lib/types';
 
 	let {
 		title = $bindable(''),
@@ -59,12 +61,16 @@
 			</div>
 
 			<div>
-				<label
-					for="style"
-					class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-				>
-					Style Prompt
-				</label>
+				<div class="mb-1.5 flex items-center justify-between">
+					<label for="style" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+						Style Prompt
+					</label>
+					<StylePicker
+						onSelect={(s: StyleCollection) => {
+							style = s.style;
+						}}
+					/>
+				</div>
 				<textarea
 					id="style"
 					bind:value={style}

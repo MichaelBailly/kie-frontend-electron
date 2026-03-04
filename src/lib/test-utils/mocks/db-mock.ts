@@ -1,5 +1,12 @@
 import { vi } from 'vitest';
-import type { Project, Generation, StemSeparation, VariationAnnotation, Setting } from '$lib/types';
+import type {
+	Project,
+	Generation,
+	StemSeparation,
+	VariationAnnotation,
+	Setting,
+	StyleCollection
+} from '$lib/types';
 import type { MockFn } from './types';
 
 export interface DbMock {
@@ -59,6 +66,12 @@ export interface DbMock {
 	setAnnotationLabels: MockFn;
 	getDb: MockFn;
 	prepareStmt: MockFn;
+	getAllStyles: MockFn;
+	getStyle: MockFn;
+	createStyle: MockFn;
+	updateStyle: MockFn;
+	deleteStyle: MockFn;
+	searchStyles: MockFn;
 	__reset: () => void;
 	__setSettings: (settings: Record<string, string>) => void;
 	__setProjects: (projects: Project[]) => void;
@@ -81,6 +94,7 @@ export function createDbMock(): DbMock {
 	let generations: Generation[] = [];
 	let stemSeparations: StemSeparation[] = [];
 	let annotations: VariationAnnotation[] = [];
+	let styleCollections: StyleCollection[] = [];
 
 	const mock: DbMock = {
 		getSetting: vi.fn((key: string) => settings[key] ?? null),
@@ -312,12 +326,51 @@ export function createDbMock(): DbMock {
 		getDb: vi.fn(),
 		prepareStmt: vi.fn(),
 
+		getAllStyles: vi.fn((): StyleCollection[] => [...styleCollections]),
+		getStyle: vi.fn((id: number) => styleCollections.find((s) => s.id === id)),
+		createStyle: vi.fn((name: string, style: string, description: string = ''): StyleCollection => {
+			const entry: StyleCollection = {
+				id: styleCollections.length + 1,
+				name,
+				style,
+				description,
+				created_at: '2026-01-15T12:00:00.000Z',
+				updated_at: '2026-01-15T12:00:00.000Z'
+			};
+			styleCollections.push(entry);
+			return entry;
+		}),
+		updateStyle: vi.fn(
+			(
+				id: number,
+				fields: Partial<Pick<StyleCollection, 'name' | 'description' | 'style'>>
+			): StyleCollection | undefined => {
+				const entry = styleCollections.find((s) => s.id === id);
+				if (!entry) return undefined;
+				Object.assign(entry, fields);
+				return entry;
+			}
+		),
+		deleteStyle: vi.fn((id: number) => {
+			styleCollections = styleCollections.filter((s) => s.id !== id);
+		}),
+		searchStyles: vi.fn((query: string): StyleCollection[] => {
+			const q = query.toLowerCase();
+			return styleCollections.filter(
+				(s) =>
+					s.name.toLowerCase().includes(q) ||
+					s.description.toLowerCase().includes(q) ||
+					s.style.toLowerCase().includes(q)
+			);
+		}),
+
 		__reset() {
 			settings = {};
 			projects = [];
 			generations = [];
 			stemSeparations = [];
 			annotations = [];
+			styleCollections = [];
 			clearAllMockCalls(mock as unknown as Record<string, unknown>);
 		},
 		__setSettings(nextSettings: Record<string, string>) {

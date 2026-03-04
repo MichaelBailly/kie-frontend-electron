@@ -193,6 +193,17 @@ export function getDb(): BetterSqlite3.Database {
 
 		CREATE INDEX IF NOT EXISTS idx_variation_label_links_annotation ON variation_label_links(annotation_id);
 		CREATE INDEX IF NOT EXISTS idx_variation_label_links_label ON variation_label_links(label_id);
+
+		CREATE TABLE IF NOT EXISTS style_collection (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT NOT NULL,
+			description TEXT NOT NULL DEFAULT '',
+			style TEXT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_style_collection_name ON style_collection(name);
 	`);
 
 	function columnExists(tableName: string, columnName: string): boolean {

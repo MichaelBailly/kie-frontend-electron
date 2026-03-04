@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Generation } from '$lib/types';
+	import StylePicker from './StylePicker.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
@@ -139,12 +140,19 @@
 		</div>
 
 		<div>
-			<label
-				for="add-instrumental-tags"
-				class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-			>
-				Tags
-			</label>
+			<div class="mb-1.5 flex items-center justify-between">
+				<label
+					for="add-instrumental-tags"
+					class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>
+					Tags
+				</label>
+				<StylePicker
+					onSelect={(s) => {
+						tags = s.style;
+					}}
+				/>
+			</div>
 			<textarea
 				id="add-instrumental-tags"
 				bind:value={tags}

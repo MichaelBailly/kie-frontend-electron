@@ -22,7 +22,8 @@ export type {
 	StemSeparation,
 	VariationAnnotation,
 	Label,
-	Setting
+	Setting,
+	StyleCollection
 } from '$lib/types';
 
 // Database core
@@ -110,6 +111,16 @@ export {
 	getApiKey,
 	setApiKey
 } from './db/settings.server';
+
+// Style collection operations
+export {
+	getAllStyles,
+	getStyle,
+	createStyle,
+	updateStyle,
+	deleteStyle,
+	searchStyles
+} from './db/style-collection.server';
 
 // Export a getter for the db instance (for default export compatibility)
 import { getDb } from './db/database.server';
