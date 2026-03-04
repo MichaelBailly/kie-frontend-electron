@@ -73,10 +73,58 @@ export function getExtendedGenerations(generationId: number, audioId: string): G
 	const stmt = prepareStmt(`
 		SELECT * FROM generations 
 		WHERE extends_generation_id = ? AND extends_audio_id = ?
-		AND generation_type NOT IN ('add_instrumental', 'upload_instrumental')
+		AND generation_type NOT IN ('add_instrumental', 'upload_instrumental', 'add_vocals', 'upload_vocals')
 		ORDER BY created_at ASC
 	`);
 	return stmt.all(generationId, audioId) as Generation[];
+}
+
+export function createAddVocalsGeneration(
+	projectId: number,
+	title: string,
+	style: string,
+	prompt: string,
+	negativeTags: string,
+	sourceGenerationId: number,
+	sourceAudioId: string,
+	stemType: string,
+	stemUrl: string
+): Generation {
+	const stmt = prepareStmt(`
+		INSERT INTO generations (
+			project_id,
+			title,
+			style,
+			lyrics,
+			status,
+			extends_generation_id,
+			extends_audio_id,
+			continue_at,
+			extends_stem_type,
+			extends_stem_url,
+			instrumental,
+			generation_type,
+			negative_tags
+		)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, NULL, ?, ?, 0, 'add_vocals', ?)
+		RETURNING *
+	`);
+
+	const generation = stmt.get(
+		projectId,
+		title,
+		style,
+		prompt,
+		sourceGenerationId,
+		sourceAudioId,
+		stemType,
+		stemUrl,
+		negativeTags
+	) as Generation;
+
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+
+	return generation;
 }
 
 export function createAddInstrumentalGeneration(
@@ -137,6 +185,18 @@ export function getAddInstrumentalGenerations(generationId: number, audioId: str
 	return stmt.all(generationId, audioId) as Generation[];
 }
 
+export function getAddVocalsGenerations(generationId: number, audioId: string): Generation[] {
+	const stmt = prepareStmt(`
+		SELECT * FROM generations
+		WHERE extends_generation_id = ?
+		  AND extends_audio_id = ?
+		  AND generation_type = 'add_vocals'
+		ORDER BY created_at ASC
+	`);
+
+	return stmt.all(generationId, audioId) as Generation[];
+}
+
 export function createUploadInstrumentalGeneration(
 	projectId: number,
 	title: string,
@@ -164,6 +224,44 @@ export function createUploadInstrumentalGeneration(
 		projectId,
 		title,
 		tags,
+		negativeTags,
+		sourceAudioLocalUrl
+	) as Generation;
+
+	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
+
+	return generation;
+}
+
+export function createUploadVocalsGeneration(
+	projectId: number,
+	title: string,
+	style: string,
+	prompt: string,
+	negativeTags: string,
+	sourceAudioLocalUrl: string | null = null
+): Generation {
+	const stmt = prepareStmt(`
+		INSERT INTO generations (
+			project_id,
+			title,
+			style,
+			lyrics,
+			status,
+			instrumental,
+			generation_type,
+			negative_tags,
+			source_audio_local_url
+		)
+		VALUES (?, ?, ?, ?, 'pending', 0, 'upload_vocals', ?, ?)
+		RETURNING *
+	`);
+
+	const generation = stmt.get(
+		projectId,
+		title,
+		style,
+		prompt,
 		negativeTags,
 		sourceAudioLocalUrl
 	) as Generation;

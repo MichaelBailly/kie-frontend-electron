@@ -18,6 +18,7 @@ export {
 	createErrorGeneration,
 	createExtendGeneration,
 	createAddInstrumentalGeneration,
+	createAddVocalsGeneration,
 	createStemSeparation,
 	createCompletedStemSeparation,
 	createAnnotation,

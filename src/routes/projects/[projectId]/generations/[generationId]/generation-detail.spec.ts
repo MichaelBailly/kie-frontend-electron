@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
 	createCompletedGeneration,
 	createAddInstrumentalGeneration,
+	createAddVocalsGeneration,
 	createExtendGeneration,
 	createProject
 } from '$lib/test-utils';
@@ -292,5 +293,66 @@ describe('retryExtension — add_instrumental generation', () => {
 
 		expect(result.retryExtension!.defaults.tags).toBe('cinematic');
 		expect(result.retryExtension!.defaults.negativeTags).toBe('drums,bass');
+	});
+});
+
+describe('retryExtension — add_vocals generation', () => {
+	it('has canRetry true when stem URL and type are present', async () => {
+		const parent = createCompletedGeneration({
+			id: 10,
+			project_id: 1,
+			track1_audio_id: 'parent-audio-1',
+			track1_duration: 60
+		});
+		const gen = createAddVocalsGeneration({
+			project_id: 1,
+			extends_generation_id: parent.id,
+			extends_audio_id: parent.track1_audio_id!,
+			extends_stem_type: 'instrumental',
+			extends_stem_url: 'https://example.com/stems/instrumental.mp3'
+		});
+		const result = await callLoad(gen, parent);
+
+		expect(result.retryExtension!.canRetry).toBe(true);
+		expect(result.retryExtension!.reason).toBeNull();
+	});
+
+	it('does NOT block retry when source track duration is missing', async () => {
+		const parent = createCompletedGeneration({
+			id: 10,
+			project_id: 1,
+			track1_audio_id: 'parent-audio-1',
+			track1_duration: null
+		});
+		const gen = createAddVocalsGeneration({
+			project_id: 1,
+			extends_generation_id: parent.id,
+			extends_audio_id: parent.track1_audio_id!,
+			extends_stem_type: 'instrumental',
+			extends_stem_url: 'https://example.com/stems/instrumental.mp3'
+		});
+		const result = await callLoad(gen, parent);
+
+		expect(result.retryExtension!.canRetry).toBe(true);
+	});
+
+	it('has canRetry false when stem URL is missing', async () => {
+		const parent = createCompletedGeneration({
+			id: 10,
+			project_id: 1,
+			track1_audio_id: 'parent-audio-1',
+			track1_duration: 180
+		});
+		const gen = createAddVocalsGeneration({
+			project_id: 1,
+			extends_generation_id: parent.id,
+			extends_audio_id: parent.track1_audio_id!,
+			extends_stem_type: 'instrumental',
+			extends_stem_url: null
+		});
+		const result = await callLoad(gen, parent);
+
+		expect(result.retryExtension!.canRetry).toBe(false);
+		expect(result.retryExtension!.reason).toContain('stem URL or type');
 	});
 });

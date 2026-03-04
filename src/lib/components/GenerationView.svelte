@@ -29,12 +29,19 @@
 		if (generation.generation_type === 'add_instrumental') {
 			return `Instrumental from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
+		if (generation.generation_type === 'add_vocals') {
+			return `Vocals from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
 
 	const isInstrumentalGeneration = $derived(
 		generation.generation_type === 'add_instrumental' ||
 			generation.generation_type === 'upload_instrumental'
+	);
+
+	const isAddVocalsGeneration = $derived(
+		generation.generation_type === 'add_vocals' || generation.generation_type === 'upload_vocals'
 	);
 </script>
 
@@ -69,7 +76,9 @@
 					>
 						{generation.generation_type === 'add_instrumental'
 							? 'Retry instrumental creation'
-							: "Retry song's extension"}
+							: generation.generation_type === 'add_vocals'
+								? 'Retry vocals creation'
+								: "Retry song's extension"}
 					</span>
 				</button>
 			{/if}
@@ -269,7 +278,7 @@
 				</ReadonlyMetadataField>
 			{/if}
 
-			{#if generation.generation_type === 'upload_instrumental' && generation.source_audio_local_url}
+			{#if (generation.generation_type === 'upload_instrumental' || generation.generation_type === 'upload_vocals') && generation.source_audio_local_url}
 				<div class="overflow-hidden rounded-xl border border-teal-200/80 dark:border-teal-800/50">
 					<div class="h-1 bg-linear-to-r from-teal-500 via-emerald-500 to-cyan-500"></div>
 					<div class="bg-teal-50/70 p-4 dark:bg-teal-950/20">
@@ -282,7 +291,7 @@
 						</div>
 						<AudioPlayer
 							src={generation.source_audio_local_url}
-							title={`${generation.title} (Source Upload)`}
+							title={`${generation.title} (${isAddVocalsGeneration ? 'Vocal' : 'Instrumental'} Source Upload)`}
 							imageUrl={generation.track1_image_local_url || generation.track1_image_url || ''}
 							duration={0}
 							continueAt={null}

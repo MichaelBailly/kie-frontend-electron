@@ -26,8 +26,11 @@ export interface DbMock {
 	createGeneration: MockFn;
 	createExtendGeneration: MockFn;
 	createAddInstrumentalGeneration: MockFn;
+	createAddVocalsGeneration: MockFn;
+	createUploadVocalsGeneration: MockFn;
 	getExtendedGenerations: MockFn;
 	getAddInstrumentalGenerations: MockFn;
+	getAddVocalsGenerations: MockFn;
 	getGeneration: MockFn;
 	getGenerationByTaskId: MockFn;
 	getGenerationsByProject: MockFn;
@@ -151,12 +154,16 @@ export function createDbMock(): DbMock {
 		createGeneration: vi.fn(),
 		createExtendGeneration: vi.fn(),
 		createAddInstrumentalGeneration: vi.fn(),
+		createAddVocalsGeneration: vi.fn(),
+		createUploadVocalsGeneration: vi.fn(),
 		getExtendedGenerations: vi.fn((generationId: number, audioId: string) =>
 			generations.filter(
 				(generation) =>
 					generation.extends_generation_id === generationId &&
 					generation.extends_audio_id === audioId &&
-					generation.generation_type !== 'add_instrumental'
+					!['add_instrumental', 'upload_instrumental', 'add_vocals', 'upload_vocals'].includes(
+						generation.generation_type
+					)
 			)
 		),
 		getAddInstrumentalGenerations: vi.fn((generationId: number, audioId: string) =>
@@ -164,7 +171,15 @@ export function createDbMock(): DbMock {
 				(generation) =>
 					generation.extends_generation_id === generationId &&
 					generation.extends_audio_id === audioId &&
-					generation.generation_type === 'add_instrumental'
+					['add_instrumental', 'upload_instrumental'].includes(generation.generation_type)
+			)
+		),
+		getAddVocalsGenerations: vi.fn((generationId: number, audioId: string) =>
+			generations.filter(
+				(generation) =>
+					generation.extends_generation_id === generationId &&
+					generation.extends_audio_id === audioId &&
+					generation.generation_type === 'add_vocals'
 			)
 		),
 		getGeneration: vi.fn((id: number) => generations.find((generation) => generation.id === id)),

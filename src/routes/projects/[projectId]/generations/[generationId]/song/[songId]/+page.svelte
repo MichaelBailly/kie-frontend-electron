@@ -4,11 +4,13 @@
 	import SaveStyleModal from '$lib/components/SaveStyleModal.svelte';
 	import SongExtendSection from '$lib/components/SongExtendSection.svelte';
 	import AddInstrumentalSection from '$lib/components/AddInstrumentalSection.svelte';
+	import AddVocalsSection from '$lib/components/AddVocalsSection.svelte';
 	import StemSeparationResults from '$lib/components/StemSeparationResults.svelte';
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
 	import Waveform from '$lib/components/Waveform.svelte';
 	import ExtendedGenerationsList from '$lib/components/ExtendedGenerationsList.svelte';
 	import AddInstrumentalGenerationsList from '$lib/components/AddInstrumentalGenerationsList.svelte';
+	import AddVocalsGenerationsList from '$lib/components/AddVocalsGenerationsList.svelte';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { useSongGenerationState } from '$lib/routes/song/useSongGenerationState.svelte';
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
@@ -68,19 +70,19 @@
 	const hasAddInstrumentalGenerations = $derived(
 		(data.addInstrumentalGenerations ?? []).length > 0
 	);
+	const hasAddVocalsGenerations = $derived((data.addVocalsGenerations ?? []).length > 0);
 	const isAddInstrumental = $derived(
 		generationState.generation.generation_type === 'add_instrumental' ||
 			generationState.generation.generation_type === 'upload_instrumental'
 	);
 	const hasLyrics = $derived(!!generationState.generation.lyrics && !isAddInstrumental);
-	const hasNegativeTags = $derived(
-		isAddInstrumental && !!generationState.generation.negative_tags?.trim()
-	);
+	const hasNegativeTags = $derived(!!generationState.generation.negative_tags?.trim());
 
 	// Collapsed states for cards
 	let stemsCollapsed = $state(false);
 	let extensionsCollapsed = $state(false);
 	let addInstrumentalCollapsed = $state(false);
+	let addVocalsCollapsed = $state(false);
 
 	let styleCopied = $state(false);
 	let lyricsCopied = $state(false);
@@ -157,6 +159,9 @@
 		if (generationState.generation.generation_type === 'add_instrumental') {
 			return `Instrumental added from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
+		if (generationState.generation.generation_type === 'add_vocals') {
+			return `Vocals added from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
+		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
 
@@ -169,6 +174,13 @@
 
 	function handleAddInstrumental(stemType: string, stemUrl: string) {
 		generationState.openAddInstrumentalForm(stemType, stemUrl);
+		setTimeout(() => {
+			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}, 0);
+	}
+
+	function handleAddVocals(stemType: string, stemUrl: string) {
+		generationState.openAddVocalsForm(stemType, stemUrl);
 		setTimeout(() => {
 			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 		}, 0);
@@ -432,6 +444,15 @@
 					stemUrl={generationState.addInstrumentalStemUrl}
 					onSubmit={generationState.handleAddInstrumental}
 					onCancel={generationState.closeAddInstrumentalForm}
+				/>
+				<AddVocalsSection
+					show={generationState.showAddVocalsForm}
+					generation={generationState.generation}
+					song={generationState.song}
+					stemType={generationState.addVocalsStemType}
+					stemUrl={generationState.addVocalsStemUrl}
+					onSubmit={generationState.handleAddVocals}
+					onCancel={generationState.closeAddVocalsForm}
 				/>
 			</div>
 
@@ -858,7 +879,58 @@
 									imageUrl={generationState.song.imageUrl}
 									onExtendStem={handleExtendStem}
 									onAddInstrumental={handleAddInstrumental}
+									onAddVocals={handleAddVocals}
 								/>
+							</div>
+						{/if}
+					</div>
+				{/if}
+
+				{#if hasAddVocalsGenerations}
+					<div
+						class="overflow-hidden rounded-2xl border border-violet-200/80 bg-linear-to-br from-violet-50 to-white p-5 shadow-sm dark:border-violet-800/50 dark:from-violet-950/30 dark:to-gray-900"
+					>
+						<button
+							onclick={() => (addVocalsCollapsed = !addVocalsCollapsed)}
+							class="flex w-full cursor-pointer items-center justify-between"
+						>
+							<h3
+								class="flex items-center gap-2 text-sm font-semibold text-violet-900 dark:text-violet-100"
+							>
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 18.5c4.142 0 7.5-3.134 7.5-7s-3.358-7-7.5-7-7.5 3.134-7.5 7 3.358 7 7.5 7zM12 18.5v3"
+									/>
+								</svg>
+								Vocal Versions
+								<span
+									class="rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:bg-violet-900/50 dark:text-violet-300"
+								>
+									{(data.addVocalsGenerations ?? []).length}
+								</span>
+							</h3>
+							<svg
+								class="h-4 w-4 text-violet-400 transition-transform {addVocalsCollapsed
+									? ''
+									: 'rotate-180'}"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 9l-7 7-7-7"
+								/>
+							</svg>
+						</button>
+						{#if !addVocalsCollapsed}
+							<div class="mt-4">
+								<AddVocalsGenerationsList generations={data.addVocalsGenerations ?? []} />
 							</div>
 						{/if}
 					</div>

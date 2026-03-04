@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import ImportSongModal from '$lib/components/ImportSongModal.svelte';
 	import UploadInstrumentalModal from '$lib/components/UploadInstrumentalModal.svelte';
+	import UploadVocalsModal from '$lib/components/UploadVocalsModal.svelte';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
 	import { formatDate, getTimeAgo } from '$lib/utils/format';
 
@@ -25,6 +26,7 @@
 	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let showImportModal = $state(false);
 	let showUploadInstrumentalModal = $state(false);
+	let showUploadVocalsModal = $state(false);
 	let isCreating = $state(false);
 
 	// Filtered and sorted projects
@@ -182,6 +184,20 @@
 							/>
 						</svg>
 					</a>
+					<button
+						onclick={() => (showUploadVocalsModal = true)}
+						class="flex items-center gap-2 rounded-xl border border-violet-400/30 bg-violet-500/10 px-5 py-2.5 text-sm font-medium text-violet-200 backdrop-blur-sm transition-all hover:border-violet-400/50 hover:bg-violet-500/20"
+					>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 18.5c4.142 0 7.5-3.134 7.5-7s-3.358-7-7.5-7-7.5 3.134-7.5 7 3.358 7 7.5 7zM12 18.5v3"
+							/>
+						</svg>
+						Upload Vocals
+					</button>
 					<button
 						onclick={() => (showUploadInstrumentalModal = true)}
 						class="flex items-center gap-2 rounded-xl border border-teal-400/30 bg-teal-500/10 px-5 py-2.5 text-sm font-medium text-teal-200 backdrop-blur-sm transition-all hover:border-teal-400/50 hover:bg-teal-500/20"
@@ -520,4 +536,10 @@
 <UploadInstrumentalModal
 	bind:isOpen={showUploadInstrumentalModal}
 	onClose={() => (showUploadInstrumentalModal = false)}
+/>
+
+<!-- Upload Vocals Modal -->
+<UploadVocalsModal
+	bind:isOpen={showUploadVocalsModal}
+	onClose={() => (showUploadVocalsModal = false)}
 />

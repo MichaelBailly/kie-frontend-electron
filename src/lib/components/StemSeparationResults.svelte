@@ -11,7 +11,8 @@
 		songTitle = '',
 		imageUrl = null,
 		onExtendStem,
-		onAddInstrumental
+		onAddInstrumental,
+		onAddVocals
 	}: {
 		vocalSeparation: StemSeparation | undefined;
 		stemSeparation: StemSeparation | undefined;
@@ -22,6 +23,7 @@
 		imageUrl?: string | null;
 		onExtendStem?: (stemType: string, stemUrl: string) => void;
 		onAddInstrumental?: (stemType: string, stemUrl: string) => void;
+		onAddVocals?: (stemType: string, stemUrl: string) => void;
 	} = $props();
 </script>
 
@@ -42,6 +44,7 @@
 					{imageUrl}
 					{onExtendStem}
 					{onAddInstrumental}
+					{onAddVocals}
 				/>
 			</div>
 		{:else if pendingVocalSeparation}
@@ -83,6 +86,7 @@
 					{imageUrl}
 					{onExtendStem}
 					{onAddInstrumental}
+					{onAddVocals}
 				/>
 			</div>
 		{:else if pendingStemSeparation}

@@ -123,6 +123,22 @@ export function createAddInstrumentalGeneration(overrides: Partial<Generation> =
 	});
 }
 
+export function createAddVocalsGeneration(overrides: Partial<Generation> = {}): Generation {
+	const id = overrides.id ?? nextGenerationFixtureId();
+	return createGeneration({
+		id,
+		generation_type: 'add_vocals',
+		instrumental: 0,
+		lyrics: '[Verse] New topline',
+		extends_generation_id: 1,
+		extends_audio_id: 'audio-1-1',
+		extends_stem_type: 'instrumental',
+		extends_stem_url: 'https://example.com/stems/instrumental.mp3',
+		negative_tags: '',
+		...overrides
+	});
+}
+
 export function createStemSeparation(overrides: Partial<StemSeparation> = {}): StemSeparation {
 	const id = overrides.id ?? nextStemSeparationFixtureId();
 	return {

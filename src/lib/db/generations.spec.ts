@@ -14,8 +14,11 @@ import {
 	createGeneration,
 	createExtendGeneration,
 	createAddInstrumentalGeneration,
+	createAddVocalsGeneration,
+	createUploadVocalsGeneration,
 	getExtendedGenerations,
 	getAddInstrumentalGenerations,
+	getAddVocalsGenerations,
 	getGeneration,
 	getGenerationByTaskId,
 	getGenerationsByProject,
@@ -163,6 +166,34 @@ describe('Generations repository', () => {
 		});
 	});
 
+	describe('createAddVocalsGeneration', () => {
+		it('creates add-vocals generation with lineage fields populated', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const created = createAddVocalsGeneration(
+				projectId,
+				'Parent — Vocals',
+				'synth pop',
+				'[Verse] Neon lights',
+				'growl',
+				parent.id,
+				'audio-123',
+				'instrumental',
+				'https://example.com/stems/instrumental.mp3'
+			);
+
+			expect(created.generation_type).toBe('add_vocals');
+			expect(created.instrumental).toBe(0);
+			expect(created.style).toBe('synth pop');
+			expect(created.lyrics).toBe('[Verse] Neon lights');
+			expect(created.negative_tags).toBe('growl');
+			expect(created.continue_at).toBeNull();
+			expect(created.extends_generation_id).toBe(parent.id);
+			expect(created.extends_audio_id).toBe('audio-123');
+			expect(created.extends_stem_type).toBe('instrumental');
+			expect(created.extends_stem_url).toBe('https://example.com/stems/instrumental.mp3');
+		});
+	});
+
 	describe('getGeneration', () => {
 		it('returns a generation by id', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
@@ -265,6 +296,26 @@ describe('Generations repository', () => {
 			expect(exts).toHaveLength(1);
 			expect(exts[0].title).toBe('Ext1');
 		});
+
+		it('excludes add-vocals generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'l');
+			createExtendGeneration(projectId, 'Ext1', 'pop', 'l', parent.id, 'audio-1', 60);
+			createAddVocalsGeneration(
+				projectId,
+				'Vox1',
+				'synth pop',
+				'lyrics',
+				'',
+				parent.id,
+				'audio-1',
+				'instrumental',
+				'https://example.com/stems/instrumental.mp3'
+			);
+
+			const exts = getExtendedGenerations(parent.id, 'audio-1');
+			expect(exts).toHaveLength(1);
+			expect(exts[0].title).toBe('Ext1');
+		});
 	});
 
 	describe('getAddInstrumentalGenerations', () => {
@@ -296,6 +347,58 @@ describe('Generations repository', () => {
 			expect(rows).toHaveLength(1);
 			expect(rows[0].title).toBe('Instr1');
 			expect(rows[0].generation_type).toBe('add_instrumental');
+		});
+	});
+
+	describe('getAddVocalsGenerations', () => {
+		it('returns only add-vocals children for source song', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			createAddVocalsGeneration(
+				projectId,
+				'Vox1',
+				'synth pop',
+				'[Verse] 1',
+				'',
+				parent.id,
+				'audio-1',
+				'instrumental',
+				'https://example.com/stems/instrumental.mp3'
+			);
+			createAddVocalsGeneration(
+				projectId,
+				'Vox2',
+				'synth pop',
+				'[Verse] 2',
+				'',
+				parent.id,
+				'audio-2',
+				'instrumental',
+				'https://example.com/stems/instrumental.mp3'
+			);
+			createExtendGeneration(projectId, 'Ext1', 'pop', 'lyrics', parent.id, 'audio-1', 90);
+
+			const rows = getAddVocalsGenerations(parent.id, 'audio-1');
+			expect(rows).toHaveLength(1);
+			expect(rows[0].title).toBe('Vox1');
+			expect(rows[0].generation_type).toBe('add_vocals');
+		});
+	});
+
+	describe('createUploadVocalsGeneration', () => {
+		it('creates upload-vocals generation with prompt and style', () => {
+			const created = createUploadVocalsGeneration(
+				projectId,
+				'Uploaded Vocal Song',
+				'synthwave pop',
+				'[Verse] We ride the midnight tide',
+				'growl'
+			);
+
+			expect(created.generation_type).toBe('upload_vocals');
+			expect(created.instrumental).toBe(0);
+			expect(created.style).toBe('synthwave pop');
+			expect(created.lyrics).toBe('[Verse] We ride the midnight tide');
+			expect(created.negative_tags).toBe('growl');
 		});
 	});
 

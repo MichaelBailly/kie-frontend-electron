@@ -4,6 +4,7 @@
 	import GenerationView from '$lib/components/GenerationView.svelte';
 	import RetryExtendModal from '$lib/components/RetryExtendModal.svelte';
 	import RetryAddInstrumentalModal from '$lib/components/RetryAddInstrumentalModal.svelte';
+	import RetryAddVocalsModal from '$lib/components/RetryAddVocalsModal.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { getContext } from 'svelte';
@@ -34,6 +35,9 @@
 	const isAddInstrumental = $derived(
 		generation.generation_type === 'add_instrumental' ||
 			generation.generation_type === 'upload_instrumental'
+	);
+	const isAddVocals = $derived(
+		generation.generation_type === 'add_vocals' || generation.generation_type === 'upload_vocals'
 	);
 	const retrySourceSong = $derived(data.retryExtension?.sourceSong ?? null);
 	const retryDisabledReason = $derived(
@@ -137,6 +141,53 @@
 			})
 		);
 	}
+
+	async function handleRetryAddVocals(retryData: {
+		title: string;
+		prompt: string;
+		style: string;
+		negativeTags: string;
+	}) {
+		if (
+			!data.retryExtension?.extendsGenerationId ||
+			!data.retryExtension.extendsAudioId ||
+			!data.retryExtension.stemUrl ||
+			!data.retryExtension.stemType
+		) {
+			return;
+		}
+
+		const response = await fetch('/api/generations/add-vocals', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				projectId: generation.project_id,
+				title: retryData.title,
+				prompt: retryData.prompt,
+				style: retryData.style,
+				negativeTags: retryData.negativeTags,
+				sourceGenerationId: data.retryExtension.extendsGenerationId,
+				sourceAudioId: data.retryExtension.extendsAudioId,
+				stemType: data.retryExtension.stemType,
+				stemUrl: data.retryExtension.stemUrl
+			})
+		});
+
+		if (!response.ok) {
+			console.error('Failed to create retry add-vocals generation');
+			return;
+		}
+
+		const newGeneration = await response.json();
+		showRetryModal = false;
+
+		goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
 </script>
 
 <GenerationView
@@ -158,7 +209,17 @@
 			stemUrl={data.retryExtension.stemUrl}
 			onRetry={handleRetryAddInstrumental}
 		/>
-	{:else if !isAddInstrumental}
+	{:else if isAddVocals && data.retryExtension.stemUrl && data.retryExtension.stemType}
+		<RetryAddVocalsModal
+			bind:isOpen={showRetryModal}
+			onClose={closeRetryModal}
+			{generation}
+			sourceSong={retrySourceSong}
+			stemType={data.retryExtension.stemType}
+			stemUrl={data.retryExtension.stemUrl}
+			onRetry={handleRetryAddVocals}
+		/>
+	{:else if !isAddInstrumental && !isAddVocals}
 		<RetryExtendModal
 			bind:isOpen={showRetryModal}
 			onClose={closeRetryModal}

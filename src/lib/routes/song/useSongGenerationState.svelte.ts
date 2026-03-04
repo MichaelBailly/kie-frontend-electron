@@ -42,6 +42,13 @@ type AddInstrumentalData = {
 	negativeTags: string;
 };
 
+type AddVocalsData = {
+	title: string;
+	prompt: string;
+	style: string;
+	negativeTags: string;
+};
+
 export function useSongGenerationState(options: {
 	getData: () => SongPageStateData;
 	activeProjectContext: ActiveProjectContext | undefined;
@@ -55,6 +62,9 @@ export function useSongGenerationState(options: {
 	let showAddInstrumentalForm = $state(false);
 	let addInstrumentalStemType = $state<string | null>(null);
 	let addInstrumentalStemUrl = $state<string | null>(null);
+	let showAddVocalsForm = $state(false);
+	let addVocalsStemType = $state<string | null>(null);
+	let addVocalsStemUrl = $state<string | null>(null);
 	let starredOverride = $state<boolean | null>(null);
 	let starAnimClass = $state('');
 
@@ -138,6 +148,9 @@ export function useSongGenerationState(options: {
 		showAddInstrumentalForm = false;
 		addInstrumentalStemType = null;
 		addInstrumentalStemUrl = null;
+		showAddVocalsForm = false;
+		addVocalsStemType = null;
+		addVocalsStemUrl = null;
 		extendingStemType = null;
 		extendingStemUrl = null;
 		showExtendForm = !showExtendForm;
@@ -153,6 +166,9 @@ export function useSongGenerationState(options: {
 		showAddInstrumentalForm = false;
 		addInstrumentalStemType = null;
 		addInstrumentalStemUrl = null;
+		showAddVocalsForm = false;
+		addVocalsStemType = null;
+		addVocalsStemUrl = null;
 		extendingStemType = stemType;
 		extendingStemUrl = stemUrl;
 		showExtendForm = true;
@@ -168,9 +184,30 @@ export function useSongGenerationState(options: {
 		showExtendForm = false;
 		extendingStemType = null;
 		extendingStemUrl = null;
+		showAddVocalsForm = false;
+		addVocalsStemType = null;
+		addVocalsStemUrl = null;
 		addInstrumentalStemType = stemType;
 		addInstrumentalStemUrl = stemUrl;
 		showAddInstrumentalForm = true;
+	}
+
+	function closeAddVocalsForm() {
+		showAddVocalsForm = false;
+		addVocalsStemType = null;
+		addVocalsStemUrl = null;
+	}
+
+	function openAddVocalsForm(stemType: string, stemUrl: string) {
+		showExtendForm = false;
+		extendingStemType = null;
+		extendingStemUrl = null;
+		showAddInstrumentalForm = false;
+		addInstrumentalStemType = null;
+		addInstrumentalStemUrl = null;
+		addVocalsStemType = stemType;
+		addVocalsStemUrl = stemUrl;
+		showAddVocalsForm = true;
 	}
 
 	async function handleExtend(extendData: ExtendData) {
@@ -248,6 +285,46 @@ export function useSongGenerationState(options: {
 		);
 	}
 
+	async function handleAddVocals(data: AddVocalsData) {
+		if (!addVocalsStemType || !addVocalsStemUrl) {
+			console.error('No stem selected for add vocals');
+			return;
+		}
+
+		const response = await fetch('/api/generations/add-vocals', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				projectId: generation.project_id,
+				sourceGenerationId: generation.id,
+				sourceAudioId: song.id,
+				stemType: addVocalsStemType,
+				stemUrl: addVocalsStemUrl,
+				title: data.title,
+				prompt: data.prompt,
+				style: data.style,
+				negativeTags: data.negativeTags
+			})
+		});
+
+		if (!response.ok) {
+			console.error('Failed to create add vocals generation');
+			return;
+		}
+
+		const newGeneration = await response.json();
+		showAddVocalsForm = false;
+		addVocalsStemType = null;
+		addVocalsStemUrl = null;
+
+		goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
+
 	return {
 		get generation() {
 			return generation;
@@ -267,6 +344,9 @@ export function useSongGenerationState(options: {
 		get showAddInstrumentalForm() {
 			return showAddInstrumentalForm;
 		},
+		get showAddVocalsForm() {
+			return showAddVocalsForm;
+		},
 		get extendingStemType() {
 			return extendingStemType;
 		},
@@ -279,6 +359,12 @@ export function useSongGenerationState(options: {
 		get addInstrumentalStemUrl() {
 			return addInstrumentalStemUrl;
 		},
+		get addVocalsStemType() {
+			return addVocalsStemType;
+		},
+		get addVocalsStemUrl() {
+			return addVocalsStemUrl;
+		},
 		get starred() {
 			return starred;
 		},
@@ -290,8 +376,11 @@ export function useSongGenerationState(options: {
 		openStemExtendForm,
 		openAddInstrumentalForm,
 		closeAddInstrumentalForm,
+		openAddVocalsForm,
+		closeAddVocalsForm,
 		handleToggleStar,
 		handleExtend,
-		handleAddInstrumental
+		handleAddInstrumental,
+		handleAddVocals
 	};
 }

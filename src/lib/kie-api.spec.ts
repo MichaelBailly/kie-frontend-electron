@@ -193,4 +193,27 @@ describe('kie-api.server', () => {
 			expect.objectContaining({ method: 'POST' })
 		);
 	});
+
+	it('calls add-vocals endpoint', async () => {
+		const { addVocals } = await import('./kie-api.server');
+		const fetchMock = global.fetch as unknown as ReturnType<typeof vi.fn>;
+		fetchMock.mockResolvedValue(
+			createOkResponse({ code: 200, msg: 'success', data: { taskId: 't-vocals' } })
+		);
+
+		await addVocals({
+			uploadUrl: 'https://example.com/stems/instrumental.mp3',
+			title: 'Vocal Version',
+			prompt: '[Verse] Midnight lights',
+			style: 'synth pop',
+			negativeTags: 'screamo',
+			model: 'V5',
+			callBackUrl: 'https://example.com/callback'
+		});
+
+		expect(fetchMock).toHaveBeenCalledWith(
+			'https://api.kie.ai/api/v1/generate/add-vocals',
+			expect.objectContaining({ method: 'POST' })
+		);
+	});
 });
