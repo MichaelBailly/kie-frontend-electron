@@ -9,8 +9,8 @@ export function useSSEConnection(options: {
 }) {
 	const reconnectDelayMs = options.reconnectDelayMs ?? 3000;
 
-	let eventSource = $state<EventSource | null>(null);
-	let reconnectTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
+	let eventSource: EventSource | null = null;
+	let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	function clearReconnectTimeout() {
 		if (reconnectTimeout) {
