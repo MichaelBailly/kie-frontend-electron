@@ -356,3 +356,38 @@ describe('retryExtension — add_vocals generation', () => {
 		expect(result.retryExtension!.reason).toContain('stem URL or type');
 	});
 });
+
+// ============================================================================
+// Retry generate — base generate type
+// ============================================================================
+
+describe('retryExtension — generate generation', () => {
+	it('is null for a base generate generation (no parent)', async () => {
+		const gen = createCompletedGeneration({ project_id: 1, generation_type: 'generate' });
+		const result = await callLoad(gen);
+
+		expect(result.retryExtension).toBeNull();
+	});
+
+	it('retryUpload is null for a base generate generation', async () => {
+		const gen = createCompletedGeneration({ project_id: 1, generation_type: 'generate' });
+		const result = (await callLoad(gen)) as typeof result & { retryUpload: unknown };
+
+		expect((result as { retryUpload: unknown }).retryUpload).toBeNull();
+	});
+
+	it('generation is returned with correct title, style and lyrics', async () => {
+		const gen = createCompletedGeneration({
+			project_id: 1,
+			generation_type: 'generate',
+			title: 'Midnight Echoes',
+			style: 'synthwave, dark',
+			lyrics: '[Verse]\nCity of neon dreams'
+		});
+		const result = await callLoad(gen);
+
+		expect(result.generation.title).toBe('Midnight Echoes');
+		expect(result.generation.style).toBe('synthwave, dark');
+		expect(result.generation.lyrics).toBe('[Verse]\nCity of neon dreams');
+	});
+});

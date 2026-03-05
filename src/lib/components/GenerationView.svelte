@@ -18,6 +18,7 @@
 		generation,
 		parentGeneration = null,
 		parentSong = null,
+		onRetryGenerate = null,
 		onRetryExtension = null,
 		retryDisabledReason = null,
 		onRetryUpload = null,
@@ -26,6 +27,7 @@
 		generation: Generation;
 		parentGeneration?: { id: number } | null;
 		parentSong?: { id: string; title: string } | null;
+		onRetryGenerate?: (() => void) | null;
 		onRetryExtension?: (() => void) | null;
 		retryDisabledReason?: string | null;
 		onRetryUpload?: (() => void) | null;
@@ -77,6 +79,32 @@
 	<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
 		<h2 class="flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
 			{generation.title}
+			{#if onRetryGenerate && isGenerationTypeOneOf(generation.generation_type, ['generate'])}
+				<button
+					type="button"
+					onclick={onRetryGenerate}
+					class="group inline-flex items-center justify-center overflow-hidden rounded-full bg-gray-100/50 p-1.5 text-sm font-medium whitespace-nowrap text-gray-500 transition-all duration-300 hover:cursor-pointer hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-800/50 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+				>
+					<svg
+						class="h-5 w-5 shrink-0"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							d="M4 4v5h.582m14.836 2A8.001 8.001 0 005.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-13.837-2m13.837 2H15"
+						/>
+					</svg>
+					<span
+						class="max-w-0 pr-0 opacity-0 transition-all duration-300 group-hover:max-w-xs group-hover:px-1.5 group-hover:opacity-100"
+					>
+						Retry generation
+					</span>
+				</button>
+			{/if}
 			{#if onRetryExtension && generation.extends_generation_id}
 				<button
 					type="button"

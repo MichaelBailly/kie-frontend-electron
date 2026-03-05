@@ -64,3 +64,43 @@ describe('GenerationView', () => {
 		expect(body).not.toContain('Variation 2');
 	});
 });
+
+describe('GenerationView — retry generate button', () => {
+	it('renders "Retry generation" button when onRetryGenerate is provided for a generate-type generation', () => {
+		const generation = createGeneration({ generation_type: 'generate' });
+		const { body } = render(GenerationView, {
+			props: { generation, onRetryGenerate: () => {} }
+		});
+
+		expect(body).toContain('Retry generation');
+	});
+
+	it('does NOT render "Retry generation" button when onRetryGenerate is null', () => {
+		const generation = createGeneration({ generation_type: 'generate' });
+		const { body } = render(GenerationView, {
+			props: { generation, onRetryGenerate: null }
+		});
+
+		expect(body).not.toContain('Retry generation');
+	});
+
+	it('does NOT render "Retry generation" button for extend-type generation even if onRetryGenerate is provided', () => {
+		const generation = createGeneration({
+			generation_type: 'extend',
+			extends_generation_id: 1,
+			extends_audio_id: 'audio-1-1'
+		});
+		const { body } = render(GenerationView, {
+			props: { generation, onRetryGenerate: () => {} }
+		});
+
+		expect(body).not.toContain('Retry generation');
+	});
+
+	it('does NOT render "Retry generation" button by default (no onRetryGenerate prop)', () => {
+		const generation = createGeneration({ generation_type: 'generate' });
+		const { body } = render(GenerationView, { props: { generation } });
+
+		expect(body).not.toContain('Retry generation');
+	});
+});

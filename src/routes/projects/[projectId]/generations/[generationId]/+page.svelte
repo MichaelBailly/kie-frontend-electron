@@ -284,12 +284,31 @@
 			})
 		);
 	}
+
+	function handleRetryGenerate() {
+		// Pre-fill the generation form with the current generation's data by
+		// writing to sessionStorage before navigating back to the project page.
+		const storageKey = `generation-form-${generation.project_id}`;
+		sessionStorage.setItem(
+			storageKey,
+			JSON.stringify({
+				title: generation.title,
+				style: generation.style,
+				lyrics: generation.lyrics,
+				instrumental: !!generation.instrumental
+			})
+		);
+		goto(resolve('/projects/[projectId]', { projectId: String(generation.project_id) }));
+	}
 </script>
 
 <GenerationView
 	{generation}
 	parentGeneration={data.parentGeneration}
 	parentSong={data.parentSong}
+	onRetryGenerate={isGenerationTypeOneOf(generation.generation_type, ['generate'])
+		? handleRetryGenerate
+		: null}
 	onRetryExtension={openRetryModal}
 	{retryDisabledReason}
 	onRetryUpload={isUploadBased ? openRetryUploadModal : null}
