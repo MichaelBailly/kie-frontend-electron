@@ -11,7 +11,7 @@
 
 import { execFileSync } from 'child_process';
 import { createRequire } from 'module';
-import { existsSync, rmSync } from 'fs';
+import { existsSync, rmSync, mkdirSync, copyFileSync } from 'fs';
 import { resolve, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -23,7 +23,12 @@ const require = createRequire(import.meta.url);
 // Get Electron version from installed package
 const electronPkg = require(join(projectDir, 'node_modules/electron/package.json'));
 const electronVersion = electronPkg.version;
-console.log(`Compiling better-sqlite3 for Electron ${electronVersion}...`);
+
+const platform = process.platform;
+const arch = process.arch;
+const cacheKey = `electron-${electronVersion}-${platform}-${arch}`;
+const cacheDir = join(process.env.HOME ?? '/root', '.cache', 'kie-sqlite3-electron');
+const cachedBinary = join(cacheDir, `${cacheKey}.node`);
 
 const bsqliteDir = join(projectDir, 'node_modules/better-sqlite3');
 const nodeGyp = join(projectDir, 'node_modules/.bin/node-gyp');
@@ -34,6 +39,19 @@ if (!existsSync(nodeGyp)) {
 	console.error(`node-gyp not found at ${nodeGyp}`);
 	process.exit(1);
 }
+
+// Use cached binary if available for this exact Electron version + platform + arch
+if (existsSync(cachedBinary)) {
+	console.log(`Cache hit for ${cacheKey} — restoring binary from cache.`);
+	mkdirSync(join(bsqliteDir, 'build/Release'), { recursive: true });
+	copyFileSync(cachedBinary, binary);
+	console.log(`✔ better-sqlite3 restored from cache for Electron ${electronVersion}`);
+	process.exit(0);
+}
+
+console.log(
+	`Cache miss for ${cacheKey} — compiling better-sqlite3 for Electron ${electronVersion}...`
+);
 
 // Remove stale binary and forge-meta so nothing is cached from a previous run
 for (const f of [binary, forgeMeta]) {
@@ -72,4 +90,7 @@ try {
 	console.warn('node-gyp exited with an error but the binary was created — continuing.');
 }
 
-console.log(`✔ better-sqlite3 compiled for Electron ${electronVersion}`);
+// Store compiled binary in cache for future runs
+mkdirSync(cacheDir, { recursive: true });
+copyFileSync(binary, cachedBinary);
+console.log(`✔ better-sqlite3 compiled for Electron ${electronVersion} and saved to cache`);
