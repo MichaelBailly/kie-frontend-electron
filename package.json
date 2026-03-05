@@ -9,6 +9,7 @@
 	"scripts": {
 		"rebuild:node": "npm rebuild better-sqlite3",
 		"rebuild:electron": "node scripts/rebuild-electron.js",
+		"rebuild:e": "npm run rebuild:electron && npm run rebuild:node",
 		"dev": "npm run rebuild:node && vite dev",
 		"dev:electron": "npm run build && npm run rebuild:electron && electron .",
 		"build": "vite build",
