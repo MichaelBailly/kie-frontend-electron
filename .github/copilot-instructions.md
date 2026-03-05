@@ -23,6 +23,10 @@
 
 ## Agent Workflow
 
+Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+
+When a change adds features or modifies existing feature, add or update focused tests when necessary to cover that feature and prevent regressions.
+
 After **every** code change, always run the following commands before considering a task done — do not skip any step:
 
 1. `npm run check` — TypeScript and Svelte type checking
@@ -30,8 +34,6 @@ After **every** code change, always run the following commands before considerin
 3. `npm run test` — full unit test suite
 
 Fix any errors or failures before reporting the task as complete.
-
-When a change adds behavior or modifies existing behavior, add or update focused tests when necessary to cover that behavior and prevent regressions.
 
 ## Project Conventions
 
