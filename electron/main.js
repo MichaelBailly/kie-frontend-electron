@@ -1,8 +1,18 @@
-import { app, BrowserWindow, shell, ipcMain, Notification } from 'electron';
+import { app, BrowserWindow, shell, ipcMain, Notification, nativeImage } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import http from 'node:http';
 import net from 'node:net';
+import { promises as fs } from 'node:fs';
+import { spawn } from 'node:child_process';
+import os from 'node:os';
+
+// Set the desktop file name so that on Wayland the xdg-toplevel app_id matches
+// the embedded .desktop file (kie-frontend-electron.desktop), allowing KDE to
+// resolve the correct icon for title bar and Alt-Tab.
+// The --class switch sets both the X11 WM_CLASS and the Wayland app_id.
+app.setName('KIE Music');
+app.commandLine.appendSwitch('class', 'kie-frontend-electron');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -13,6 +23,61 @@ let server = null;
 let serverPort = null;
 
 const isDev = !app.isPackaged;
+
+// When running as an uninstalled AppImage, KDE cannot find the icon because the
+// .desktop file and icon are not registered in the system's XDG directories.
+// This function self-registers both on first launch so that KDE can look them up.
+async function registerAppImageIntegration() {
+	if (!process.env.APPIMAGE) return;
+
+	const homeDir = os.homedir();
+	const iconDir = path.join(homeDir, '.local', 'share', 'icons', 'hicolor', '256x256', 'apps');
+	const appsDir = path.join(homeDir, '.local', 'share', 'applications');
+	const iconDest = path.join(iconDir, 'kie-frontend-electron.png');
+	const desktopDest = path.join(appsDir, 'kie-frontend-electron.desktop');
+
+	// Desktop file: Wayland app_id is matched by filename (kie-frontend-electron);
+	// StartupWMClass covers the X11 / XWayland case.
+	const desktopContent = [
+		'[Desktop Entry]',
+		'Name=KIE Music',
+		`Exec="${process.env.APPIMAGE}" --no-sandbox %U`,
+		'Terminal=false',
+		'Type=Application',
+		'Icon=kie-frontend-electron',
+		'StartupWMClass=kie-frontend-electron',
+		'Comment=KIE Music - Electron App for interacting with kie.ai APIs',
+		'Categories=Audio;',
+		''
+	].join('\n');
+
+	try {
+		await fs.mkdir(iconDir, { recursive: true });
+		await fs.mkdir(appsDir, { recursive: true });
+		await fs.copyFile(getIconPath(), iconDest);
+		await fs.writeFile(desktopDest, desktopContent, 'utf8');
+		// Refresh KDE's desktop and icon databases (fire-and-forget)
+		spawn('update-desktop-database', [appsDir], { detached: true, stdio: 'ignore' }).unref();
+		spawn(
+			'gtk-update-icon-cache',
+			['-f', '-t', path.join(homeDir, '.local', 'share', 'icons', 'hicolor')],
+			{ detached: true, stdio: 'ignore' }
+		).unref();
+	} catch (err) {
+		if (isDev) console.warn('AppImage desktop integration failed:', err);
+	}
+}
+
+function getIconPath() {
+	if (isDev) {
+		return path.join(__dirname, '..', 'build-resources', 'icon.png');
+	}
+	return path.join(process.resourcesPath, 'icon.png');
+}
+
+function getIcon() {
+	return nativeImage.createFromPath(getIconPath());
+}
 
 function getResourcePath(...paths) {
 	if (isDev) {
@@ -121,10 +186,14 @@ function createWindow() {
 			nodeIntegration: false,
 			contextIsolation: true
 		},
-		icon: path.join(__dirname, '..', 'build-resources', 'icon.png'),
+		icon: getIcon(),
 		show: false,
 		backgroundColor: '#111827' // Match the app's dark theme
 	});
+
+	// Explicitly set the icon after creation — required for some Wayland compositors
+	// (e.g. KDE Plasma) to show the correct icon in the title bar and Alt-Tab switcher.
+	mainWindow.setIcon(getIcon());
 
 	// Show window when ready
 	mainWindow.once('ready-to-show', () => {
@@ -163,7 +232,7 @@ ipcMain.on('show-notification', (event, { title, options }) => {
 		const notification = new Notification({
 			title,
 			body: options?.body || '',
-			icon: options?.icon || path.join(__dirname, '..', 'build-resources', 'icon.png'),
+			icon: options?.icon || getIconPath(),
 			silent: options?.silent || false
 		});
 
@@ -183,6 +252,20 @@ ipcMain.on('show-notification', (event, { title, options }) => {
 
 // App lifecycle
 app.whenReady().then(async () => {
+	// Register icon + .desktop file for uninstalled AppImage runs so KDE (Wayland)
+	// can resolve the correct icon for window decorations and the Alt-Tab switcher.
+	registerAppImageIntegration();
+
+	// Set application icon for Linux (title bar, Alt-Tab switcher).
+	// nativeImage is used so Electron can embed it directly without relying
+	// on a .desktop file being installed in the system.
+	if (process.platform === 'linux') {
+		try {
+			app.setIcon(getIcon());
+		} catch {
+			// Non-fatal: some Wayland compositors don't support app-level icon overrides
+		}
+	}
 	try {
 		await startServer();
 		createWindow();

@@ -83,6 +83,10 @@
 			{
 				"from": "build",
 				"to": "app/build"
+			},
+			{
+				"from": "build-resources/icon.png",
+				"to": "icon.png"
 			}
 		],
 		"icon": "build-resources/icon",
