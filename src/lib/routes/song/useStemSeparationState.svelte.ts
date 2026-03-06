@@ -26,9 +26,12 @@ export function useStemSeparationState(options: {
 
 		return [
 			...serverData,
-			...newStemSeparations.filter(
-				(item) => !serverData.find((serverItem) => serverItem.id === item.id)
-			)
+			...newStemSeparations
+				.filter((item) => !serverData.find((serverItem) => serverItem.id === item.id))
+				.map((item) => {
+					const updates = stemSeparationsContext?.updates.get(item.id);
+					return updates ? { ...item, ...updates } : item;
+				})
 		];
 	});
 
