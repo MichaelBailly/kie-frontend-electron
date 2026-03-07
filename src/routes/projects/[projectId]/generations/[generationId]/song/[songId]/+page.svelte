@@ -18,7 +18,7 @@
 	import { useWavConversionState } from '$lib/routes/song/useWavConversionState.svelte';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 	import { getStemDisplay } from '$lib/utils/stems';
-	import { getContext } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { Generation, StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 
@@ -180,25 +180,31 @@
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 	});
 
-	function handleExtendStem(stemType: string, stemUrl: string) {
+	async function handleToggleExtend() {
+		const willShow = !generationState.showExtendForm;
+		generationState.toggleExtendForm();
+		if (willShow) {
+			await tick();
+			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		}
+	}
+
+	async function handleExtendStem(stemType: string, stemUrl: string) {
 		generationState.openStemExtendForm(stemType, stemUrl);
-		setTimeout(() => {
-			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}, 0);
+		await tick();
+		extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
-	function handleAddInstrumental(stemType: string, stemUrl: string) {
+	async function handleAddInstrumental(stemType: string, stemUrl: string) {
 		generationState.openAddInstrumentalForm(stemType, stemUrl);
-		setTimeout(() => {
-			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}, 0);
+		await tick();
+		extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 
-	function handleAddVocals(stemType: string, stemUrl: string) {
+	async function handleAddVocals(stemType: string, stemUrl: string) {
 		generationState.openAddVocalsForm(stemType, stemUrl);
-		setTimeout(() => {
-			extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-		}, 0);
+		await tick();
+		extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
 </script>
 
@@ -324,7 +330,7 @@
 
 			<!-- Extend -->
 			<button
-				onclick={generationState.toggleExtendForm}
+				onclick={handleToggleExtend}
 				class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-purple-50 px-3 text-xs font-medium text-purple-600 transition-colors hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50"
 			>
 				<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
