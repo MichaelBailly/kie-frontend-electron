@@ -14,10 +14,7 @@ function makeContext() {
 	};
 }
 
-function makeState(
-	initialStemSeparations: StemSeparation[],
-	context = makeContext()
-) {
+function makeState(initialStemSeparations: StemSeparation[], context = makeContext()) {
 	return {
 		state: useStemSeparationState({
 			generationId: () => 1,
@@ -88,7 +85,11 @@ describe('useStemSeparationState', () => {
 		});
 
 		it('vocalSeparation is populated when new separation SSE completes', async () => {
-			const newSeparation = createStemSeparation({ id: 101, status: 'pending', type: 'separate_vocal' });
+			const newSeparation = createStemSeparation({
+				id: 101,
+				status: 'pending',
+				type: 'separate_vocal'
+			});
 			const fetchMock = vi
 				.fn()
 				.mockResolvedValue({ ok: true, json: async () => newSeparation } as Response);

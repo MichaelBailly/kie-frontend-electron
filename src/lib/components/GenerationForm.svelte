@@ -123,21 +123,12 @@ The catchy part..."
 		<button
 			type="submit"
 			form="generation-form"
-			disabled={isSubmitting ||
-				!title.trim() ||
-				!style.trim() ||
-				(!instrumental && !lyrics.trim())}
+			disabled={isSubmitting || !title.trim() || !style.trim() || (!instrumental && !lyrics.trim())}
 			class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 		>
 			{#if isSubmitting}
 				<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-					<circle
-						class="opacity-25"
-						cx="12"
-						cy="12"
-						r="10"
-						stroke="currentColor"
-						stroke-width="4"
+					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
 					></circle>
 					<path
 						class="opacity-75"

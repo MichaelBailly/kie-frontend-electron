@@ -44,6 +44,10 @@ interface LoadResult {
 	} | null;
 }
 
+type LoadResultWithRetryUpload = LoadResult & {
+	retryUpload: unknown;
+};
+
 function makeParams(generationId: number) {
 	return { generationId: String(generationId), projectId: '1' };
 }
@@ -371,9 +375,9 @@ describe('retryExtension — generate generation', () => {
 
 	it('retryUpload is null for a base generate generation', async () => {
 		const gen = createCompletedGeneration({ project_id: 1, generation_type: 'generate' });
-		const result = (await callLoad(gen)) as typeof result & { retryUpload: unknown };
+		const result = (await callLoad(gen)) as LoadResultWithRetryUpload;
 
-		expect((result as { retryUpload: unknown }).retryUpload).toBeNull();
+		expect(result.retryUpload).toBeNull();
 	});
 
 	it('generation is returned with correct title, style and lyrics', async () => {
