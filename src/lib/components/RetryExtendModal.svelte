@@ -77,7 +77,7 @@
 		tabindex="0"
 	>
 		<div
-			class="relative max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto rounded-xl bg-white shadow-2xl dark:bg-gray-900"
+			class="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col rounded-xl bg-white shadow-2xl dark:bg-gray-900"
 			role="document"
 		>
 			<div
@@ -104,11 +104,12 @@
 					</svg>
 				</button>
 			</div>
-			<div class="p-6">
+			<div class="min-h-0 flex-1 overflow-y-auto p-6 pb-0">
 				<ExtendSongForm
 					{generation}
 					song={sourceSong}
 					{initialContinueAt}
+					stickyActions={true}
 					onExtend={handleExtend}
 					onCancel={onClose}
 				/>

@@ -14,6 +14,7 @@
 		stemType = null,
 		stemUrl = null,
 		initialContinueAt = null,
+		stickyActions = false,
 		onExtend,
 		onCancel
 	}: {
@@ -29,6 +30,7 @@
 		stemType?: string | null;
 		stemUrl?: string | null;
 		initialContinueAt?: number | null;
+		stickyActions?: boolean;
 		onExtend: (data: {
 			title: string;
 			style: string;
@@ -322,7 +324,11 @@
 			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{lyrics.length}/5000 characters</p>
 		</div>
 
-		<div class="flex gap-3 pt-2">
+		<div
+			class={stickyActions
+				? 'sticky bottom-0 -mx-6 flex gap-3 border-t border-gray-100 bg-white px-6 pt-4 pb-6 dark:border-gray-700 dark:bg-gray-900'
+				: 'flex gap-3 pt-2'}
+		>
 			<button
 				type="button"
 				onclick={onCancel}
