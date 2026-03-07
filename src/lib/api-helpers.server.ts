@@ -144,7 +144,7 @@ export function asOptionalString(value: unknown, name: string): string {
 }
 
 export function normalizeNegativeTags(value: string | null | undefined): string {
-	return value?.trim() || 'none';
+	return value?.trim() || '';
 }
 
 // ============================================================================

@@ -151,7 +151,7 @@ describe('POST /api/generations/add-vocals', () => {
 		expect(polling.pollForResults).toHaveBeenCalledWith(created.id, 'task-mock-005');
 	});
 
-	it('sends fallback negativeTags to KIE when input is empty', async () => {
+	it('sends empty negativeTags to KIE when input is empty', async () => {
 		seedScenario();
 		const { POST } = await import('./+server');
 
@@ -172,9 +172,7 @@ describe('POST /api/generations/add-vocals', () => {
 		await POST(event as never);
 		await flushPromises();
 
-		expect(kieApi.addVocals).toHaveBeenCalledWith(
-			expect.objectContaining({ negativeTags: 'none' })
-		);
+		expect(kieApi.addVocals).toHaveBeenCalledWith(expect.objectContaining({ negativeTags: '' }));
 	});
 
 	it('marks generation errored when KIE returns non-200', async () => {

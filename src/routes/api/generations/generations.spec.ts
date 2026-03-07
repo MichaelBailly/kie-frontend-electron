@@ -172,7 +172,8 @@ describe('POST /api/generations', () => {
 				customMode: true,
 				instrumental: false,
 				model: 'V5',
-				callBackUrl: KIE_CALLBACK_URL
+				callBackUrl: KIE_CALLBACK_URL,
+				negativeTags: ''
 			})
 		);
 	});

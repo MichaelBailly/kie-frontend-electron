@@ -146,7 +146,7 @@ describe('POST /api/generations/add-instrumental', () => {
 		expect(polling.pollForResults).toHaveBeenCalledWith(created.id, 'task-mock-004');
 	});
 
-	it('sends fallback negativeTags to KIE when input is empty', async () => {
+	it('sends empty negativeTags to KIE when input is empty', async () => {
 		const { created } = seedScenario();
 		const { POST } = await import('./+server');
 
@@ -177,7 +177,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			'https://example.com/stems/vocal.mp3'
 		);
 		expect(kieApi.addInstrumental).toHaveBeenCalledWith(
-			expect.objectContaining({ negativeTags: 'none' })
+			expect.objectContaining({ negativeTags: '' })
 		);
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(created.id, 'task-mock-004');
 		expect(polling.pollForResults).toHaveBeenCalledWith(created.id, 'task-mock-004');

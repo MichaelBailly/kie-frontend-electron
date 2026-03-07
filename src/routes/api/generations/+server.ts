@@ -33,7 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			instrumental,
 			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL,
-			negativeTags: 'none'
+			negativeTags: ''
 		})
 	).catch((err) => console.error(`[AsyncTask] generation ${generation.id} failed to start:`, err));
 

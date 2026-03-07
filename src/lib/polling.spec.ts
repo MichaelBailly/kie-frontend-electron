@@ -240,6 +240,37 @@ describe('pollForResults', () => {
 		expect(setGenerationCompleted).not.toHaveBeenCalled();
 	});
 
+	it('includes API error details in terminal error logs', async () => {
+		const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+		const details = createErrorMusicDetailsResponse({
+			msg: 'Invalid request',
+			data: {
+				taskId: 'task-1',
+				parentMusicId: '',
+				param: '',
+				response: { taskId: 'task-1', sunoData: [] },
+				status: 'GENERATE_AUDIO_FAILED',
+				type: 'generate',
+				errorCode: 'PERMISSION_DENIED',
+				errorMessage: 'You do not have permission to use negative tags.'
+			}
+		});
+
+		vi.mocked(getMusicDetails).mockResolvedValue(details);
+
+		await pollForResults(1, 'task-1');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('"phase":"terminal_error"'));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('errorCode=PERMISSION_DENIED'));
+		expect(logSpy).toHaveBeenCalledWith(
+			expect.stringContaining('You do not have permission to use negative tags.')
+		);
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('apiMessage=Invalid request'));
+
+		logSpy.mockRestore();
+	});
+
 	it('marks generation as error when API returns non-200 code', async () => {
 		vi.mocked(getMusicDetails).mockResolvedValue({
 			code: 500,

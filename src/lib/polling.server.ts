@@ -87,6 +87,49 @@ interface PollLogEvent {
 	intervalSeconds?: number;
 	isRecovery?: boolean;
 	detail?: string;
+	errorCode?: string | null;
+	errorMessage?: string | null;
+	apiMessage?: string;
+}
+
+function buildTerminalErrorLog<TDetails extends { code: number; msg: string }>(options: {
+	config: PollConfig<TDetails>;
+	details: TDetails;
+	status: string;
+	attempt: number;
+	prefix: string;
+}): PollLogEvent {
+	const errorMessage = options.config.getStatusErrorMessage(options.details) ?? null;
+	const errorCode =
+		typeof options.details === 'object' &&
+		options.details !== null &&
+		'data' in options.details &&
+		typeof options.details.data === 'object' &&
+		options.details.data !== null &&
+		'errorCode' in options.details.data
+			? String(options.details.data.errorCode ?? '') || null
+			: null;
+
+	const detailParts = [
+		`${options.prefix}[${options.config.logTag} #${options.attempt}] ERROR status detected: ${options.status}`
+	];
+	if (errorCode) detailParts.push(`errorCode=${errorCode}`);
+	if (errorMessage) detailParts.push(`errorMessage=${errorMessage}`);
+	if (options.details.msg) detailParts.push(`apiMessage=${options.details.msg}`);
+
+	return {
+		tag: options.config.logTag,
+		phase: 'terminal_error',
+		taskId: options.config.taskId,
+		entity: options.config.label,
+		attempt: options.attempt,
+		status: options.status,
+		isRecovery: !!options.config.isRecovery,
+		errorCode,
+		errorMessage,
+		apiMessage: options.details.msg,
+		detail: detailParts.join(' | ')
+	};
 }
 
 function emitPollLog(level: PollLogLevel, event: PollLogEvent): void {
@@ -166,16 +209,16 @@ function runPollLoop<TDetails extends { code: number; msg: string }>(
 			}
 
 			if (status && config.isError(status)) {
-				emitPollLog('log', {
-					tag: config.logTag,
-					phase: 'terminal_error',
-					taskId: config.taskId,
-					entity: config.label,
-					attempt: attempts,
-					status,
-					isRecovery: !!config.isRecovery,
-					detail: `${prefix}[${config.logTag} #${attempts}] ERROR status detected: ${status}`
-				});
+				emitPollLog(
+					'log',
+					buildTerminalErrorLog({
+						config,
+						details,
+						status,
+						attempt: attempts,
+						prefix
+					})
+				);
 				config.onError(config.getStatusErrorMessage(details) || status);
 				cancel();
 				return;
