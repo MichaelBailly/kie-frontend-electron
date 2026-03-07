@@ -63,6 +63,21 @@ describe('GenerationView', () => {
 		expect(body).toContain('Variation 1');
 		expect(body).not.toContain('Variation 2');
 	});
+
+	it('renders a friendly error summary with collapsible technical details', () => {
+		const generation = createGeneration({
+			status: 'error',
+			error_message: 'Invalid request. You do not have permission to use negative tags.'
+		});
+		const { body } = render(GenerationView, { props: { generation } });
+
+		expect(body).toContain('Generation failed');
+		expect(body).toContain(
+			'The music provider rejected this request because it included an unsupported advanced option.'
+		);
+		expect(body).toContain('Technical details');
+		expect(body).toContain('You do not have permission to use negative tags.');
+	});
 });
 
 describe('GenerationView — retry generate button', () => {

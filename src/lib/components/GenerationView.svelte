@@ -72,6 +72,32 @@
 		saveStyleSuccess = true;
 		setTimeout(() => (saveStyleSuccess = false), 3000);
 	}
+
+	function getErrorSummary(errorMessage: string | null): string {
+		if (!errorMessage) {
+			return 'The generation could not be completed. Try again or inspect the technical details.';
+		}
+
+		const normalized = errorMessage.toLowerCase();
+
+		if (normalized.includes('permission to use negative tags')) {
+			return 'The music provider rejected this request because it included an unsupported advanced option.';
+		}
+
+		if (normalized.includes('sensitive')) {
+			return 'The music provider rejected this request because of content restrictions.';
+		}
+
+		if (normalized.includes('timed out')) {
+			return 'The generation took too long to complete.';
+		}
+
+		if (normalized.includes('network')) {
+			return 'The app could not reach the music provider to finish this generation.';
+		}
+
+		return 'The generation could not be completed. Try again or inspect the technical details.';
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -234,8 +260,22 @@
 					</svg>
 					<span class="font-medium text-red-800 dark:text-red-200">Generation failed</span>
 				</div>
+				<p class="mt-2 text-sm text-red-700 dark:text-red-300">
+					{getErrorSummary(generation.error_message)}
+				</p>
 				{#if generation.error_message}
-					<p class="mt-2 text-sm text-red-700 dark:text-red-300">{generation.error_message}</p>
+					<details
+						class="mt-3 rounded-md border border-red-200/70 bg-white/50 px-3 py-2 dark:border-red-800/70 dark:bg-red-950/20"
+					>
+						<summary
+							class="cursor-pointer text-sm font-medium text-red-800 select-none dark:text-red-200"
+						>
+							Technical details
+						</summary>
+						<p class="mt-2 text-xs leading-5 break-words text-red-700 dark:text-red-300">
+							{generation.error_message}
+						</p>
+					</details>
 				{/if}
 			</div>
 		{/if}
