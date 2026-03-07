@@ -129,6 +129,8 @@ async function startServer() {
 	process.env.NODE_ENV = isDev ? 'development' : 'production';
 	process.env.DATABASE_PATH = dbPath;
 	process.env.ELECTRON_RESOURCES_PATH = process.resourcesPath || path.join(__dirname, '..');
+	// Allow audio uploads up to 100 MB (matches MAX_UPLOAD_BYTES in the upload-audio route)
+	process.env.BODY_SIZE_LIMIT = String(100 * 1024 * 1024);
 
 	// For production, set up NODE_PATH to find unpacked native modules
 	if (!isDev) {
