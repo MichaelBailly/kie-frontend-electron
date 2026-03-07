@@ -38,4 +38,23 @@ describe('AudioPlayer extension controls', () => {
 		expect(body).not.toContain('Extended at');
 		expect(body).not.toContain('10 seconds before extension point');
 	});
+
+	it('marks sticky behavior as enabled when requested', () => {
+		const { body } = render(AudioPlayer, {
+			props: {
+				src: 'https://example.com/audio.mp3',
+				title: 'Golden Wheel Turn (V1)',
+				imageUrl: '',
+				duration: 214,
+				continueAt: null,
+				stickyWhenPlaying: true,
+				trackId: 'audio-1',
+				generationId: 20,
+				projectId: 6
+			}
+		});
+
+		expect(body).toContain('data-sticky-enabled="true"');
+		expect(body).toContain('data-sticky-active="false"');
+	});
 });

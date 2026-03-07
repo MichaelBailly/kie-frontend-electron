@@ -9,6 +9,7 @@
 		imageUrl = '',
 		duration = 0,
 		continueAt = null,
+		stickyWhenPlaying = false,
 		trackId,
 		generationId,
 		projectId
@@ -18,6 +19,7 @@
 		imageUrl?: string;
 		duration?: number;
 		continueAt?: number | null;
+		stickyWhenPlaying?: boolean;
 		trackId: string;
 		generationId: number;
 		projectId: number;
@@ -37,6 +39,7 @@
 	let hasExtensionTime = $derived(continueAt !== null && Number.isFinite(continueAt));
 	let extensionTime = $derived(hasExtensionTime ? Math.max(0, continueAt as number) : 0);
 	let extensionJumpTime = $derived(Math.max(0, extensionTime - 10));
+	let shouldStick = $derived(stickyWhenPlaying && isPlaying);
 
 	function buildTrack(): AudioTrack {
 		return {
@@ -108,7 +111,9 @@
 </script>
 
 <div
-	class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+	class={`flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-[top,box-shadow,border-color] dark:border-gray-700 dark:bg-gray-800 ${shouldStick ? 'sticky top-0 z-20 border-indigo-200 shadow-lg ring-1 ring-indigo-100/80 dark:border-indigo-500/40 dark:ring-indigo-500/20' : ''}`}
+	data-sticky-enabled={stickyWhenPlaying ? 'true' : 'false'}
+	data-sticky-active={shouldStick ? 'true' : 'false'}
 >
 	<ArtworkImage
 		src={imageUrl}

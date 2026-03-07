@@ -11,8 +11,10 @@
 	import ParentSongBanner from './ParentSongBanner.svelte';
 	import ReadonlyMetadataField from './ReadonlyMetadataField.svelte';
 	import SaveStyleModal from './SaveStyleModal.svelte';
+	import { audioStore } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
+	import { getPinnedGenerationTrack } from './generationStickyPlayer';
 
 	let {
 		generation,
@@ -67,6 +69,30 @@
 	const copyLyrics = createCopyWithFeedback((copied) => {
 		lyricsCopied = copied;
 	});
+	let viewRoot: HTMLDivElement | undefined = $state();
+	let isInlinePlayerHidden = $state(false);
+
+	const generationTrackIds = $derived.by(() => {
+		const ids = [
+			generation.track1_audio_id || `preview-${generation.id}-1`,
+			(generation.track2_stream_url ||
+				generation.track2_audio_local_url ||
+				generation.track2_audio_url) &&
+				(generation.track2_audio_id || `preview-${generation.id}-2`)
+		].filter((value): value is string => Boolean(value));
+
+		return ids;
+	});
+
+	const pinnedTrack = $derived(
+		getPinnedGenerationTrack({
+			currentTrack: audioStore.currentTrack,
+			isPlaying: audioStore.isPlaying,
+			isInlinePlayerHidden,
+			generationId: generation.id,
+			trackIds: generationTrackIds
+		})
+	);
 
 	function handleStyleSaved() {
 		saveStyleSuccess = true;
@@ -98,9 +124,79 @@
 
 		return 'The generation could not be completed. Try again or inspect the technical details.';
 	}
+
+	function getScrollHost(node: HTMLElement | undefined): HTMLElement | null {
+		let current = node?.parentElement ?? null;
+
+		while (current) {
+			const styles = window.getComputedStyle(current);
+			if (/(auto|scroll)/.test(styles.overflowY) && current.scrollHeight > current.clientHeight) {
+				return current;
+			}
+
+			current = current.parentElement;
+		}
+
+		return null;
+	}
+
+	function getInlineTrackElement(root: HTMLElement, trackId: string): HTMLElement | null {
+		if (typeof CSS === 'undefined') {
+			return null;
+		}
+
+		return root.querySelector(`[data-generation-track-id="${CSS.escape(trackId)}"]`);
+	}
+
+	$effect(() => {
+		if (typeof window === 'undefined' || !viewRoot) {
+			return;
+		}
+
+		const root = viewRoot;
+		const scrollHost = getScrollHost(viewRoot);
+		if (!scrollHost) {
+			isInlinePlayerHidden = false;
+			return;
+		}
+
+		const currentTrack = audioStore.currentTrack;
+		const isPlaying = audioStore.isPlaying;
+
+		const syncInlinePlayerVisibility = () => {
+			if (
+				!currentTrack ||
+				!isPlaying ||
+				currentTrack.generationId !== generation.id ||
+				!generationTrackIds.includes(currentTrack.id)
+			) {
+				isInlinePlayerHidden = false;
+				return;
+			}
+
+			const inlineTrack = getInlineTrackElement(root, currentTrack.id);
+			if (!inlineTrack) {
+				isInlinePlayerHidden = false;
+				return;
+			}
+
+			const scrollHostTop = scrollHost.getBoundingClientRect().top;
+			const inlineTrackRect = inlineTrack.getBoundingClientRect();
+			isInlinePlayerHidden = inlineTrackRect.bottom <= scrollHostTop;
+		};
+
+		syncInlinePlayerVisibility();
+		scrollHost.addEventListener('scroll', syncInlinePlayerVisibility, { passive: true });
+		window.addEventListener('resize', syncInlinePlayerVisibility);
+
+		return () => {
+			scrollHost.removeEventListener('scroll', syncInlinePlayerVisibility);
+			window.removeEventListener('resize', syncInlinePlayerVisibility);
+		};
+	});
 </script>
 
-<div class="flex h-full flex-col">
+<div class="flex h-full flex-col" bind:this={viewRoot}>
 	<!-- Header -->
 	<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
 		<h2 class="flex items-center gap-2 text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -221,7 +317,29 @@
 		{/if}
 	</div>
 
-	<div class="flex-1 overflow-y-auto p-6">
+	<div class="flex-1 p-6">
+		{#if pinnedTrack}
+			<div
+				class="sticky top-0 z-30 -mx-6 mb-6 border-b border-gray-200/80 bg-white/95 px-6 py-3 shadow-sm backdrop-blur dark:border-gray-700/80 dark:bg-gray-800/95"
+			>
+				<p
+					class="mb-3 text-xs font-semibold tracking-[0.2em] text-indigo-600 uppercase dark:text-indigo-400"
+				>
+					Now Playing
+				</p>
+				<AudioPlayer
+					src={pinnedTrack.audioUrl || pinnedTrack.streamUrl || ''}
+					title={pinnedTrack.title}
+					imageUrl={pinnedTrack.imageUrl || ''}
+					duration={pinnedTrack.duration || 0}
+					continueAt={generation.continue_at}
+					trackId={pinnedTrack.id}
+					generationId={pinnedTrack.generationId}
+					projectId={pinnedTrack.projectId}
+				/>
+			</div>
+		{/if}
+
 		<!-- Status indicator for completed or error -->
 		{#if generation.status === 'success'}
 			<div
