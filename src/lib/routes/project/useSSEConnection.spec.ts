@@ -1,4 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSSEConnection } from './useSSEConnection.svelte';
+
+vi.mock('$app/environment', () => ({ browser: true }));
 
 type MessageHandler = ((event: { data: string }) => void) | null;
 type ErrorHandler = (() => void) | null;
@@ -17,24 +20,18 @@ class MockEventSource {
 	}
 }
 
-async function loadComposable() {
-	vi.resetModules();
-	vi.doMock('$app/environment', () => ({ browser: true }));
-	return import('./useSSEConnection.svelte');
-}
-
 describe('useSSEConnection', () => {
 	beforeEach(() => {
 		vi.restoreAllMocks();
 		vi.unstubAllGlobals();
 		MockEventSource.instances = [];
+		vi.clearAllTimers();
 		vi.useRealTimers();
 		vi.stubGlobal('EventSource', MockEventSource as unknown as typeof EventSource);
 	});
 
-	it('connects and forwards non-connected messages', async () => {
+	it('connects and forwards non-connected messages', () => {
 		const onMessage = vi.fn();
-		const { useSSEConnection } = await loadComposable();
 		const sse = useSSEConnection({ onMessage });
 
 		sse.connect();
@@ -56,10 +53,9 @@ describe('useSSEConnection', () => {
 		expect(onMessage).toHaveBeenCalledTimes(1);
 	});
 
-	it('reconnects after errors using the configured delay', async () => {
+	it('reconnects after errors using the configured delay', () => {
 		vi.useFakeTimers();
 		const onMessage = vi.fn();
-		const { useSSEConnection } = await loadComposable();
 		const sse = useSSEConnection({ onMessage, reconnectDelayMs: 1000 });
 
 		sse.connect();
@@ -76,10 +72,9 @@ describe('useSSEConnection', () => {
 		expect(MockEventSource.instances).toHaveLength(2);
 	});
 
-	it('cancels pending reconnect when disconnect is called explicitly', async () => {
+	it('cancels pending reconnect when disconnect is called explicitly', () => {
 		vi.useFakeTimers();
 		const onMessage = vi.fn();
-		const { useSSEConnection } = await loadComposable();
 		const sse = useSSEConnection({ onMessage, reconnectDelayMs: 500 });
 
 		sse.connect();

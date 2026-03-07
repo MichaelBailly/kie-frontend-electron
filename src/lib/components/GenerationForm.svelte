@@ -43,12 +43,12 @@
 		<!-- Generation form -->
 		<form id="generation-form" onsubmit={handleSubmit} class="space-y-5">
 			<div>
-				<label
-					for="title"
-					class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-				>
-					Title
-				</label>
+				<div class="mb-1.5 flex items-center justify-between">
+					<label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+						Title
+					</label>
+					<InstrumentalToggle bind:value={instrumental} id="generation-instrumental" compact />
+				</div>
 				<input
 					type="text"
 					id="title"
@@ -83,22 +83,16 @@
 			</div>
 
 			<div>
-				<p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Mode</p>
-				<InstrumentalToggle bind:value={instrumental} id="generation-instrumental" />
-				{#if instrumental}
-					<p class="mt-1.5 text-xs text-indigo-600 dark:text-indigo-400">
-						Instrumental mode — lyrics are optional.
-					</p>
-				{/if}
-			</div>
-
-			<div>
-				<label
-					for="lyrics"
-					class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-				>
-					Lyrics {instrumental ? '(optional)' : ''}
-				</label>
+				<div class="mb-1.5 flex items-center gap-2">
+					<label for="lyrics" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+						Lyrics
+					</label>
+					{#if instrumental}
+						<span class="text-xs text-indigo-500 dark:text-indigo-400"
+							>Instrumental mode — lyrics are optional.</span
+						>
+					{/if}
+				</div>
 				<textarea
 					id="lyrics"
 					bind:value={lyrics}

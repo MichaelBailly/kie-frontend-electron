@@ -1,21 +1,27 @@
 <script lang="ts">
 	let {
 		value = $bindable(false),
-		id = 'instrumental-toggle'
+		id = 'instrumental-toggle',
+		compact = false
 	}: {
 		value: boolean;
 		id?: string;
+		compact?: boolean;
 	} = $props();
 </script>
 
 <!--
   InstrumentalToggle — a sophisticated segmented control to choose between
   "With Vocals" and "Instrumental" generation modes.
+  compact=true renders a smaller inline variant for use inside label rows.
 -->
 <div
 	role="group"
 	aria-label="Vocal mode"
-	class="relative inline-flex w-full items-stretch rounded-xl border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800/60"
+	class={[
+		'relative inline-flex items-stretch rounded-xl border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800/60',
+		compact ? 'p-0.5' : 'w-full p-1'
+	].join(' ')}
 >
 	<!-- With Vocals option -->
 	<button
@@ -24,7 +30,8 @@
 		aria-pressed={!value}
 		onclick={() => (value = false)}
 		class={[
-			'relative flex flex-1 cursor-pointer items-center justify-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 select-none focus-visible:ring-2 focus-visible:ring-teal-500/60 focus-visible:outline-none',
+			'relative flex flex-1 cursor-pointer items-center justify-center rounded-lg font-semibold transition-all duration-200 select-none focus-visible:ring-2 focus-visible:ring-teal-500/60 focus-visible:outline-none',
+			compact ? 'gap-1 px-1.5 py-0.5 text-xs' : 'gap-2.5 px-4 py-2.5 text-sm',
 			!value
 				? 'bg-white text-teal-700 shadow-sm ring-1 ring-black/5 dark:bg-gray-700 dark:text-teal-300 dark:ring-white/10'
 				: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -32,7 +39,7 @@
 	>
 		<!-- Microphone icon -->
 		<svg
-			class="h-4 w-4 shrink-0 transition-transform duration-200 {!value
+			class="{compact ? 'h-3 w-3' : 'h-4 w-4'} shrink-0 transition-transform duration-200 {!value
 				? 'scale-110'
 				: 'scale-100'}"
 			viewBox="0 0 24 24"
@@ -49,8 +56,8 @@
 			<line x1="8" y1="22" x2="16" y2="22" />
 		</svg>
 		<span>With Vocals</span>
-		{#if !value}
-			<!-- Active indicator dot -->
+		{#if !value && !compact}
+			<!-- Active indicator dot (full-size only) -->
 			<span
 				class="absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-teal-500 dark:bg-teal-400"
 			></span>
@@ -63,7 +70,8 @@
 		aria-pressed={value}
 		onclick={() => (value = true)}
 		class={[
-			'relative flex flex-1 cursor-pointer items-center justify-center gap-2.5 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 select-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:outline-none',
+			'relative flex flex-1 cursor-pointer items-center justify-center rounded-lg font-semibold transition-all duration-200 select-none focus-visible:ring-2 focus-visible:ring-indigo-500/60 focus-visible:outline-none',
+			compact ? 'gap-1 px-1.5 py-0.5 text-xs' : 'gap-2.5 px-4 py-2.5 text-sm',
 			value
 				? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg ring-1 shadow-indigo-500/25 ring-indigo-500/20'
 				: 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -71,7 +79,9 @@
 	>
 		<!-- Piano / music-note icon -->
 		<svg
-			class="h-4 w-4 shrink-0 transition-transform duration-200 {value ? 'scale-110' : 'scale-100'}"
+			class="{compact ? 'h-3 w-3' : 'h-4 w-4'} shrink-0 transition-transform duration-200 {value
+				? 'scale-110'
+				: 'scale-100'}"
 			viewBox="0 0 24 24"
 			fill="none"
 			stroke="currentColor"
