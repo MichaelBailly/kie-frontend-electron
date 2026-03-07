@@ -41,7 +41,7 @@
 
 	<div class="flex-1 overflow-y-auto p-6">
 		<!-- Generation form -->
-		<form onsubmit={handleSubmit} class="space-y-5">
+		<form id="generation-form" onsubmit={handleSubmit} class="space-y-5">
 			<div>
 				<label
 					for="title"
@@ -115,46 +115,48 @@ The catchy part..."
 				></textarea>
 				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{lyrics.length}/5000 characters</p>
 			</div>
-
-			<div class="pt-2">
-				<button
-					type="submit"
-					disabled={isSubmitting ||
-						!title.trim() ||
-						!style.trim() ||
-						(!instrumental && !lyrics.trim())}
-					class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
-				>
-					{#if isSubmitting}
-						<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
-							<circle
-								class="opacity-25"
-								cx="12"
-								cy="12"
-								r="10"
-								stroke="currentColor"
-								stroke-width="4"
-							></circle>
-							<path
-								class="opacity-75"
-								fill="currentColor"
-								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-							></path>
-						</svg>
-						Generating...
-					{:else}
-						<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-							/>
-						</svg>
-						Generate Song
-					{/if}
-				</button>
-			</div>
 		</form>
+	</div>
+
+	<!-- Always-visible footer -->
+	<div class="shrink-0 border-t border-gray-200 px-6 py-4 dark:border-gray-700">
+		<button
+			type="submit"
+			form="generation-form"
+			disabled={isSubmitting ||
+				!title.trim() ||
+				!style.trim() ||
+				(!instrumental && !lyrics.trim())}
+			class="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+		>
+			{#if isSubmitting}
+				<svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
+					<circle
+						class="opacity-25"
+						cx="12"
+						cy="12"
+						r="10"
+						stroke="currentColor"
+						stroke-width="4"
+					></circle>
+					<path
+						class="opacity-75"
+						fill="currentColor"
+						d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+					></path>
+				</svg>
+				Generating...
+			{:else}
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+					/>
+				</svg>
+				Generate Song
+			{/if}
+		</button>
 	</div>
 </div>
