@@ -16,11 +16,25 @@ import {
 	setGenerationErrored,
 	setGenerationTaskStarted,
 	setStemSeparationErrored,
-	setStemSeparationTaskStarted
+	setStemSeparationTaskStarted,
+	setWavConversionErrored,
+	setWavConversionTaskStarted
 } from '$lib/db.server';
-import type { GenerateMusicResponse, StemSeparationResponse } from '$lib/kie-api.server';
-import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
-import { pollForResults, pollForStemSeparationResults } from '$lib/polling.server';
+import type {
+	ConvertToWavResponse,
+	GenerateMusicResponse,
+	StemSeparationResponse
+} from '$lib/kie-api.server';
+import {
+	notifyClients,
+	notifyStemSeparationClients,
+	notifyWavConversionClients
+} from '$lib/sse.server';
+import {
+	pollForResults,
+	pollForStemSeparationResults,
+	pollForWavResults
+} from '$lib/polling.server';
 import type { Project, Generation } from '$lib/types';
 
 type JsonRecord = Record<string, unknown>;
@@ -299,6 +313,35 @@ export async function startStemSeparationTask(
 				task_id: taskId
 			});
 			pollForStemSeparationResults(separationId, taskId, generationId, audioId);
+		}
+	});
+}
+
+/**
+ * Start an async WAV conversion task.
+ */
+export async function startWavConversionTask(
+	wavConversionId: number,
+	generationId: number,
+	audioId: string,
+	apiCall: () => Promise<ConvertToWavResponse>
+): Promise<void> {
+	await runKieApiTask({
+		apiCall,
+		onError(message) {
+			setWavConversionErrored(wavConversionId, message);
+			notifyWavConversionClients(wavConversionId, generationId, audioId, 'wav_conversion_error', {
+				status: 'error',
+				error_message: message
+			});
+		},
+		onSuccess(taskId) {
+			setWavConversionTaskStarted(wavConversionId, taskId);
+			notifyWavConversionClients(wavConversionId, generationId, audioId, 'wav_conversion_update', {
+				status: 'processing',
+				task_id: taskId
+			});
+			pollForWavResults(wavConversionId, taskId, generationId, audioId);
 		}
 	});
 }

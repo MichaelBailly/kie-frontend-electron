@@ -6,6 +6,7 @@ import {
 	getAddVocalsGenerations,
 	getGeneration as getGenerationById,
 	getStemSeparationsForSong,
+	getWavConversionsForSong,
 	getAnnotation
 } from '$lib/db.server';
 import { getPreferredTrackAssetUrl, queueTrackAssetCaching } from '$lib/server/assets-cache.server';
@@ -65,6 +66,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
 	// Get stem separations for this song
 	const stemSeparations = getStemSeparationsForSong(generationId, songId);
+	const wavConversions = getWavConversionsForSong(generationId, songId);
 
 	// Get annotation (star/comment) for this song
 	const annotation = getAnnotation(generationId, songId) ?? null;
@@ -98,6 +100,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 		addInstrumentalGenerations,
 		addVocalsGenerations,
 		stemSeparations,
+		wavConversions,
 		annotation,
 		parentGeneration,
 		parentSong,

@@ -291,3 +291,62 @@ export function isStemSeparationErrorStatus(status: string): boolean {
 export function isStemSeparationCompleteStatus(status: string): boolean {
 	return status === 'SUCCESS';
 }
+
+// WAV Conversion API
+
+export interface ConvertToWavRequest {
+	taskId: string;
+	audioId: string;
+	callBackUrl: string;
+}
+
+export interface ConvertToWavResponse {
+	code: number;
+	msg: string;
+	data: {
+		taskId: string;
+	};
+}
+
+export interface WavDetailsResponse {
+	code: number;
+	msg: string;
+	data: {
+		taskId: string;
+		musicId: string;
+		callbackUrl: string;
+		musicIndex: number;
+		completeTime: string | null;
+		response: {
+			audioWavUrl: string;
+		} | null;
+		successFlag:
+			| 'PENDING'
+			| 'SUCCESS'
+			| 'CREATE_TASK_FAILED'
+			| 'GENERATE_WAV_FAILED'
+			| 'CALLBACK_EXCEPTION';
+		createTime: string;
+		errorCode: number | null;
+		errorMessage: string | null;
+	};
+}
+
+export async function convertToWav(request: ConvertToWavRequest): Promise<ConvertToWavResponse> {
+	return kieRequest<ConvertToWavResponse>('/wav/generate', {
+		method: 'POST',
+		body: request
+	});
+}
+
+export async function getWavDetails(taskId: string): Promise<WavDetailsResponse> {
+	return kieRequest<WavDetailsResponse>(`/wav/record-info?taskId=${taskId}`);
+}
+
+export function isWavErrorStatus(status: string): boolean {
+	return ['CREATE_TASK_FAILED', 'GENERATE_WAV_FAILED', 'CALLBACK_EXCEPTION'].includes(status);
+}
+
+export function isWavCompleteStatus(status: string): boolean {
+	return status === 'SUCCESS';
+}

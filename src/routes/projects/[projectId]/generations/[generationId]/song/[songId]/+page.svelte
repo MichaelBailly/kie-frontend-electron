@@ -15,11 +15,12 @@
 	import { useSongGenerationState } from '$lib/routes/song/useSongGenerationState.svelte';
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
 	import { useStemSeparationState } from '$lib/routes/song/useStemSeparationState.svelte';
+	import { useWavConversionState } from '$lib/routes/song/useWavConversionState.svelte';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 	import { getStemDisplay } from '$lib/utils/stems';
 	import { getContext } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { Generation, StemSeparation, VariationAnnotation } from '$lib/types';
+	import type { Generation, StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -27,6 +28,11 @@
 		updates: Map<number, Partial<StemSeparation>>;
 		set: (id: number, data: Partial<StemSeparation>) => void;
 	}>('stemSeparations');
+
+	const wavConversionsContext = getContext<{
+		updates: Map<number, Partial<WavConversion>>;
+		set: (id: number, data: Partial<WavConversion>) => void;
+	}>('wavConversions');
 
 	const activeProjectContext = getContext<{ current: { id: number; generations: Generation[] } }>(
 		'activeProject'
@@ -54,6 +60,13 @@
 		stemSeparationsContext
 	});
 
+	const wavState = useWavConversionState({
+		generationId: () => generationState.generation.id,
+		audioId: () => generationState.song.id,
+		getInitialWavConversions: () => data.wavConversions || [],
+		wavConversionsContext
+	});
+
 	function fmt(seconds: number): string {
 		const m = Math.floor(seconds / 60);
 		const s = Math.floor(seconds % 60);
@@ -64,7 +77,9 @@
 		!!stemState.vocalSeparation ||
 			!!stemState.stemSeparation ||
 			!!stemState.pendingVocalSeparation ||
-			!!stemState.pendingStemSeparation
+			!!stemState.pendingStemSeparation ||
+			!!wavState.wavConversion ||
+			!!wavState.pendingWavConversion
 	);
 	const hasExtensions = $derived((data.extendedGenerations ?? []).length > 0);
 	const hasAddInstrumentalGenerations = $derived(
@@ -327,10 +342,10 @@
 			<div class="relative">
 				<button
 					onclick={stemState.toggleStemOptions}
-					disabled={stemState.separatingType !== null}
+					disabled={stemState.separatingType !== null || wavState.isConverting}
 					class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-cyan-50 px-3 text-xs font-medium text-cyan-600 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-900/30 dark:text-cyan-400 dark:hover:bg-cyan-900/50"
 				>
-					{#if stemState.separatingType !== null || stemState.pendingVocalSeparation || stemState.pendingStemSeparation}
+					{#if stemState.separatingType !== null || stemState.pendingVocalSeparation || stemState.pendingStemSeparation || wavState.isConverting || wavState.pendingWavConversion}
 						<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
 							<circle
 								class="opacity-25"
@@ -396,6 +411,25 @@
 									<div class="text-xs text-gray-500">
 										{#if stemState.stemSeparation}✓ Done{:else if stemState.pendingStemSeparation}Processing...{:else}Drums,
 											bass, guitar…{/if}
+									</div>
+								</div>
+							</button>
+							<div class="my-2 border-t border-gray-200 dark:border-gray-700"></div>
+							<button
+								onclick={wavState.requestWavConversion}
+								disabled={!!wavState.wavConversion ||
+									!!wavState.pendingWavConversion ||
+									wavState.isConverting}
+								class="flex w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-700"
+							>
+								<span class="text-lg">🎵</span>
+								<div>
+									<div class="text-sm font-medium text-gray-900 dark:text-gray-100">
+										Convert to WAV
+									</div>
+									<div class="text-xs text-gray-500">
+										{#if wavState.wavConversion}✓ Done{:else if wavState.pendingWavConversion}Processing...{:else}Uncompressed
+											export for editing{/if}
 									</div>
 								</div>
 							</button>
@@ -882,6 +916,100 @@
 									onAddVocals={handleAddVocals}
 								/>
 							</div>
+							{#if wavState.pendingWavConversion || wavState.wavConversion}
+								<div
+									class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 p-5 shadow-lg ring-1 shadow-cyan-950/15 ring-cyan-400/10"
+								>
+									<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+										<div class="min-w-0">
+											<div class="mb-2 flex items-center gap-2">
+												<span
+													class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/8 text-base text-cyan-200 ring-1 ring-white/10"
+												>
+													~
+												</span>
+												<div>
+													<h4 class="text-sm font-semibold tracking-wide text-white">WAV Export</h4>
+													<p class="text-xs text-cyan-100/70">
+														High-fidelity render for DAWs, mastering, and precise editing.
+													</p>
+												</div>
+											</div>
+											<div
+												class="rounded-2xl border border-white/10 bg-white/6 px-4 py-3 backdrop-blur-sm"
+											>
+												{#if wavState.pendingWavConversion}
+													<div class="flex items-center gap-3 text-sm text-white">
+														<span class="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400"
+														></span>
+														<span>Converting this variation to WAV...</span>
+													</div>
+													<p class="mt-2 text-xs text-cyan-100/60">
+														KIE keeps generated WAV files for 14 days. Larger file size, cleaner
+														downstream workflow.
+													</p>
+												{:else if wavState.wavConversion?.wav_url}
+													<div class="flex items-center gap-3 text-sm text-white">
+														<span class="h-2.5 w-2.5 rounded-full bg-cyan-300"></span>
+														<span>WAV export ready</span>
+													</div>
+													<p class="mt-2 text-xs text-cyan-100/60">
+														Perfect when you need full-resolution audio instead of the usual
+														compressed delivery file.
+													</p>
+												{/if}
+											</div>
+										</div>
+
+										<div class="flex shrink-0 items-center gap-3">
+											{#if wavState.pendingWavConversion}
+												<div
+													class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-2 text-xs font-medium text-cyan-100"
+												>
+													<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+														<circle
+															class="opacity-25"
+															cx="12"
+															cy="12"
+															r="10"
+															stroke="currentColor"
+															stroke-width="4"
+														></circle>
+														<path
+															class="opacity-75"
+															fill="currentColor"
+															d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+														></path>
+													</svg>
+													Rendering
+												</div>
+											{:else if wavState.wavConversion?.wav_url}
+												<a
+													href={wavState.wavConversion.wav_url}
+													rel="external"
+													download={`${generationState.song.title}.wav`}
+													class="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition-transform hover:scale-[1.02] hover:bg-cyan-200"
+												>
+													<svg
+														class="h-4 w-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+														/>
+													</svg>
+													Download WAV
+												</a>
+											{/if}
+										</div>
+									</div>
+								</div>
+							{/if}
 						{/if}
 					</div>
 				{/if}

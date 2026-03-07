@@ -1,4 +1,4 @@
-import type { Generation, StemSeparation } from '$lib/types';
+import type { Generation, StemSeparation, WavConversion } from '$lib/types';
 import {
 	setGenerationErrored,
 	setGenerationStatus,
@@ -6,23 +6,38 @@ import {
 	setGenerationCompleted,
 	setStemSeparationErrored,
 	setStemSeparationStatus,
-	setStemSeparationCompleted
+	setStemSeparationCompleted,
+	setWavConversionCompleted,
+	setWavConversionErrored,
+	setWavConversionStatus
 } from '$lib/db.server';
-import type { MusicDetailsResponse, StemSeparationDetailsResponse } from '$lib/kie-api.server';
+import type {
+	MusicDetailsResponse,
+	StemSeparationDetailsResponse,
+	WavDetailsResponse
+} from '$lib/kie-api.server';
 import {
 	getMusicDetails,
 	isErrorStatus,
 	isCompleteStatus,
 	getStemSeparationDetails,
 	isStemSeparationErrorStatus,
-	isStemSeparationCompleteStatus
+	isStemSeparationCompleteStatus,
+	getWavDetails,
+	isWavErrorStatus,
+	isWavCompleteStatus
 } from '$lib/kie-api.server';
-import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
+import {
+	notifyClients,
+	notifyStemSeparationClients,
+	notifyWavConversionClients
+} from '$lib/sse.server';
 import {
 	mapGenerationCompletion,
 	mapGenerationProgress
 } from '$lib/polling/generation-mapper.server';
 import { mapStemCompletion } from '$lib/polling/stem-mapper.server';
+import { mapWavCompletion } from '$lib/polling/wav-mapper.server';
 
 // ============================================================================
 // Generic polling engine
@@ -74,6 +89,7 @@ interface PollLoopController {
 
 const activeGenerationPolls = new Map<string, PollLoopController>();
 const activeStemPolls = new Map<string, PollLoopController>();
+const activeWavPolls = new Map<string, PollLoopController>();
 
 type PollLogLevel = 'log' | 'error';
 
@@ -324,6 +340,11 @@ export function cancelAllPolls(): void {
 		loop.cancel();
 	}
 	activeStemPolls.clear();
+
+	for (const loop of activeWavPolls.values()) {
+		loop.cancel();
+	}
+	activeWavPolls.clear();
 }
 
 // ============================================================================
@@ -598,6 +619,134 @@ export function recoverIncompleteStemSeparations(separations: StemSeparation[]):
 			separation.generation_id,
 			separation.audio_id,
 			{ isRecovery: true }
+		);
+	}
+}
+
+// ============================================================================
+// WAV conversion polling
+// ============================================================================
+
+export async function pollForWavResults(
+	wavConversionId: number,
+	taskId: string,
+	generationId: number,
+	audioId: string,
+	options: { isRecovery?: boolean } = {}
+): Promise<void> {
+	if (activeWavPolls.has(taskId)) {
+		emitPollLog('log', {
+			tag: 'PollRegistry',
+			phase: 'dedupe',
+			taskId,
+			entity: `wav conversion ${wavConversionId}`,
+			isRecovery: !!options.isRecovery,
+			detail: `[PollRegistry] Poll already active for wav taskId: ${taskId}`
+		});
+		return;
+	}
+
+	const loop = runPollLoop<WavDetailsResponse>({
+		taskId,
+		label: `wav conversion ${wavConversionId}`,
+		logTag: 'WavPoll',
+		isRecovery: options.isRecovery,
+		timeoutMessage: 'WAV conversion timed out',
+
+		fetchDetails: getWavDetails,
+		getStatus: (d) => d.data?.successFlag,
+		getStatusErrorMessage: (d) => d.data?.errorMessage ?? undefined,
+		isError: isWavErrorStatus,
+		isComplete: isWavCompleteStatus,
+
+		onError(msg) {
+			activeWavPolls.delete(taskId);
+			setWavConversionErrored(wavConversionId, msg);
+			notifyWavConversionClients(wavConversionId, generationId, audioId, 'wav_conversion_error', {
+				status: 'error',
+				error_message: msg
+			});
+		},
+
+		onComplete(details) {
+			const completion = mapWavCompletion(details);
+			if (!completion) return false;
+
+			activeWavPolls.delete(taskId);
+			setWavConversionCompleted(wavConversionId, completion.wavUrl, completion.responseData);
+			notifyWavConversionClients(
+				wavConversionId,
+				generationId,
+				audioId,
+				'wav_conversion_complete',
+				completion.ssePayload
+			);
+			return true;
+		},
+
+		onProgress() {
+			setWavConversionStatus(wavConversionId, 'processing');
+			notifyWavConversionClients(wavConversionId, generationId, audioId, 'wav_conversion_update', {
+				status: 'processing'
+			});
+		}
+	});
+
+	activeWavPolls.set(taskId, loop);
+}
+
+export function recoverIncompleteWavConversions(conversions: WavConversion[]): void {
+	if (conversions.length === 0) {
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'scan_none',
+			entity: 'wav conversion',
+			isRecovery: true,
+			detail: '[Recovery] No incomplete wav conversions to recover'
+		});
+		return;
+	}
+
+	emitPollLog('log', {
+		tag: 'Recovery',
+		phase: 'scan_found',
+		entity: 'wav conversion',
+		status: String(conversions.length),
+		isRecovery: true,
+		detail: `[Recovery] Found ${conversions.length} incomplete wav conversion(s) to recover`
+	});
+
+	for (const conversion of conversions) {
+		if (!conversion.task_id) {
+			emitPollLog('log', {
+				tag: 'Recovery',
+				phase: 'missing_task_id',
+				entity: `wav conversion ${conversion.id}`,
+				isRecovery: true,
+				detail: `[Recovery] WAV conversion ${conversion.id} has no task_id, marking as error`
+			});
+			setWavConversionErrored(conversion.id, 'WAV conversion interrupted before task creation');
+			continue;
+		}
+
+		emitPollLog('log', {
+			tag: 'Recovery',
+			phase: 'resume',
+			taskId: conversion.task_id,
+			entity: `wav conversion ${conversion.id}`,
+			status: conversion.status,
+			isRecovery: true,
+			detail: `[Recovery] Resuming polling for wav conversion ${conversion.id} (taskId: ${conversion.task_id}, status: ${conversion.status})`
+		});
+
+		pollForWavResults(
+			conversion.id,
+			conversion.task_id,
+			conversion.generation_id,
+			conversion.audio_id,
+			{
+				isRecovery: true
+			}
 		);
 	}
 }

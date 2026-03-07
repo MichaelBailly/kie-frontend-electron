@@ -56,6 +56,7 @@ function createSongPageData(options?: { annotation: ReturnType<typeof createAnno
 				audio_id: song.id
 			})
 		],
+		wavConversions: [],
 		annotation,
 		parentGeneration: null,
 		parentSong: null,

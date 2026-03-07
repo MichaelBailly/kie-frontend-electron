@@ -74,6 +74,19 @@ export interface StemSeparation {
 	updated_at: string;
 }
 
+export interface WavConversion {
+	id: number;
+	generation_id: number;
+	audio_id: string;
+	task_id: string | null;
+	status: string;
+	error_message: string | null;
+	wav_url: string | null;
+	response_data: string | null;
+	created_at: string;
+	updated_at: string;
+}
+
 export interface VariationAnnotation {
 	id: number;
 	generation_id: number;
@@ -117,10 +130,18 @@ export interface SSEMessage {
 		| 'stem_separation_update'
 		| 'stem_separation_complete'
 		| 'stem_separation_error'
+		| 'wav_conversion_update'
+		| 'wav_conversion_complete'
+		| 'wav_conversion_error'
 		| 'annotation_update';
 	generationId: number;
-	data: Partial<Generation> | Partial<StemSeparation> | Partial<VariationAnnotation>;
+	data:
+		| Partial<Generation>
+		| Partial<StemSeparation>
+		| Partial<WavConversion>
+		| Partial<VariationAnnotation>;
 	stemSeparationId?: number;
+	wavConversionId?: number;
 	audioId?: string;
 }
 

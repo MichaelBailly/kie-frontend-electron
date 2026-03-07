@@ -3,6 +3,7 @@ import type {
 	Project,
 	Generation,
 	StemSeparation,
+	WavConversion,
 	VariationAnnotation,
 	Setting,
 	StyleCollection
@@ -59,6 +60,19 @@ export interface DbMock {
 	updateStemSeparationStatus: MockFn;
 	completeStemSeparation: MockFn;
 	getPendingStemSeparations: MockFn;
+	createWavConversion: MockFn;
+	getWavConversion: MockFn;
+	getWavConversionByTaskId: MockFn;
+	getWavConversionsForSong: MockFn;
+	getWavConversionByGenerationAndAudio: MockFn;
+	setWavConversionTaskStarted: MockFn;
+	setWavConversionStatus: MockFn;
+	setWavConversionErrored: MockFn;
+	setWavConversionCompleted: MockFn;
+	updateWavConversionTaskId: MockFn;
+	updateWavConversionStatus: MockFn;
+	completeWavConversion: MockFn;
+	getPendingWavConversions: MockFn;
 	getLabelSuggestions: MockFn;
 	getAnnotation: MockFn;
 	getAnnotationsForGeneration: MockFn;
@@ -80,6 +94,7 @@ export interface DbMock {
 	__setProjects: (projects: Project[]) => void;
 	__setGenerations: (generations: Generation[]) => void;
 	__setStemSeparations: (separations: StemSeparation[]) => void;
+	__setWavConversions: (conversions: WavConversion[]) => void;
 	__setAnnotations: (annotations: VariationAnnotation[]) => void;
 }
 
@@ -96,6 +111,7 @@ export function createDbMock(): DbMock {
 	let projects: Project[] = [];
 	let generations: Generation[] = [];
 	let stemSeparations: StemSeparation[] = [];
+	let wavConversions: WavConversion[] = [];
 	let annotations: VariationAnnotation[] = [];
 	let styleCollections: StyleCollection[] = [];
 
@@ -302,6 +318,62 @@ export function createDbMock(): DbMock {
 			stemSeparations.filter((separation) => ['pending', 'processing'].includes(separation.status))
 		),
 
+		createWavConversion: vi.fn(),
+		getWavConversion: vi.fn((id: number) =>
+			wavConversions.find((conversion) => conversion.id === id)
+		),
+		getWavConversionByTaskId: vi.fn((taskId: string) =>
+			wavConversions.find((conversion) => conversion.task_id === taskId)
+		),
+		getWavConversionsForSong: vi.fn((generationId: number, audioId: string) =>
+			wavConversions.filter(
+				(conversion) => conversion.generation_id === generationId && conversion.audio_id === audioId
+			)
+		),
+		getWavConversionByGenerationAndAudio: vi.fn((generationId: number, audioId: string) =>
+			wavConversions.find(
+				(conversion) => conversion.generation_id === generationId && conversion.audio_id === audioId
+			)
+		),
+		setWavConversionTaskStarted: vi.fn((id: number, taskId: string) => {
+			const conversion = wavConversions.find((item) => item.id === id);
+			if (conversion) {
+				conversion.task_id = taskId;
+				conversion.status = 'processing';
+			}
+		}),
+		setWavConversionStatus: vi.fn((id: number, status: string) => {
+			const conversion = wavConversions.find((item) => item.id === id);
+			if (conversion) {
+				conversion.status = status;
+				conversion.error_message = null;
+			}
+		}),
+		setWavConversionErrored: vi.fn((id: number, errorMessage: string) => {
+			const conversion = wavConversions.find((item) => item.id === id);
+			if (conversion) {
+				conversion.status = 'error';
+				conversion.error_message = errorMessage;
+			}
+		}),
+		setWavConversionCompleted: vi.fn(),
+		updateWavConversionTaskId: vi.fn((id: number, taskId: string) => {
+			mock.setWavConversionTaskStarted(id, taskId);
+		}),
+		updateWavConversionStatus: vi.fn((id: number, status: string, errorMessage?: string) => {
+			if (status === 'error') {
+				mock.setWavConversionErrored(id, errorMessage ?? 'Unknown wav conversion error');
+				return;
+			}
+			mock.setWavConversionStatus(id, status);
+		}),
+		completeWavConversion: vi.fn((id: number, wavUrl: string, responseData: string) => {
+			mock.setWavConversionCompleted(id, wavUrl, responseData);
+		}),
+		getPendingWavConversions: vi.fn(() =>
+			wavConversions.filter((conversion) => ['pending', 'processing'].includes(conversion.status))
+		),
+
 		getLabelSuggestions: vi.fn((): string[] => []),
 		getAnnotation: vi.fn((generationId: number, audioId: string) =>
 			annotations.find(
@@ -384,6 +456,7 @@ export function createDbMock(): DbMock {
 			projects = [];
 			generations = [];
 			stemSeparations = [];
+			wavConversions = [];
 			annotations = [];
 			styleCollections = [];
 			clearAllMockCalls(mock as unknown as Record<string, unknown>);
@@ -399,6 +472,9 @@ export function createDbMock(): DbMock {
 		},
 		__setStemSeparations(nextSeparations: StemSeparation[]) {
 			stemSeparations = [...nextSeparations];
+		},
+		__setWavConversions(nextConversions: WavConversion[]) {
+			wavConversions = [...nextConversions];
 		},
 		__setAnnotations(nextAnnotations: VariationAnnotation[]) {
 			annotations = [...nextAnnotations];

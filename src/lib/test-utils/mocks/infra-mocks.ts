@@ -6,6 +6,7 @@ export interface SseMock {
 	removeClient: MockFn;
 	notifyClients: MockFn;
 	notifyStemSeparationClients: MockFn;
+	notifyWavConversionClients: MockFn;
 	notifyAnnotationClients: MockFn;
 	__reset: () => void;
 }
@@ -13,8 +14,10 @@ export interface SseMock {
 export interface PollingMock {
 	pollForResults: MockFn;
 	pollForStemSeparationResults: MockFn;
+	pollForWavResults: MockFn;
 	recoverIncompleteGenerations: MockFn;
 	recoverIncompleteStemSeparations: MockFn;
+	recoverIncompleteWavConversions: MockFn;
 	__reset: () => void;
 }
 
@@ -32,6 +35,7 @@ export function createSseMock(): SseMock {
 		removeClient: vi.fn(),
 		notifyClients: vi.fn(),
 		notifyStemSeparationClients: vi.fn(),
+		notifyWavConversionClients: vi.fn(),
 		notifyAnnotationClients: vi.fn(),
 		__reset() {
 			clearAllMockCalls(mock as unknown as Record<string, unknown>);
@@ -45,8 +49,10 @@ export function createPollingMock(): PollingMock {
 	const mock: PollingMock = {
 		pollForResults: vi.fn(),
 		pollForStemSeparationResults: vi.fn(),
+		pollForWavResults: vi.fn(),
 		recoverIncompleteGenerations: vi.fn(),
 		recoverIncompleteStemSeparations: vi.fn(),
+		recoverIncompleteWavConversions: vi.fn(),
 		__reset() {
 			clearAllMockCalls(mock as unknown as Record<string, unknown>);
 		}

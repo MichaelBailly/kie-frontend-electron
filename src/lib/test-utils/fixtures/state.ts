@@ -3,6 +3,7 @@ const DEFAULT_TIMESTAMP = '2026-01-15T12:00:00.000Z';
 let nextProjectId = 1;
 let nextGenerationId = 1;
 let nextStemSeparationId = 1;
+let nextWavConversionId = 1;
 let nextAnnotationId = 1;
 let nextLabelId = 1;
 
@@ -10,6 +11,7 @@ export function resetFixtureIds(): void {
 	nextProjectId = 1;
 	nextGenerationId = 1;
 	nextStemSeparationId = 1;
+	nextWavConversionId = 1;
 	nextAnnotationId = 1;
 	nextLabelId = 1;
 }
@@ -24,6 +26,10 @@ export function nextGenerationFixtureId(): number {
 
 export function nextStemSeparationFixtureId(): number {
 	return nextStemSeparationId++;
+}
+
+export function nextWavConversionFixtureId(): number {
+	return nextWavConversionId++;
 }
 
 export function nextAnnotationFixtureId(): number {

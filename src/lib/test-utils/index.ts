@@ -21,6 +21,8 @@ export {
 	createAddVocalsGeneration,
 	createStemSeparation,
 	createCompletedStemSeparation,
+	createWavConversion,
+	createCompletedWavConversion,
 	createAnnotation,
 	createStarredAnnotation,
 	createLabel,
@@ -34,7 +36,10 @@ export {
 	createErrorMusicDetailsResponse,
 	createStemSeparationRequest,
 	createStemSeparationResponse,
-	createStemSeparationDetailsResponse
+	createStemSeparationDetailsResponse,
+	createConvertToWavRequest,
+	createConvertToWavResponse,
+	createWavDetailsResponse
 } from './fixtures';
 
 // Mock helpers

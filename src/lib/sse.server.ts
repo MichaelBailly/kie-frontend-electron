@@ -1,4 +1,4 @@
-import type { Generation, StemSeparation, VariationAnnotation } from '$lib/types';
+import type { Generation, StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 
 // Store connected clients
 const clients = new Map<string, ReadableStreamDefaultController<Uint8Array>>();
@@ -58,4 +58,14 @@ export function notifyAnnotationClients(
 		audioId,
 		data
 	});
+}
+
+export function notifyWavConversionClients(
+	wavConversionId: number,
+	generationId: number,
+	audioId: string,
+	type: 'wav_conversion_update' | 'wav_conversion_complete' | 'wav_conversion_error',
+	data: Partial<WavConversion>
+) {
+	broadcast({ type, wavConversionId, generationId, audioId, data });
 }

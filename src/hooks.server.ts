@@ -1,8 +1,13 @@
 import type { Handle } from '@sveltejs/kit';
-import { getPendingGenerations, getPendingStemSeparations } from '$lib/db.server';
+import {
+	getPendingGenerations,
+	getPendingStemSeparations,
+	getPendingWavConversions
+} from '$lib/db.server';
 import {
 	recoverIncompleteGenerations,
-	recoverIncompleteStemSeparations
+	recoverIncompleteStemSeparations,
+	recoverIncompleteWavConversions
 } from '$lib/polling.server';
 
 // Run recovery on server startup
@@ -11,6 +16,9 @@ recoverIncompleteGenerations(incompleteGenerations);
 
 const incompleteStemSeparations = getPendingStemSeparations();
 recoverIncompleteStemSeparations(incompleteStemSeparations);
+
+const incompleteWavConversions = getPendingWavConversions();
+recoverIncompleteWavConversions(incompleteWavConversions);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const response = await resolve(event);

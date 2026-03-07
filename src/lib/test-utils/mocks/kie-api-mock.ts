@@ -10,11 +10,15 @@ export interface KieApiMock {
 	getMusicDetails: MockFn;
 	separateVocals: MockFn;
 	getStemSeparationDetails: MockFn;
+	convertToWav: MockFn;
+	getWavDetails: MockFn;
 	isErrorStatus: MockFn;
 	isCompleteStatus: MockFn;
 	isInProgressStatus: MockFn;
 	isStemSeparationErrorStatus: MockFn;
 	isStemSeparationCompleteStatus: MockFn;
+	isWavErrorStatus: MockFn;
+	isWavCompleteStatus: MockFn;
 	__reset: () => void;
 }
 
@@ -88,6 +92,27 @@ export function createKieApiMock(): KieApiMock {
 				errorMessage: null
 			}
 		}),
+		convertToWav: vi.fn().mockResolvedValue({
+			code: 200,
+			msg: 'success',
+			data: { taskId: 'wav-task-mock-001' }
+		}),
+		getWavDetails: vi.fn().mockResolvedValue({
+			code: 200,
+			msg: 'success',
+			data: {
+				taskId: 'wav-task-mock-001',
+				musicId: 'audio-1-1',
+				callbackUrl: '',
+				musicIndex: 0,
+				completeTime: null,
+				response: null,
+				successFlag: 'PENDING',
+				createTime: '2026-01-15T12:00:00.000Z',
+				errorCode: null,
+				errorMessage: null
+			}
+		}),
 		isErrorStatus: vi.fn((status: string) =>
 			[
 				'CREATE_TASK_FAILED',
@@ -104,6 +129,10 @@ export function createKieApiMock(): KieApiMock {
 			['CREATE_TASK_FAILED', 'GENERATE_AUDIO_FAILED', 'CALLBACK_EXCEPTION'].includes(status)
 		),
 		isStemSeparationCompleteStatus: vi.fn((status: string) => status === 'SUCCESS'),
+		isWavErrorStatus: vi.fn((status: string) =>
+			['CREATE_TASK_FAILED', 'GENERATE_WAV_FAILED', 'CALLBACK_EXCEPTION'].includes(status)
+		),
+		isWavCompleteStatus: vi.fn((status: string) => status === 'SUCCESS'),
 		__reset() {
 			clearAllMockCalls(mock as unknown as Record<string, unknown>);
 		}

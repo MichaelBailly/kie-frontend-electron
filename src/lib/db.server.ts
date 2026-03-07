@@ -20,6 +20,7 @@ export type {
 	Generation,
 	StemSeparationType,
 	StemSeparation,
+	WavConversion,
 	VariationAnnotation,
 	Label,
 	Setting,
@@ -89,6 +90,23 @@ export {
 	getPendingStemSeparations,
 	getAllCompletedStemSeparations
 } from './db/stem-separations.server';
+
+// WAV conversion operations
+export {
+	createWavConversion,
+	getWavConversion,
+	getWavConversionByTaskId,
+	getWavConversionsForSong,
+	getWavConversionByGenerationAndAudio,
+	setTaskStarted as setWavConversionTaskStarted,
+	setStatus as setWavConversionStatus,
+	setErrored as setWavConversionErrored,
+	setCompleted as setWavConversionCompleted,
+	updateWavConversionTaskId,
+	updateWavConversionStatus,
+	completeWavConversion,
+	getPendingWavConversions
+} from './db/wav-conversions.server';
 
 // Variation annotation operations
 export {

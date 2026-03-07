@@ -3,6 +3,7 @@ import type {
 	Generation,
 	StemSeparation,
 	StemSeparationType,
+	WavConversion,
 	VariationAnnotation,
 	Label,
 	Setting
@@ -13,7 +14,8 @@ import {
 	nextGenerationFixtureId,
 	nextLabelFixtureId,
 	nextProjectFixtureId,
-	nextStemSeparationFixtureId
+	nextStemSeparationFixtureId,
+	nextWavConversionFixtureId
 } from './state';
 
 export function createProject(overrides: Partial<Project> = {}): Project {
@@ -181,6 +183,37 @@ export function createCompletedStemSeparation(
 		vocal_url: `https://cdn.example.com/stems/${id}/vocal.mp3`,
 		instrumental_url: `https://cdn.example.com/stems/${id}/instrumental.mp3`,
 		response_data: JSON.stringify({ taskId: `stem-task-${id}` }),
+		...overrides
+	});
+}
+
+export function createWavConversion(overrides: Partial<WavConversion> = {}): WavConversion {
+	const id = overrides.id ?? nextWavConversionFixtureId();
+	return {
+		id,
+		generation_id: overrides.generation_id ?? 1,
+		audio_id: overrides.audio_id ?? 'audio-1-1',
+		task_id: null,
+		status: 'pending',
+		error_message: null,
+		wav_url: null,
+		response_data: null,
+		created_at: fixtureTimestamp(),
+		updated_at: fixtureTimestamp(),
+		...overrides
+	};
+}
+
+export function createCompletedWavConversion(
+	overrides: Partial<WavConversion> = {}
+): WavConversion {
+	const id = overrides.id ?? nextWavConversionFixtureId();
+	return createWavConversion({
+		id,
+		status: 'success',
+		task_id: `wav-task-${id}`,
+		wav_url: `https://cdn.example.com/wav/${id}/track.wav`,
+		response_data: JSON.stringify({ taskId: `wav-task-${id}` }),
 		...overrides
 	});
 }

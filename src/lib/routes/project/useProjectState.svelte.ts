@@ -7,7 +7,8 @@ import type {
 	Project,
 	SSEMessage,
 	StemSeparation,
-	VariationAnnotation
+	VariationAnnotation,
+	WavConversion
 } from '$lib/types';
 import { isGenerating } from '$lib/types';
 import { SvelteMap } from 'svelte/reactivity';
@@ -24,6 +25,7 @@ type ProjectLayoutData = {
 export function useProjectState(getData: () => ProjectLayoutData) {
 	let projects = $state<ProjectWithGenerations[]>([]);
 	const stemSeparationUpdates = new SvelteMap<number, Partial<StemSeparation>>();
+	const wavConversionUpdates = new SvelteMap<number, Partial<WavConversion>>();
 	const annotationsMap = new SvelteMap<string, VariationAnnotation>();
 
 	$effect(() => {
@@ -57,6 +59,17 @@ export function useProjectState(getData: () => ProjectLayoutData) {
 					message.stemSeparationId,
 					message.data as Partial<StemSeparation>
 				);
+			}
+			return;
+		}
+
+		if (
+			message.type === 'wav_conversion_update' ||
+			message.type === 'wav_conversion_complete' ||
+			message.type === 'wav_conversion_error'
+		) {
+			if (message.wavConversionId) {
+				wavConversionUpdates.set(message.wavConversionId, message.data as Partial<WavConversion>);
 			}
 			return;
 		}
@@ -198,6 +211,9 @@ export function useProjectState(getData: () => ProjectLayoutData) {
 		},
 		get stemSeparationUpdates() {
 			return stemSeparationUpdates;
+		},
+		get wavConversionUpdates() {
+			return wavConversionUpdates;
 		},
 		get annotationsMap() {
 			return annotationsMap;

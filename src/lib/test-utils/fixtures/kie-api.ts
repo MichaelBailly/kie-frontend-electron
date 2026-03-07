@@ -4,9 +4,12 @@ import type {
 	GenerateMusicResponse,
 	MusicDetailsResponse,
 	SunoTrack,
+	ConvertToWavRequest,
+	ConvertToWavResponse,
 	StemSeparationRequest,
 	StemSeparationResponse,
-	StemSeparationDetailsResponse
+	StemSeparationDetailsResponse,
+	WavDetailsResponse
 } from '$lib/kie-api.server';
 import { DEFAULT_TIMESTAMP } from './state';
 
@@ -199,6 +202,60 @@ export function createStemSeparationDetailsResponse(
 		data: {
 			...defaults.data,
 			...(overrides.data as Partial<StemSeparationDetailsResponse['data']>)
+		}
+	};
+}
+
+export function createConvertToWavRequest(
+	overrides: Partial<ConvertToWavRequest> = {}
+): ConvertToWavRequest {
+	return {
+		taskId: 'task-abc-123',
+		audioId: 'audio-1-1',
+		callBackUrl: 'https://example.com/callback',
+		...overrides
+	};
+}
+
+export function createConvertToWavResponse(
+	overrides: Partial<ConvertToWavResponse> = {}
+): ConvertToWavResponse {
+	return {
+		code: 200,
+		msg: 'success',
+		data: { taskId: 'wav-task-abc-123' },
+		...overrides
+	};
+}
+
+export function createWavDetailsResponse(
+	overrides: Partial<WavDetailsResponse> = {}
+): WavDetailsResponse {
+	const defaults: WavDetailsResponse = {
+		code: 200,
+		msg: 'success',
+		data: {
+			taskId: 'wav-task-abc-123',
+			musicId: 'audio-1-1',
+			callbackUrl: 'https://example.com/callback',
+			musicIndex: 0,
+			completeTime: DEFAULT_TIMESTAMP,
+			response: {
+				audioWavUrl: 'https://cdn.example.com/wav/track-1.wav'
+			},
+			successFlag: 'SUCCESS',
+			createTime: DEFAULT_TIMESTAMP,
+			errorCode: null,
+			errorMessage: null
+		}
+	};
+
+	return {
+		...defaults,
+		...overrides,
+		data: {
+			...defaults.data,
+			...(overrides.data as Partial<WavDetailsResponse['data']>)
 		}
 	};
 }

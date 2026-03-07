@@ -2,7 +2,7 @@
 	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import type { StemSeparation, VariationAnnotation } from '$lib/types';
+	import type { StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import { setContext } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -36,6 +36,15 @@
 		},
 		set: (id: number, data: Partial<StemSeparation>) => {
 			projectState.stemSeparationUpdates.set(id, data);
+		}
+	});
+
+	setContext('wavConversions', {
+		get updates() {
+			return projectState.wavConversionUpdates;
+		},
+		set: (id: number, data: Partial<WavConversion>) => {
+			projectState.wavConversionUpdates.set(id, data);
 		}
 	});
 

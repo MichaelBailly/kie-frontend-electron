@@ -10,8 +10,10 @@ import {
 	createErrorMusicDetailsResponse,
 	createPendingMusicDetailsResponse,
 	createStemSeparationDetailsResponse,
+	createWavDetailsResponse,
 	createGeneration,
 	createStemSeparation,
+	createWavConversion,
 	createSunoTrack
 } from '$lib/test-utils/fixtures';
 
@@ -22,6 +24,7 @@ import {
 vi.mock('$lib/kie-api.server', () => ({
 	getMusicDetails: vi.fn(),
 	getStemSeparationDetails: vi.fn(),
+	getWavDetails: vi.fn(),
 	// Use real logic for status checks so routing works correctly
 	isErrorStatus: vi.fn((s: string) =>
 		[
@@ -35,7 +38,11 @@ vi.mock('$lib/kie-api.server', () => ({
 	isStemSeparationErrorStatus: vi.fn((s: string) =>
 		['CREATE_TASK_FAILED', 'GENERATE_AUDIO_FAILED', 'CALLBACK_EXCEPTION'].includes(s)
 	),
-	isStemSeparationCompleteStatus: vi.fn((s: string) => s === 'SUCCESS')
+	isStemSeparationCompleteStatus: vi.fn((s: string) => s === 'SUCCESS'),
+	isWavErrorStatus: vi.fn((s: string) =>
+		['CREATE_TASK_FAILED', 'GENERATE_WAV_FAILED', 'CALLBACK_EXCEPTION'].includes(s)
+	),
+	isWavCompleteStatus: vi.fn((s: string) => s === 'SUCCESS')
 }));
 
 vi.mock('$lib/db.server', () => ({
@@ -45,12 +52,16 @@ vi.mock('$lib/db.server', () => ({
 	setGenerationCompleted: vi.fn(),
 	setStemSeparationErrored: vi.fn(),
 	setStemSeparationStatus: vi.fn(),
-	setStemSeparationCompleted: vi.fn()
+	setStemSeparationCompleted: vi.fn(),
+	setWavConversionErrored: vi.fn(),
+	setWavConversionStatus: vi.fn(),
+	setWavConversionCompleted: vi.fn()
 }));
 
 vi.mock('$lib/sse.server', () => ({
 	notifyClients: vi.fn(),
-	notifyStemSeparationClients: vi.fn()
+	notifyStemSeparationClients: vi.fn(),
+	notifyWavConversionClients: vi.fn()
 }));
 
 // ============================================================================
@@ -62,20 +73,28 @@ import {
 	recoverIncompleteGenerations,
 	pollForStemSeparationResults,
 	recoverIncompleteStemSeparations,
+	pollForWavResults,
+	recoverIncompleteWavConversions,
 	cancelGenerationPoll,
 	cancelStemSeparationPoll,
 	cancelAllPolls
 } from '$lib/polling.server';
 
-import { getMusicDetails, getStemSeparationDetails } from '$lib/kie-api.server';
+import { getMusicDetails, getStemSeparationDetails, getWavDetails } from '$lib/kie-api.server';
 import {
 	setGenerationErrored,
 	setGenerationStatus,
 	setGenerationCompleted,
 	setStemSeparationErrored,
-	setStemSeparationCompleted
+	setStemSeparationCompleted,
+	setWavConversionErrored,
+	setWavConversionCompleted
 } from '$lib/db.server';
-import { notifyClients, notifyStemSeparationClients } from '$lib/sse.server';
+import {
+	notifyClients,
+	notifyStemSeparationClients,
+	notifyWavConversionClients
+} from '$lib/sse.server';
 
 // ============================================================================
 // Scenario builders
@@ -541,5 +560,112 @@ describe('recoverIncompleteStemSeparations', () => {
 
 		expect(setStemSeparationErrored).not.toHaveBeenCalled();
 		expect(getStemSeparationDetails).not.toHaveBeenCalled();
+	});
+});
+
+// ============================================================================
+// pollForWavResults
+// ============================================================================
+
+describe('pollForWavResults', () => {
+	it('completes WAV conversion when API returns SUCCESS', async () => {
+		vi.mocked(getWavDetails).mockResolvedValue(createWavDetailsResponse());
+
+		await pollForWavResults(1, 'wav-task-1', 10, 'audio-1');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(setWavConversionCompleted).toHaveBeenCalledWith(
+			1,
+			'https://cdn.example.com/wav/track-1.wav',
+			expect.any(String)
+		);
+		expect(notifyWavConversionClients).toHaveBeenCalledWith(
+			1,
+			10,
+			'audio-1',
+			'wav_conversion_complete',
+			expect.objectContaining({
+				status: 'success',
+				wav_url: 'https://cdn.example.com/wav/track-1.wav'
+			})
+		);
+	});
+
+	it('marks WAV conversion as error on error status', async () => {
+		vi.mocked(getWavDetails).mockResolvedValue(
+			createWavDetailsResponse({
+				data: {
+					taskId: 'wav-task-1',
+					musicId: 'audio-1',
+					callbackUrl: '',
+					musicIndex: 0,
+					completeTime: null,
+					response: null,
+					successFlag: 'GENERATE_WAV_FAILED',
+					createTime: '2026-01-15T12:00:00.000Z',
+					errorCode: 500,
+					errorMessage: 'WAV render failed'
+				}
+			})
+		);
+
+		await pollForWavResults(1, 'wav-task-1', 10, 'audio-1');
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(setWavConversionErrored).toHaveBeenCalledWith(1, 'WAV render failed');
+		expect(notifyWavConversionClients).toHaveBeenCalledWith(
+			1,
+			10,
+			'audio-1',
+			'wav_conversion_error',
+			expect.objectContaining({ status: 'error' })
+		);
+	});
+});
+
+// ============================================================================
+// recoverIncompleteWavConversions
+// ============================================================================
+
+describe('recoverIncompleteWavConversions', () => {
+	it('marks conversions without task_id as error', () => {
+		const conversion = createWavConversion({
+			id: 9,
+			task_id: null,
+			status: 'pending',
+			generation_id: 10,
+			audio_id: 'audio-1'
+		});
+
+		recoverIncompleteWavConversions([conversion]);
+
+		expect(setWavConversionErrored).toHaveBeenCalledWith(
+			9,
+			'WAV conversion interrupted before task creation'
+		);
+	});
+
+	it('resumes polling for conversions with task_id', async () => {
+		const conversion = createWavConversion({
+			id: 9,
+			task_id: 'wav-task-abc',
+			status: 'processing',
+			generation_id: 10,
+			audio_id: 'audio-1'
+		});
+		vi.mocked(getWavDetails).mockResolvedValue(createWavDetailsResponse());
+
+		recoverIncompleteWavConversions([conversion]);
+		await vi.advanceTimersByTimeAsync(0);
+
+		expect(getWavDetails).toHaveBeenCalledWith('wav-task-abc');
+		expect(setWavConversionCompleted).toHaveBeenCalledTimes(1);
+	});
+
+	it('does nothing for empty array', () => {
+		recoverIncompleteWavConversions([]);
+
+		expect(setWavConversionErrored).not.toHaveBeenCalled();
+		expect(getWavDetails).not.toHaveBeenCalled();
 	});
 });

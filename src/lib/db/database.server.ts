@@ -148,6 +148,23 @@ export function getDb(): BetterSqlite3.Database {
 		CREATE INDEX IF NOT EXISTS idx_stem_separations_generation_audio ON stem_separations(generation_id, audio_id);
 		CREATE INDEX IF NOT EXISTS idx_stem_separations_task_id ON stem_separations(task_id);
 
+		CREATE TABLE IF NOT EXISTS wav_conversions (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			generation_id INTEGER NOT NULL,
+			audio_id TEXT NOT NULL,
+			task_id TEXT,
+			status TEXT NOT NULL DEFAULT 'pending',
+			error_message TEXT,
+			wav_url TEXT,
+			response_data TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			FOREIGN KEY (generation_id) REFERENCES generations(id) ON DELETE CASCADE
+		);
+
+		CREATE INDEX IF NOT EXISTS idx_wav_conversions_generation_audio ON wav_conversions(generation_id, audio_id);
+		CREATE INDEX IF NOT EXISTS idx_wav_conversions_task_id ON wav_conversions(task_id);
+
 		CREATE TABLE IF NOT EXISTS settings (
 			key TEXT PRIMARY KEY,
 			value TEXT NOT NULL,
