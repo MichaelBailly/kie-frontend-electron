@@ -181,6 +181,27 @@ function createAudioStore() {
 		 */
 		seek(time: number) {
 			if (!audioElement) return;
+			if (!Number.isFinite(time) || time < 0) {
+				console.warn('[AudioPlayer] seek() called with invalid time', {
+					time,
+					trackId: state.currentTrack?.id
+				});
+				return;
+			}
+			// Cancel any pending URL swap — the user seeked manually, so the old resumeTime is stale
+			if (pendingUrlSwap) {
+				console.log('[AudioPlayer] seek() cancelled pending URL swap', {
+					oldResumeTime: pendingUrlSwap.resumeTime,
+					newTime: time
+				});
+				pendingUrlSwap = null;
+			}
+			console.log('[AudioPlayer] seek()', {
+				time,
+				trackId: state.currentTrack?.id,
+				src: audioElement.src,
+				readyState: audioElement.readyState
+			});
 			audioElement.currentTime = time;
 			state.currentTime = time;
 		},
@@ -267,14 +288,19 @@ function createAudioStore() {
 			if (!pendingUrlSwap || !audioElement) return;
 
 			const { resumeTime } = pendingUrlSwap;
+			pendingUrlSwap = null;
 			audioElement.currentTime = resumeTime;
+			state.currentTime = resumeTime;
+			console.log('[AudioPlayer] URL swap complete, resuming', {
+				resumeTime,
+				src: audioElement.src
+			});
 			audioElement.play().catch((err: unknown) => {
 				console.error('[AudioPlayer] play() failed after URL swap', {
 					src: audioElement?.src,
 					err
 				});
 			});
-			pendingUrlSwap = null;
 		},
 
 		/**
@@ -286,6 +312,15 @@ function createAudioStore() {
 
 		// Event handlers for the audio element (called by GlobalAudioPlayer)
 		onTimeUpdate(time: number) {
+			if (time === 0 && state.currentTime > 2 && state.isPlaying) {
+				console.warn('[AudioPlayer] onTimeUpdate: unexpected reset to 0 while playing', {
+					previousTime: state.currentTime,
+					trackId: state.currentTrack?.id,
+					src: audioElement?.src,
+					readyState: audioElement?.readyState,
+					hasPendingUrlSwap: pendingUrlSwap !== null
+				});
+			}
 			state.currentTime = time;
 		},
 

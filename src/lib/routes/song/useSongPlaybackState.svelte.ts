@@ -27,7 +27,16 @@ export function useSongPlaybackState(options: {
 			audioStore.seek(time);
 			return;
 		}
-
+		// Log when seek is called but this song is not the active track.
+		// This can cause the waveform to reset to 0 because currentTime is derived as 0 when isCurrentTrack=false.
+		console.warn(
+			'[SongPlayback] handleWaveformSeek: not the current track, will load from seek position',
+			{
+				songId: getSong().id,
+				currentTrackId: audioStore.currentTrack?.id,
+				time
+			}
+		);
 		audioStore.play(buildAudioTrack(getGeneration(), getSong()), time);
 	}
 
@@ -46,6 +55,14 @@ export function useSongPlaybackState(options: {
 
 		if (isCurrentTrack) {
 			audioStore.seek(time);
+		} else {
+			// Log when seek is silently dropped.
+			// This causes the slider to snap back to 0 since currentTime=0 when isCurrentTrack=false.
+			console.warn('[SongPlayback] handleSeek: not the current track, seek ignored', {
+				songId: getSong().id,
+				currentTrackId: audioStore.currentTrack?.id,
+				time
+			});
 		}
 	}
 

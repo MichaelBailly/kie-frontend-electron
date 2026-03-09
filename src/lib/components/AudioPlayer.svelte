@@ -72,6 +72,12 @@
 		const target = e.target as HTMLInputElement;
 		if (isCurrentTrack) {
 			audioStore.seek(parseFloat(target.value));
+		} else {
+			console.warn('[AudioPlayer] handleSeek: not the current track, seek ignored', {
+				trackId,
+				currentTrackId: audioStore.currentTrack?.id,
+				time: target.value
+			});
 		}
 	}
 
