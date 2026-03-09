@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createWavConversion } from '$lib/test-utils/fixtures/entities';
 import type { WavConversion } from '$lib/types';
+import { SvelteMap } from 'svelte/reactivity';
 
 import { useWavConversionState } from './useWavConversionState.svelte';
 
 function makeContext() {
-	const updates = new Map<number, Partial<WavConversion>>();
+	const updates = new SvelteMap<number, Partial<WavConversion>>();
 	return {
 		updates,
 		set(id: number, data: Partial<WavConversion>) {
@@ -27,13 +28,14 @@ function makeState(initialWavConversions: WavConversion[], context = makeContext
 }
 
 describe('useWavConversionState', () => {
-	it('applies SSE updates to an initial conversion', () => {
+	it('applies SSE updates to an initial conversion', async () => {
 		const initial = createWavConversion({ id: 10, status: 'pending' });
 		const { state, context } = makeState([initial]);
 
 		expect(state.wavConversions[0].status).toBe('pending');
 
 		context.set(10, { status: 'success', wav_url: 'https://cdn.example.com/render.wav' });
+		await Promise.resolve();
 
 		expect(state.wavConversions[0].status).toBe('success');
 		expect(state.wavConversions[0].wav_url).toBe('https://cdn.example.com/render.wav');
@@ -49,11 +51,13 @@ describe('useWavConversionState', () => {
 		const { state, context } = makeState([]);
 
 		await state.requestWavConversion();
+		await Promise.resolve();
 
 		expect(state.wavConversions).toHaveLength(1);
 		expect(state.pendingWavConversion?.id).toBe(99);
 
 		context.set(99, { status: 'success', wav_url: 'https://cdn.example.com/render.wav' });
+		await Promise.resolve();
 
 		expect(state.wavConversion?.wav_url).toBe('https://cdn.example.com/render.wav');
 	});

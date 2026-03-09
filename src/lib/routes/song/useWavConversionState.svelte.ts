@@ -16,7 +16,7 @@ export function useWavConversionState(options: {
 	let newWavConversions = $state<WavConversion[]>([]);
 	let isConverting = $state(false);
 
-	const wavConversions = $derived.by(() => {
+	function getWavConversions() {
 		const initialWavConversions = getInitialWavConversions();
 		const serverData = initialWavConversions.map((conversion) => {
 			const updates = wavConversionsContext?.updates.get(conversion.id);
@@ -32,14 +32,7 @@ export function useWavConversionState(options: {
 					return updates ? { ...item, ...updates } : item;
 				})
 		];
-	});
-
-	const wavConversion = $derived(
-		wavConversions.find((item) => item.status === 'success' && !!item.wav_url)
-	);
-	const pendingWavConversion = $derived(
-		wavConversions.find((item) => item.status === 'pending' || item.status === 'processing')
-	);
+	}
 
 	async function requestWavConversion() {
 		isConverting = true;
@@ -74,13 +67,15 @@ export function useWavConversionState(options: {
 
 	return {
 		get wavConversions() {
-			return wavConversions;
+			return getWavConversions();
 		},
 		get wavConversion() {
-			return wavConversion;
+			return getWavConversions().find((item) => item.status === 'success' && !!item.wav_url);
 		},
 		get pendingWavConversion() {
-			return pendingWavConversion;
+			return getWavConversions().find(
+				(item) => item.status === 'pending' || item.status === 'processing'
+			);
 		},
 		get isConverting() {
 			return isConverting;

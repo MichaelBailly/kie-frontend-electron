@@ -17,7 +17,7 @@ export function useStemSeparationState(options: {
 	let separatingType = $state<StemSeparationType | null>(null);
 	let showStemOptions = $state(false);
 
-	const stemSeparations = $derived.by(() => {
+	function getStemSeparations() {
 		const initialStemSeparations = getInitialStemSeparations();
 		const serverData = initialStemSeparations.map((separation) => {
 			const updates = stemSeparationsContext?.updates.get(separation.id);
@@ -33,27 +33,7 @@ export function useStemSeparationState(options: {
 					return updates ? { ...item, ...updates } : item;
 				})
 		];
-	});
-
-	const vocalSeparation = $derived(
-		stemSeparations.find((item) => item.type === 'separate_vocal' && item.status === 'success')
-	);
-	const stemSeparation = $derived(
-		stemSeparations.find((item) => item.type === 'split_stem' && item.status === 'success')
-	);
-	const pendingVocalSeparation = $derived(
-		stemSeparations.find(
-			(item) =>
-				item.type === 'separate_vocal' &&
-				(item.status === 'pending' || item.status === 'processing')
-		)
-	);
-	const pendingStemSeparation = $derived(
-		stemSeparations.find(
-			(item) =>
-				item.type === 'split_stem' && (item.status === 'pending' || item.status === 'processing')
-		)
-	);
+	}
 
 	function toggleStemOptions() {
 		showStemOptions = !showStemOptions;
@@ -93,7 +73,7 @@ export function useStemSeparationState(options: {
 
 	return {
 		get stemSeparations() {
-			return stemSeparations;
+			return getStemSeparations();
 		},
 		get separatingType() {
 			return separatingType;
@@ -102,16 +82,27 @@ export function useStemSeparationState(options: {
 			return showStemOptions;
 		},
 		get vocalSeparation() {
-			return vocalSeparation;
+			return getStemSeparations().find(
+				(item) => item.type === 'separate_vocal' && item.status === 'success'
+			);
 		},
 		get stemSeparation() {
-			return stemSeparation;
+			return getStemSeparations().find(
+				(item) => item.type === 'split_stem' && item.status === 'success'
+			);
 		},
 		get pendingVocalSeparation() {
-			return pendingVocalSeparation;
+			return getStemSeparations().find(
+				(item) =>
+					item.type === 'separate_vocal' &&
+					(item.status === 'pending' || item.status === 'processing')
+			);
 		},
 		get pendingStemSeparation() {
-			return pendingStemSeparation;
+			return getStemSeparations().find(
+				(item) =>
+					item.type === 'split_stem' && (item.status === 'pending' || item.status === 'processing')
+			);
 		},
 		toggleStemOptions,
 		requestStemSeparation
