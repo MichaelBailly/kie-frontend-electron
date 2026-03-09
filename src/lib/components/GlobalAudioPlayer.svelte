@@ -44,6 +44,17 @@
 	function handleEnded() {
 		audioStore.onEnded();
 	}
+
+	function handleError() {
+		const track = audioStore.currentTrack;
+		console.error('[AudioPlayer] Audio element error', {
+			trackId: track?.id,
+			src: audio?.src,
+			audioUrl: track?.audioUrl,
+			streamUrl: track?.streamUrl,
+			error: audio?.error ? { code: audio.error.code, message: audio.error.message } : 'unknown'
+		});
+	}
 </script>
 
 <!-- Hidden audio element that persists across navigation -->
@@ -55,6 +66,7 @@
 	onplay={handlePlay}
 	onpause={handlePause}
 	onended={handleEnded}
+	onerror={handleError}
 	preload="metadata"
 	class="hidden"
 ></audio>

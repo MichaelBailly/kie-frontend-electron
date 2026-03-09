@@ -17,7 +17,7 @@ function createMockAudioElement() {
 	const audioElement: MockAudioElement = {
 		src: '',
 		currentTime: 0,
-		play: vi.fn(),
+		play: vi.fn().mockResolvedValue(undefined),
 		pause: vi.fn(),
 		load: vi.fn(),
 		addEventListener: vi.fn((eventName: string, callback: () => void) => {

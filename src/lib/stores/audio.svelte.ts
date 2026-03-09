@@ -92,29 +92,54 @@ function createAudioStore() {
 					audioElement.currentTime = playbackStart;
 					state.currentTime = playbackStart;
 				}
-				audioElement.play();
+				audioElement.play().catch((err: unknown) => {
+					console.error('[AudioPlayer] play() failed for current track', {
+						trackId: track.id,
+						src: audioElement?.src,
+						err
+					});
+				});
 			} else {
 				// Different track, load and play
+				if (!newSrc) {
+					console.warn('[AudioPlayer] Cannot play track – no audio URL available', {
+						trackId: track.id,
+						audioUrl: track.audioUrl,
+						streamUrl: track.streamUrl
+					});
+					return;
+				}
+
 				state.currentTrack = track;
 				state.currentTime = playbackStart ?? 0;
 				state.duration = track.duration || 0;
 
-				if (newSrc) {
-					audioElement.src = newSrc;
-					audioElement.load();
+				audioElement.src = newSrc;
+				audioElement.load();
 
-					if (playbackStart !== undefined) {
-						const handleLoadedMetadata = () => {
-							if (!audioElement) return;
-							audioElement.currentTime = playbackStart;
-							state.currentTime = playbackStart;
-							audioElement.play();
-						};
+				if (playbackStart !== undefined) {
+					const handleLoadedMetadata = () => {
+						if (!audioElement) return;
+						audioElement.currentTime = playbackStart;
+						state.currentTime = playbackStart;
+						audioElement.play().catch((err: unknown) => {
+							console.error('[AudioPlayer] play() failed after loadedmetadata', {
+								trackId: track.id,
+								src: audioElement?.src,
+								err
+							});
+						});
+					};
 
-						audioElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
-					} else {
-						audioElement.play();
-					}
+					audioElement.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+				} else {
+					audioElement.play().catch((err: unknown) => {
+						console.error('[AudioPlayer] play() failed after load', {
+							trackId: track.id,
+							src: audioElement?.src,
+							err
+						});
+					});
 				}
 			}
 		},
@@ -135,7 +160,19 @@ function createAudioStore() {
 			if (state.isPlaying) {
 				audioElement.pause();
 			} else {
-				audioElement.play();
+				if (!audioElement.src || audioElement.src === document.baseURI) {
+					console.warn('[AudioPlayer] toggle() called with no src loaded', {
+						currentTrack: state.currentTrack
+					});
+					return;
+				}
+				audioElement.play().catch((err: unknown) => {
+					console.error('[AudioPlayer] toggle play() failed', {
+						trackId: state.currentTrack?.id,
+						src: audioElement?.src,
+						err
+					});
+				});
 			}
 		},
 
@@ -231,7 +268,12 @@ function createAudioStore() {
 
 			const { resumeTime } = pendingUrlSwap;
 			audioElement.currentTime = resumeTime;
-			audioElement.play();
+			audioElement.play().catch((err: unknown) => {
+				console.error('[AudioPlayer] play() failed after URL swap', {
+					src: audioElement?.src,
+					err
+				});
+			});
 			pendingUrlSwap = null;
 		},
 
