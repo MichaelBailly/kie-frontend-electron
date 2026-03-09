@@ -570,6 +570,9 @@
 			{/if}
 		</div>
 	</div>
+	{#if generation.task_id}
+		<p class="task-id-footer">Task ID: {generation.task_id}</p>
+	{/if}
 </div>
 
 {#if showSaveStyleModal}
@@ -579,3 +582,15 @@
 		onSaved={handleStyleSaved}
 	/>
 {/if}
+
+<style>
+	.task-id-footer {
+		padding: 0.5rem;
+		text-align: center;
+		font-size: 0.7rem;
+		color: color-mix(in srgb, currentColor 25%, transparent);
+		font-family: monospace;
+		user-select: all;
+		border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent);
+	}
+</style>
