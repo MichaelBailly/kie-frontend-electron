@@ -60,6 +60,25 @@
 	let showSaveStyleModal = $state(false);
 	let saveStyleSuccess = $state(false);
 
+	let showCompleteBanner = $state(false);
+	let completeBannerTimer: ReturnType<typeof setTimeout> | undefined;
+	let prevGenerationStatus: string | undefined;
+
+	$effect(() => {
+		const status = generation.status;
+		if (
+			prevGenerationStatus !== undefined &&
+			status === 'success' &&
+			prevGenerationStatus !== 'success'
+		) {
+			showCompleteBanner = true;
+			clearTimeout(completeBannerTimer);
+			completeBannerTimer = setTimeout(() => (showCompleteBanner = false), 8000);
+		}
+		prevGenerationStatus = status;
+		return () => clearTimeout(completeBannerTimer);
+	});
+
 	let styleCopied = $state(false);
 	const copyStyle = createCopyWithFeedback((copied) => {
 		styleCopied = copied;
@@ -341,7 +360,7 @@
 		{/if}
 
 		<!-- Status indicator for completed or error -->
-		{#if generation.status === 'success'}
+		{#if showCompleteBanner}
 			<div
 				class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20"
 			>
