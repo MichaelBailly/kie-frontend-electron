@@ -40,10 +40,14 @@
 		const stemType = generation.extends_stem_type;
 		if (!stemType) return undefined;
 		const stemDisplay = getStemDisplay(normalizeStemType(stemType));
+		const isFullMix = stemType.trim().toLowerCase() === 'mp3';
 		if (isGenerationTypeOneOf(generation.generation_type, ['add_instrumental'])) {
 			return `Instrumental from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
 		if (isGenerationTypeOneOf(generation.generation_type, ['add_vocals'])) {
+			if (isFullMix) {
+				return `Vocals from ${stemDisplay.icon} ${stemDisplay.label} of:`;
+			}
 			return `Vocals from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;

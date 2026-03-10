@@ -92,6 +92,14 @@
 	);
 	const hasLyrics = $derived(!!generationState.generation.lyrics && !isAddInstrumental);
 	const hasNegativeTags = $derived(!!generationState.generation.negative_tags?.trim());
+	const addVocalsMp3SourceUrl = $derived(
+		generationState.song.audioUrl || generationState.song.streamUrl || null
+	);
+	const isAddVocalsFromMp3Active = $derived(
+		generationState.showAddVocalsForm &&
+			generationState.addVocalsStemType === 'mp3' &&
+			generationState.addVocalsStemUrl === addVocalsMp3SourceUrl
+	);
 
 	// Collapsed states for cards
 	let stemsCollapsed = $state(false);
@@ -171,10 +179,14 @@
 		const stemType = generationState.generation.extends_stem_type;
 		if (!stemType) return undefined;
 		const stemDisplay = getStemDisplay(stemType);
+		const isFullMix = stemType.trim().toLowerCase() === 'mp3';
 		if (generationState.generation.generation_type === 'add_instrumental') {
 			return `Instrumental added from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
 		if (generationState.generation.generation_type === 'add_vocals') {
+			if (isFullMix) {
+				return `Vocals added from ${stemDisplay.icon} ${stemDisplay.label} of:`;
+			}
 			return `Vocals added from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
 		}
 		return `Extended from ${stemDisplay.icon} ${stemDisplay.label} stem of:`;
@@ -203,6 +215,25 @@
 
 	async function handleAddVocals(stemType: string, stemUrl: string) {
 		generationState.openAddVocalsForm(stemType, stemUrl);
+		await tick();
+		extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
+	async function handleAddVocalsFromMp3() {
+		const sourceUrl = addVocalsMp3SourceUrl;
+		if (!sourceUrl) return;
+
+		const alreadyOpen =
+			generationState.showAddVocalsForm &&
+			generationState.addVocalsStemType === 'mp3' &&
+			generationState.addVocalsStemUrl === sourceUrl;
+
+		if (alreadyOpen) {
+			generationState.closeAddVocalsForm();
+			return;
+		}
+
+		generationState.openAddVocalsForm('mp3', sourceUrl);
 		await tick();
 		extendSectionEl?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 	}
@@ -343,6 +374,32 @@
 				</svg>
 				Extend
 			</button>
+
+			<!-- Add Vocal from full mix -->
+			{#if addVocalsMp3SourceUrl}
+				<button
+					onclick={handleAddVocalsFromMp3}
+					class="group relative flex h-9 shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg px-3 text-xs font-semibold tracking-wide transition-all duration-200 {isAddVocalsFromMp3Active
+						? 'bg-linear-to-r from-violet-600 via-fuchsia-600 to-violet-700 text-white shadow-md ring-1 shadow-violet-500/35 ring-violet-300/60 dark:ring-violet-500/40'
+						: 'bg-linear-to-r from-violet-50 to-fuchsia-50 text-violet-700 ring-1 ring-violet-200/90 hover:from-violet-100 hover:to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/20 dark:text-violet-300 dark:ring-violet-700/50 dark:hover:from-violet-900/45 dark:hover:to-fuchsia-900/35'}"
+					title="Generate new vocals from this variation MP3"
+				>
+					<span
+						class="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 {isAddVocalsFromMp3Active
+							? ''
+							: 'bg-linear-to-r from-white/35 via-white/0 to-white/20 dark:from-white/10 dark:to-white/5'}"
+					></span>
+					<svg class="relative h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 18.5c4.142 0 7.5-3.134 7.5-7s-3.358-7-7.5-7-7.5 3.134-7.5 7 3.358 7 7.5 7zM12 18.5v3"
+						/>
+					</svg>
+					<span class="relative">Add Vocal</span>
+				</button>
+			{/if}
 
 			<!-- Stems -->
 			<div class="relative">

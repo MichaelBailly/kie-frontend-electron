@@ -32,6 +32,7 @@
 
 	const normalizedStemType = $derived(normalizeStemType(stemType));
 	const stemDisplay = $derived(getStemDisplay(normalizedStemType));
+	const isFullMixSource = $derived(normalizedStemType === 'mp3');
 
 	let title = $state(untrack(() => `${generation.title.replace(/( — Vocals)+$/, '')} — Vocals`));
 	let prompt = $state(untrack(() => generation.lyrics ?? ''));
@@ -48,7 +49,9 @@
 			id: previewTrackId,
 			generationId: generation.id,
 			projectId: generation.project_id,
-			title: `${song.title} — ${stemDisplay.label} Stem`,
+			title: isFullMixSource
+				? `${song.title} — Full Mix`
+				: `${song.title} — ${stemDisplay.label} Stem`,
 			imageUrl: song.imageUrl,
 			streamUrl: stemUrl,
 			audioUrl: stemUrl,
@@ -89,12 +92,21 @@
 		<div class="mb-2 flex items-center gap-2">
 			<span class="text-xl">🎤</span>
 			<h3 class="font-semibold text-violet-900 dark:text-violet-100">
-				Add Vocals from {stemDisplay.label} Stem
+				{#if isFullMixSource}
+					Add Vocals from Full Mix
+				{:else}
+					Add Vocals from {stemDisplay.label} Stem
+				{/if}
 			</h3>
 		</div>
 		<p class="text-sm text-violet-700 dark:text-violet-300">
-			Generate a new vocal performance and lyrics from this isolated stem while keeping full lineage
-			to the source track.
+			{#if isFullMixSource}
+				Generate a new vocal performance and lyrics directly from this track's MP3 while keeping
+				full lineage to the source variation.
+			{:else}
+				Generate a new vocal performance and lyrics from this isolated stem while keeping full
+				lineage to the source track.
+			{/if}
 		</p>
 	</div>
 
@@ -103,7 +115,9 @@
 	>
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-xs font-semibold tracking-wider text-gray-400 uppercase">Source Stem</p>
+				<p class="text-xs font-semibold tracking-wider text-gray-400 uppercase">
+					{isFullMixSource ? 'Source Track' : 'Source Stem'}
+				</p>
 				<p class="text-sm font-medium text-gray-800 dark:text-gray-200">{song.title}</p>
 			</div>
 			<button
@@ -120,7 +134,7 @@
 					<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
 						<path d="M8 5v14l11-7z" />
 					</svg>
-					Preview Stem
+					{isFullMixSource ? 'Preview Track' : 'Preview Stem'}
 				{/if}
 			</button>
 		</div>

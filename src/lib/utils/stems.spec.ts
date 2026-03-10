@@ -10,6 +10,7 @@ describe('stems utils', () => {
 
 	it('returns display metadata for known stem types', () => {
 		expect(getStemDisplay('vocal')).toEqual({ label: 'Vocals', icon: '🎤' });
+		expect(getStemDisplay('mp3')).toEqual({ label: 'Full Mix', icon: '🎵' });
 		expect(getStemDisplay('percussion')).toEqual({ label: 'Percussion', icon: '🪘' });
 	});
 

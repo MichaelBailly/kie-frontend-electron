@@ -1,5 +1,6 @@
 export const STEM_DISPLAY: Record<string, { label: string; icon: string }> = {
 	vocal: { label: 'Vocals', icon: '🎤' },
+	mp3: { label: 'Full Mix', icon: '🎵' },
 	instrumental: { label: 'Instrumental', icon: '🎸' },
 	backing_vocals: { label: 'Backing Vocals', icon: '🎙️' },
 	drums: { label: 'Drums', icon: '🥁' },

@@ -34,7 +34,9 @@
 
 	let normalizedStemType = $derived(normalizeStemType(stemType));
 	let stemDisplay = $derived(getStemDisplay(normalizedStemType));
-	let canRenderForm = $derived(!!stemUrl && normalizedStemType === 'instrumental');
+	let canRenderForm = $derived(
+		!!stemUrl && (normalizedStemType === 'instrumental' || normalizedStemType === 'mp3')
+	);
 </script>
 
 {#if show}
@@ -85,7 +87,7 @@
 					/>
 				{:else}
 					<p class="text-sm text-gray-500 dark:text-gray-400">
-						An instrumental stem is required for this action.
+						An instrumental stem or full-mix MP3 is required for this action.
 					</p>
 				{/if}
 			</div>
