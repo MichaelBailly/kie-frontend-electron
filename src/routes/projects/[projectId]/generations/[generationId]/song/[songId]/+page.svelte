@@ -981,42 +981,51 @@
 							</div>
 							{#if wavState.pendingWavConversion || wavState.wavConversion}
 								<div
-									class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 p-5 shadow-lg ring-1 shadow-cyan-950/15 ring-cyan-400/10"
+									class="mt-4 overflow-hidden rounded-xl border border-cyan-200/60 bg-linear-to-br from-cyan-50/70 to-white p-4 shadow-sm dark:border-cyan-700/30 dark:from-cyan-950/30 dark:to-gray-900/80"
 								>
-									<div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-										<div class="min-w-0">
-											<div class="mb-2 flex items-center gap-2">
+									<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+										<div class="min-w-0 flex-1">
+											<div class="mb-3 flex items-center gap-2.5">
 												<span
-													class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/8 text-base text-cyan-200 ring-1 ring-white/10"
+													class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600 dark:bg-cyan-900/50 dark:text-cyan-300"
 												>
-													~
+													<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+														/>
+													</svg>
 												</span>
 												<div>
-													<h4 class="text-sm font-semibold tracking-wide text-white">WAV Export</h4>
-													<p class="text-xs text-cyan-100/70">
+													<h4 class="text-sm font-semibold text-cyan-900 dark:text-cyan-100">
+														WAV Export
+													</h4>
+													<p class="text-xs text-cyan-700/60 dark:text-cyan-400/60">
 														High-fidelity render for DAWs, mastering, and precise editing.
 													</p>
 												</div>
 											</div>
 											<div
-												class="rounded-2xl border border-white/10 bg-white/6 px-4 py-3 backdrop-blur-sm"
+												class="rounded-lg border border-cyan-200/60 bg-white/60 px-3 py-2.5 dark:border-cyan-800/40 dark:bg-cyan-950/30"
 											>
 												{#if wavState.pendingWavConversion}
-													<div class="flex items-center gap-3 text-sm text-white">
-														<span class="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400"
+													<div class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200">
+														<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400"
 														></span>
-														<span>Converting this variation to WAV...</span>
+														<span>Converting this variation to WAV…</span>
 													</div>
-													<p class="mt-2 text-xs text-cyan-100/60">
+													<p class="mt-1.5 text-xs text-cyan-600/70 dark:text-cyan-400/50">
 														KIE keeps generated WAV files for 14 days. Larger file size, cleaner
 														downstream workflow.
 													</p>
 												{:else if wavState.wavConversion?.wav_url}
-													<div class="flex items-center gap-3 text-sm text-white">
-														<span class="h-2.5 w-2.5 rounded-full bg-cyan-300"></span>
+													<div class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200">
+														<span class="h-2 w-2 shrink-0 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
 														<span>WAV export ready</span>
 													</div>
-													<p class="mt-2 text-xs text-cyan-100/60">
+													<p class="mt-1.5 text-xs text-cyan-600/70 dark:text-cyan-400/50">
 														Perfect when you need full-resolution audio instead of the usual
 														compressed delivery file.
 													</p>
@@ -1027,7 +1036,7 @@
 										<div class="flex shrink-0 items-center gap-3">
 											{#if wavState.pendingWavConversion}
 												<div
-													class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-2 text-xs font-medium text-cyan-100"
+													class="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-white/80 px-3 py-2 text-xs font-medium text-cyan-700 dark:border-cyan-700/50 dark:bg-cyan-900/40 dark:text-cyan-300"
 												>
 													<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
 														<circle
@@ -1044,14 +1053,14 @@
 															d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 														></path>
 													</svg>
-													Rendering
+													Rendering…
 												</div>
 											{:else if wavState.wavConversion?.wav_url}
 												<a
 													href={wavState.wavConversion.wav_url}
 													rel="external"
 													download={`${generationState.song.title}.wav`}
-													class="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950 transition-transform hover:scale-[1.02] hover:bg-cyan-200"
+													class="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-white px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition-all hover:border-cyan-400 hover:bg-cyan-50 hover:shadow-md dark:border-cyan-600/70 dark:bg-cyan-900/40 dark:text-cyan-200 dark:hover:bg-cyan-800/60"
 												>
 													<svg
 														class="h-4 w-4"
