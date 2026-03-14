@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import StylePicker from './StylePicker.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -342,10 +343,17 @@
 					</div>
 
 					<div class="md:col-span-2">
-						<label
-							class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
-							for="upload-tags">Tags</label
-						>
+						<div class="mb-1.5 flex items-center justify-between">
+							<label
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+								for="upload-tags">Tags</label
+							>
+							<StylePicker
+								onSelect={(selectedStyle) => {
+									tags = selectedStyle.style;
+								}}
+							/>
+						</div>
 						<textarea
 							id="upload-tags"
 							bind:value={tags}
