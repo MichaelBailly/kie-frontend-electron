@@ -644,7 +644,7 @@
 						>
 							<Waveform
 								audioUrl={generationState.song.audioUrl || generationState.song.streamUrl || ''}
-								height={80}
+								height={160}
 								currentTime={playbackState.currentTime}
 								duration={playbackState.duration}
 								onSeek={playbackState.handleWaveformSeek}
@@ -989,7 +989,12 @@
 												<span
 													class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600 dark:bg-cyan-900/50 dark:text-cyan-300"
 												>
-													<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<svg
+														class="h-4 w-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
 														<path
 															stroke-linecap="round"
 															stroke-linejoin="round"
@@ -1011,8 +1016,11 @@
 												class="rounded-lg border border-cyan-200/60 bg-white/60 px-3 py-2.5 dark:border-cyan-800/40 dark:bg-cyan-950/30"
 											>
 												{#if wavState.pendingWavConversion}
-													<div class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200">
-														<span class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400"
+													<div
+														class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200"
+													>
+														<span
+															class="h-2 w-2 shrink-0 animate-pulse rounded-full bg-emerald-500 dark:bg-emerald-400"
 														></span>
 														<span>Converting this variation to WAV…</span>
 													</div>
@@ -1021,8 +1029,11 @@
 														downstream workflow.
 													</p>
 												{:else if wavState.wavConversion?.wav_url}
-													<div class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200">
-														<span class="h-2 w-2 shrink-0 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
+													<div
+														class="flex items-center gap-2.5 text-sm text-cyan-800 dark:text-cyan-200"
+													>
+														<span class="h-2 w-2 shrink-0 rounded-full bg-cyan-500 dark:bg-cyan-400"
+														></span>
 														<span>WAV export ready</span>
 													</div>
 													<p class="mt-1.5 text-xs text-cyan-600/70 dark:text-cyan-400/50">

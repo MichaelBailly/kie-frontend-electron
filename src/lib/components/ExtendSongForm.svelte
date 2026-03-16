@@ -189,12 +189,10 @@
 			{#if extensionAudioUrl}
 				<Waveform
 					audioUrl={extensionAudioUrl}
-					height={80}
+					height={110}
 					currentTime={playbackCurrentTime}
 					{duration}
 					markerTime={continueAt}
-					color="#6366f1"
-					backgroundColor="#e5e7eb"
 					onSeek={handleWaveformSeek}
 				/>
 				<!-- Continue point marker badge (above waveform) -->

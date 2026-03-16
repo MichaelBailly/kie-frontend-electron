@@ -8,9 +8,7 @@
 
 	let {
 		audioUrl,
-		height = 100,
-		color = '#6366f1',
-		backgroundColor = '#e5e7eb',
+		height = 140,
 		currentTime = 0,
 		duration = 0,
 		markerTime,
@@ -19,8 +17,6 @@
 	}: {
 		audioUrl: string;
 		height?: number;
-		color?: string;
-		backgroundColor?: string;
 		currentTime?: number;
 		duration?: number;
 		markerTime?: number;
@@ -81,103 +77,224 @@
 		lib.select(container).selectAll('svg').remove();
 
 		const containerWidth = container.clientWidth;
-		const margin = { top: 4, right: 0, bottom: 4, left: 0 };
-		const innerHeight = height - margin.top - margin.bottom;
+		const paddingH = 8;
+		const paddingTop = 8;
+		const paddingBottom = 22; // extra space for time labels
+		const innerWidth = containerWidth - paddingH * 2;
+		const innerHeight = height - paddingTop - paddingBottom;
+		const midY = innerHeight / 2;
 
 		const svg = lib
 			.select(container)
 			.append('svg')
 			.attr('width', containerWidth)
 			.attr('height', height)
-			.attr('class', 'cursor-pointer rounded-lg');
+			.attr('class', 'cursor-pointer rounded-lg overflow-hidden');
 
-		const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+		const defs = svg.append('defs');
+
+		// --- Circuit-board background pattern ---
+		const patternSize = 30;
+		const pattern = defs
+			.append('pattern')
+			.attr('id', 'circuit-bg')
+			.attr('width', patternSize)
+			.attr('height', patternSize)
+			.attr('patternUnits', 'userSpaceOnUse');
+
+		pattern
+			.append('rect')
+			.attr('width', patternSize)
+			.attr('height', patternSize)
+			.attr('fill', '#080818');
+
+		pattern
+			.append('line')
+			.attr('x1', 0)
+			.attr('y1', patternSize / 2)
+			.attr('x2', patternSize)
+			.attr('y2', patternSize / 2)
+			.attr('stroke', '#141430')
+			.attr('stroke-width', 0.8);
+
+		pattern
+			.append('line')
+			.attr('x1', patternSize / 2)
+			.attr('y1', 0)
+			.attr('x2', patternSize / 2)
+			.attr('y2', patternSize)
+			.attr('stroke', '#141430')
+			.attr('stroke-width', 0.8);
+
+		pattern
+			.append('circle')
+			.attr('cx', patternSize / 2)
+			.attr('cy', patternSize / 2)
+			.attr('r', 1.5)
+			.attr('fill', '#1e1e44');
+
+		pattern.append('circle').attr('cx', 0).attr('cy', 0).attr('r', 1).attr('fill', '#1e1e44');
+
+		// --- Glow filter for playhead ---
+		const glowFilter = defs
+			.append('filter')
+			.attr('id', 'playhead-glow')
+			.attr('x', '-100%')
+			.attr('y', '-100%')
+			.attr('width', '300%')
+			.attr('height', '300%');
+
+		glowFilter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'coloredBlur');
+
+		const feMerge = glowFilter.append('feMerge');
+		feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+		feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+		// --- Fill gradient: purple → magenta → blue (horizontal) ---
+		const fillGradient = defs
+			.append('linearGradient')
+			.attr('id', 'wf-fill')
+			.attr('gradientUnits', 'userSpaceOnUse')
+			.attr('x1', paddingH)
+			.attr('y1', 0)
+			.attr('x2', paddingH + innerWidth)
+			.attr('y2', 0);
+
+		fillGradient.append('stop').attr('offset', '0%').attr('stop-color', '#0284c7');
+		fillGradient.append('stop').attr('offset', '55%').attr('stop-color', '#c026d3');
+		fillGradient.append('stop').attr('offset', '100%').attr('stop-color', '#7c00c8');
+
+		// Background
+		svg
+			.append('rect')
+			.attr('width', containerWidth)
+			.attr('height', height)
+			.attr('fill', 'url(#circuit-bg)');
+
+		const g = svg.append('g').attr('transform', `translate(${paddingH},${paddingTop})`);
 
 		// Scales
 		const xScale = lib
 			.scaleLinear()
 			.domain([0, waveformData.length - 1])
-			.range([0, containerWidth]);
+			.range([0, innerWidth]);
 
-		const yScale = lib
-			.scaleLinear()
-			.domain([0, 1])
-			.range([innerHeight / 2, 0]);
+		const yScale = lib.scaleLinear().domain([0, 1]).range([midY, 0]);
 
-		// Calculate progress
 		const progress = duration > 0 ? currentTime / duration : 0;
-		const progressX = progress * containerWidth;
+		const progressX = progress * innerWidth;
 
-		// Define gradient for played/unplayed sections
-		const defs = svg.append('defs');
+		// Piecewise contrast function:
+		// - d in [0, 0.6]: linear (identity) — quiet/mid sections keep their exact shape
+		// - d in [0.6, 1.0]: quadratic squeeze — spreads visual differences in the loud 0.8–1.0 band
+		// This prevents heavily-mastered audio from looking like a flat tube while still
+		// showing the waveform shape at lower amplitudes.
+		const displayData = waveformData.map((d) => {
+			if (d <= 0.6) return d;
+			const t = (d - 0.6) / 0.4;
+			return 0.6 + Math.pow(t, 2) * 0.4;
+		});
 
-		const gradient = defs
-			.append('linearGradient')
-			.attr('id', 'waveform-gradient')
-			.attr('gradientUnits', 'userSpaceOnUse')
-			.attr('x1', 0)
-			.attr('x2', containerWidth);
-
-		gradient.append('stop').attr('offset', progress).attr('stop-color', color);
-
-		gradient.append('stop').attr('offset', progress).attr('stop-color', backgroundColor);
-
-		// Create area generators for upper and lower half
+		// Area generators
 		const upperArea = lib
 			.area<number>()
 			.x((_: number, i: number) => xScale(i))
-			.y0(innerHeight / 2)
+			.y0(midY)
 			.y1((d: number) => yScale(d))
 			.curve(lib.curveBasis);
 
 		const lowerArea = lib
 			.area<number>()
 			.x((_: number, i: number) => xScale(i))
-			.y0(innerHeight / 2)
-			.y1((d: number) => innerHeight / 2 + (innerHeight / 2 - yScale(d)))
+			.y0(midY)
+			.y1((d: number) => midY + (midY - yScale(d)))
 			.curve(lib.curveBasis);
 
-		// Draw background waveform (subtle)
+		// Outline line generators
+		const upperLine = lib
+			.line<number>()
+			.x((_: number, i: number) => xScale(i))
+			.y((d: number) => yScale(d))
+			.curve(lib.curveBasis);
+
+		const lowerLine = lib
+			.line<number>()
+			.x((_: number, i: number) => xScale(i))
+			.y((d: number) => midY + (midY - yScale(d)))
+			.curve(lib.curveBasis);
+
+		// Inner outline lines (slightly reduced amplitude → inside the outer lines)
+		const upperLineInner = lib
+			.line<number>()
+			.x((_: number, i: number) => xScale(i))
+			.y((d: number) => yScale(d * 0.86))
+			.curve(lib.curveBasis);
+
+		const lowerLineInner = lib
+			.line<number>()
+			.x((_: number, i: number) => xScale(i))
+			.y((d: number) => midY + (midY - yScale(d * 0.86)))
+			.curve(lib.curveBasis);
+
+		// Upper fill
 		g.append('path')
-			.datum(waveformData)
+			.datum(displayData)
 			.attr('d', upperArea)
-			.attr('fill', backgroundColor)
-			.attr('opacity', 0.5);
+			.attr('fill', 'url(#wf-fill)')
+			.attr('opacity', 0.85);
 
+		// Lower fill (reflection — dimmer)
 		g.append('path')
-			.datum(waveformData)
+			.datum(displayData)
 			.attr('d', lowerArea)
-			.attr('fill', backgroundColor)
-			.attr('opacity', 0.5);
+			.attr('fill', 'url(#wf-fill)')
+			.attr('opacity', 0.35);
 
-		// Draw main waveform with gradient
+		// Outer stroke — cyan
 		g.append('path')
-			.datum(waveformData)
-			.attr('d', upperArea)
-			.attr('fill', 'url(#waveform-gradient)');
+			.datum(displayData)
+			.attr('d', upperLine)
+			.attr('fill', 'none')
+			.attr('stroke', '#00e5ff')
+			.attr('stroke-width', 1.5);
 
 		g.append('path')
-			.datum(waveformData)
-			.attr('d', lowerArea)
-			.attr('fill', 'url(#waveform-gradient)');
+			.datum(displayData)
+			.attr('d', lowerLine)
+			.attr('fill', 'none')
+			.attr('stroke', '#00e5ff')
+			.attr('stroke-width', 1.5)
+			.attr('opacity', 0.65);
 
-		// Draw progress line
-		if (progress > 0) {
-			g.append('line')
-				.attr('x1', progressX)
-				.attr('x2', progressX)
-				.attr('y1', 0)
-				.attr('y2', innerHeight)
-				.attr('stroke', color)
-				.attr('stroke-width', 2)
-				.attr('opacity', 0.8);
-		}
+		// Inner stroke — magenta
+		g.append('path')
+			.datum(displayData)
+			.attr('d', upperLineInner)
+			.attr('fill', 'none')
+			.attr('stroke', '#e040fb')
+			.attr('stroke-width', 1);
 
-		// Draw marker line (e.g. "Continue From" point)
+		g.append('path')
+			.datum(displayData)
+			.attr('d', lowerLineInner)
+			.attr('fill', 'none')
+			.attr('stroke', '#e040fb')
+			.attr('stroke-width', 1)
+			.attr('opacity', 0.65);
+
+		// Playhead
+		g.append('line')
+			.attr('x1', progressX)
+			.attr('x2', progressX)
+			.attr('y1', 0)
+			.attr('y2', innerHeight)
+			.attr('stroke', '#00e5ff')
+			.attr('stroke-width', 2)
+			.attr('filter', 'url(#playhead-glow)');
+
+		// Marker line
 		if (markerTime !== undefined && duration > 0) {
-			const markerProgress = markerTime / duration;
-			const markerX = markerProgress * containerWidth;
-
+			const markerX = (markerTime / duration) * innerWidth;
 			g.append('line')
 				.attr('x1', markerX)
 				.attr('x2', markerX)
@@ -188,13 +305,38 @@
 				.attr('opacity', 0.9);
 		}
 
+		// Time labels
+		const formatTime = (secs: number) => {
+			const m = Math.floor(secs / 60);
+			const s = Math.floor(secs % 60);
+			return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+		};
+
+		svg
+			.append('text')
+			.attr('x', paddingH + 2)
+			.attr('y', height - 6)
+			.attr('fill', '#00e5ff')
+			.attr('font-family', 'monospace')
+			.attr('font-size', '11')
+			.text(formatTime(currentTime));
+
+		svg
+			.append('text')
+			.attr('x', containerWidth - paddingH - 2)
+			.attr('y', height - 6)
+			.attr('fill', '#64748b')
+			.attr('font-family', 'monospace')
+			.attr('font-size', '11')
+			.attr('text-anchor', 'end')
+			.text(formatTime(duration));
+
 		// Click handler for seeking
 		svg.on('click', function (event: MouseEvent) {
 			if (duration === 0) return;
 			const [x] = lib.pointer(event);
-			const seekProgress = x / containerWidth;
-			const newTime = seekProgress * duration;
-			onSeek?.(newTime);
+			const seekProgress = Math.max(0, Math.min(1, (x - paddingH) / innerWidth));
+			onSeek?.(seekProgress * duration);
 		});
 
 		// Hover effect

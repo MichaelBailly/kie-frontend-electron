@@ -59,7 +59,7 @@
 		>
 			<Waveform
 				audioUrl={song.audioUrl || song.streamUrl || ''}
-				height={160}
+				height={200}
 				{currentTime}
 				{duration}
 				onSeek={onWaveformSeek}
