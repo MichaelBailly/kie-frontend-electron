@@ -39,6 +39,10 @@ export function useStemSeparationState(options: {
 		showStemOptions = !showStemOptions;
 	}
 
+	function closeStemOptions() {
+		showStemOptions = false;
+	}
+
 	async function requestStemSeparation(type: StemSeparationType) {
 		separatingType = type;
 		showStemOptions = false;
@@ -105,6 +109,7 @@ export function useStemSeparationState(options: {
 			);
 		},
 		toggleStemOptions,
+		closeStemOptions,
 		requestStemSeparation
 	};
 }

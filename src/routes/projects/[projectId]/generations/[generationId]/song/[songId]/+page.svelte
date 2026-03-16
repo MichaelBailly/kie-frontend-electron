@@ -111,8 +111,20 @@
 	let lyricsCopied = $state(false);
 	let negativeTagsCopied = $state(false);
 	let extendSectionEl: HTMLDivElement | null = $state(null);
+	let stemsMenuEl: HTMLDivElement | null = $state(null);
 	let showSaveStyleModal = $state(false);
 	let saveStyleSuccess = $state(false);
+
+	$effect(() => {
+		if (!stemState.showStemOptions) return;
+		function handleClickOutside(e: MouseEvent) {
+			if (stemsMenuEl && !stemsMenuEl.contains(e.target as Node)) {
+				stemState.closeStemOptions();
+			}
+		}
+		document.addEventListener('click', handleClickOutside);
+		return () => document.removeEventListener('click', handleClickOutside);
+	});
 
 	function handleStyleSaved() {
 		saveStyleSuccess = true;
@@ -362,7 +374,9 @@
 			<!-- Extend -->
 			<button
 				onclick={handleToggleExtend}
-				class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-purple-50 px-3 text-xs font-medium text-purple-600 transition-colors hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50"
+				class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors {generationState.showExtendForm
+					? 'bg-purple-600 text-white shadow-md shadow-purple-500/35'
+					: 'bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 dark:hover:bg-purple-900/50'}"
 			>
 				<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -380,8 +394,8 @@
 				<button
 					onclick={handleAddVocalsFromMp3}
 					class="group relative flex h-9 shrink-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg px-3 text-xs font-semibold tracking-wide transition-all duration-200 {isAddVocalsFromMp3Active
-						? 'bg-linear-to-r from-violet-600 via-fuchsia-600 to-violet-700 text-white shadow-md ring-1 shadow-violet-500/35 ring-violet-300/60 dark:ring-violet-500/40'
-						: 'bg-linear-to-r from-violet-50 to-fuchsia-50 text-violet-700 ring-1 ring-violet-200/90 hover:from-violet-100 hover:to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/20 dark:text-violet-300 dark:ring-violet-700/50 dark:hover:from-violet-900/45 dark:hover:to-fuchsia-900/35'}"
+						? 'bg-violet-600 text-white shadow-md shadow-violet-500/35'
+						: 'bg-linear-to-r from-violet-50 to-fuchsia-50 text-violet-700 hover:from-violet-100 hover:to-fuchsia-100 dark:from-violet-900/30 dark:to-fuchsia-900/20 dark:text-violet-300 dark:hover:from-violet-900/45 dark:hover:to-fuchsia-900/35'}"
 					title="Generate new vocals from this variation MP3"
 				>
 					<span
@@ -402,11 +416,13 @@
 			{/if}
 
 			<!-- Stems -->
-			<div class="relative">
+			<div class="relative" bind:this={stemsMenuEl}>
 				<button
 					onclick={stemState.toggleStemOptions}
 					disabled={stemState.separatingType !== null || wavState.isConverting}
-					class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-cyan-50 px-3 text-xs font-medium text-cyan-600 transition-colors hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-cyan-900/30 dark:text-cyan-400 dark:hover:bg-cyan-900/50"
+					class="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 {stemState.showStemOptions
+						? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/35'
+						: 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100 dark:bg-cyan-900/30 dark:text-cyan-400 dark:hover:bg-cyan-900/50'}"
 				>
 					{#if stemState.separatingType !== null || stemState.pendingVocalSeparation || stemState.pendingStemSeparation || wavState.isConverting || wavState.pendingWavConversion}
 						<svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
