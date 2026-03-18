@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
+	import { toPlayableAudioUrl } from '$lib/utils/audio';
 	import { formatTime } from '$lib/utils/format';
 	import ArtworkImage from './ArtworkImage.svelte';
 
@@ -40,6 +41,7 @@
 	let extensionTime = $derived(hasExtensionTime ? Math.max(0, continueAt as number) : 0);
 	let extensionJumpTime = $derived(Math.max(0, extensionTime - 10));
 	let shouldStick = $derived(stickyWhenPlaying && isPlaying);
+	let playableSrc = $derived(toPlayableAudioUrl(src) || '');
 
 	function buildTrack(): AudioTrack {
 		return {
@@ -49,7 +51,7 @@
 			title,
 			imageUrl: imageUrl || null,
 			streamUrl: null,
-			audioUrl: src,
+			audioUrl: playableSrc,
 			duration
 		};
 	}

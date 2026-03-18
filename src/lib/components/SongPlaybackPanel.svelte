@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { toPlayableAudioUrl } from '$lib/utils/audio';
 	import Waveform from '$lib/components/Waveform.svelte';
 	import type { StemSeparationType } from '$lib/types';
 
@@ -50,15 +51,18 @@
 		pendingStemSeparation: boolean;
 		onRequestStemSeparation: (type: StemSeparationType) => void;
 	} = $props();
+
+	let playbackAudioUrl = $derived(toPlayableAudioUrl(song.audioUrl || song.streamUrl) || '');
+	let downloadAudioUrl = $derived(toPlayableAudioUrl(song.audioUrl) || '');
 </script>
 
 <div class="mb-10">
-	{#if song.streamUrl || song.audioUrl}
+	{#if playbackAudioUrl}
 		<div
 			class="mb-6 rounded-xl border border-gray-200 bg-white p-8 shadow-lg dark:border-gray-700 dark:bg-gray-800"
 		>
 			<Waveform
-				audioUrl={song.audioUrl || song.streamUrl || ''}
+				audioUrl={playbackAudioUrl}
 				height={200}
 				{currentTime}
 				{duration}
@@ -102,9 +106,9 @@
 					</span>
 				</div>
 
-				{#if song.audioUrl}
+				{#if downloadAudioUrl}
 					<a
-						href={song.audioUrl}
+						href={downloadAudioUrl}
 						rel="external"
 						download={`${song.title}.mp3`}
 						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"

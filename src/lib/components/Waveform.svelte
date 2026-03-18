@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type * as D3 from 'd3';
+	import { toPlayableAudioUrl } from '$lib/utils/audio';
 
 	// d3 is loaded dynamically so it never appears in the SSR server bundle.
 	// (A top-level static import would cause ERR_MODULE_NOT_FOUND in the packaged
@@ -28,8 +29,9 @@
 	let waveformData: number[] = $state([]);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
+	let resolvedAudioUrl = $derived(toPlayableAudioUrl(audioUrl) || '');
 
-	async function loadWaveform(sourceUrl: string = audioUrl) {
+	async function loadWaveform(sourceUrl: string = resolvedAudioUrl) {
 		try {
 			isLoading = true;
 			error = null;
@@ -374,7 +376,7 @@
 	});
 
 	$effect(() => {
-		const sourceUrl = audioUrl;
+		const sourceUrl = resolvedAudioUrl;
 		if (d3) {
 			void loadWaveform(sourceUrl);
 		}

@@ -6,6 +6,7 @@
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
+	import { toPlayableAudioUrl } from '$lib/utils/audio';
 	import { formatTime } from '$lib/utils/format';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
@@ -72,6 +73,7 @@
 	let stemDisplay = $derived(getStemDisplay(normalizedStemType));
 	let isStemExtension = $derived(!!stemUrl && !!normalizedStemType);
 	let extensionAudioUrl = $derived(stemUrl || song.audioUrl || song.streamUrl || '');
+	let playableExtensionAudioUrl = $derived(toPlayableAudioUrl(extensionAudioUrl) || '');
 	let previewTrackId = $derived(isStemExtension ? `${song.id}:${normalizedStemType}` : song.id);
 	let isCurrentTrack = $derived(audioStore.isCurrentTrack(previewTrackId));
 	let isPlaying = $derived(audioStore.isTrackPlaying(previewTrackId));
@@ -89,8 +91,8 @@
 			projectId: generation.project_id,
 			title: previewTrackTitle,
 			imageUrl: song.imageUrl,
-			streamUrl: extensionAudioUrl,
-			audioUrl: extensionAudioUrl,
+			streamUrl: playableExtensionAudioUrl,
+			audioUrl: playableExtensionAudioUrl,
 			duration: song.duration
 		};
 	}
@@ -193,9 +195,9 @@
 
 		<!-- Waveform with marker -->
 		<div class="relative mb-4">
-			{#if extensionAudioUrl}
+			{#if playableExtensionAudioUrl}
 				<Waveform
-					audioUrl={extensionAudioUrl}
+					audioUrl={playableExtensionAudioUrl}
 					height={110}
 					currentTime={playbackCurrentTime}
 					{duration}
