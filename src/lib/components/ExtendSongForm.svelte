@@ -3,6 +3,7 @@
 	import StylePicker from './StylePicker.svelte';
 	import Waveform from './Waveform.svelte';
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { formatTime } from '$lib/utils/format';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
@@ -288,14 +289,15 @@
 					}}
 				/>
 			</div>
-			<textarea
-				id="extend-style"
+			<ExpandableTextarea
 				bind:value={style}
+				id="extend-style"
+				label="Style Prompt"
 				placeholder="Describe the musical style..."
-				rows="3"
-				maxlength="1000"
-				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-			></textarea>
+				rows={3}
+				maxlength={1000}
+				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+			/>
 			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{style.length}/1000 characters</p>
 		</div>
 
@@ -310,14 +312,16 @@
 					>
 				{/if}
 			</div>
-			<textarea
-				id="extend-lyrics"
+			<ExpandableTextarea
 				bind:value={lyrics}
+				id="extend-lyrics"
+				label="Lyrics"
 				placeholder="Write your continuation lyrics here..."
-				rows="8"
-				maxlength="5000"
-				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-mono text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-			></textarea>
+				rows={8}
+				maxlength={5000}
+				mono={true}
+				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-mono text-sm text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+			/>
 			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{lyrics.length}/5000 characters</p>
 		</div>
 

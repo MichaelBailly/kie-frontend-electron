@@ -4,6 +4,7 @@
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
 	let {
 		generation,
@@ -153,14 +154,15 @@
 					}}
 				/>
 			</div>
-			<textarea
-				id="add-instrumental-tags"
+			<ExpandableTextarea
 				bind:value={tags}
-				rows="3"
-				maxlength="1000"
+				id="add-instrumental-tags"
+				label="Tags"
+				rows={3}
+				maxlength={1000}
 				placeholder="relaxing, piano, cinematic"
-				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-			></textarea>
+				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+			/>
 		</div>
 
 		<div>

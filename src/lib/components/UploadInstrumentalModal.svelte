@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import StylePicker from './StylePicker.svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -354,14 +355,15 @@
 								}}
 							/>
 						</div>
-						<textarea
-							id="upload-tags"
+						<ExpandableTextarea
 							bind:value={tags}
-							rows="3"
-							maxlength="1000"
+							id="upload-tags"
+							label="Tags"
+							rows={3}
+							maxlength={1000}
 							placeholder="cinematic, ambient, piano"
-							class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-						></textarea>
+							textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+						/>
 					</div>
 
 					<div class="md:col-span-2">

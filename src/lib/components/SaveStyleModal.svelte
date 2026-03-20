@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
 	let {
 		style,
@@ -171,14 +172,14 @@
 				>
 					Style prompt <span class="text-red-500">*</span>
 				</label>
-				<textarea
-					id="style-text"
+				<ExpandableTextarea
 					bind:value={editedStyle}
-					rows="4"
-					maxlength="2000"
-					required
-					class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-				></textarea>
+					id="style-text"
+					label="Style Prompt"
+					rows={4}
+					maxlength={2000}
+					textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+				/>
 				<p class="mt-1 text-right text-xs text-gray-400">{editedStyle.length}/2000</p>
 			</div>
 

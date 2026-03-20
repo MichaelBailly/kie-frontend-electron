@@ -2,6 +2,7 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import StylePicker from './StylePicker.svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
 	let {
 		isOpen = $bindable(false),
@@ -351,14 +352,16 @@
 							class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
 							for="upload-vocals-prompt">Prompt / Lyrics</label
 						>
-						<textarea
-							id="upload-vocals-prompt"
+						<ExpandableTextarea
 							bind:value={prompt}
-							rows="4"
-							maxlength="5000"
+							id="upload-vocals-prompt"
+							label="Prompt / Lyrics"
+							rows={4}
+							maxlength={5000}
+							mono={true}
 							placeholder="[Verse] Midnight train..."
-							class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-						></textarea>
+							textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+						/>
 					</div>
 
 					<div class="md:col-span-2">
@@ -373,14 +376,15 @@
 								}}
 							/>
 						</div>
-						<textarea
-							id="upload-vocals-style"
+						<ExpandableTextarea
 							bind:value={style}
-							rows="3"
-							maxlength="1000"
+							id="upload-vocals-style"
+							label="Style"
+							rows={3}
+							maxlength={1000}
 							placeholder="synthpop, dreamy, emotional"
-							class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-						></textarea>
+							textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+						/>
 					</div>
 
 					<div class="md:col-span-2">

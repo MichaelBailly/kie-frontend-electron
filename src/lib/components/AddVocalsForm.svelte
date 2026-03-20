@@ -4,6 +4,7 @@
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
+	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
 	let {
 		generation,
@@ -165,14 +166,16 @@
 			>
 				Prompt / Lyrics
 			</label>
-			<textarea
-				id="add-vocals-prompt"
+			<ExpandableTextarea
 				bind:value={prompt}
-				rows="5"
-				maxlength="5000"
+				id="add-vocals-prompt"
+				label="Prompt / Lyrics"
+				rows={5}
+				maxlength={5000}
+				mono={true}
 				placeholder="[Verse] Neon rain on city streets..."
-				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-			></textarea>
+				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+			/>
 		</div>
 
 		<div>
@@ -189,14 +192,15 @@
 					}}
 				/>
 			</div>
-			<textarea
-				id="add-vocals-style"
+			<ExpandableTextarea
 				bind:value={style}
-				rows="3"
-				maxlength="1000"
+				id="add-vocals-style"
+				label="Style"
+				rows={3}
+				maxlength={1000}
 				placeholder="electro pop, moody, lush pads"
-				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
-			></textarea>
+				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+			/>
 		</div>
 
 		<div>
