@@ -11,6 +11,7 @@
 	import { resolve } from '$app/paths';
 	import { getContext } from 'svelte';
 	import { isGenerationTypeOneOf } from '$lib/types';
+	import { createGenerationFormState } from '$lib/routes/project/generation-form';
 
 	let { data }: { data: PageData } = $props();
 
@@ -291,15 +292,7 @@
 		// Pre-fill the generation form with the current generation's data by
 		// writing to sessionStorage before navigating back to the project page.
 		const storageKey = `generation-form-${generation.project_id}`;
-		sessionStorage.setItem(
-			storageKey,
-			JSON.stringify({
-				title: generation.title,
-				style: generation.style,
-				lyrics: generation.lyrics,
-				instrumental: !!generation.instrumental
-			})
-		);
+		sessionStorage.setItem(storageKey, JSON.stringify(createGenerationFormState(generation)));
 		goto(resolve('/projects/[projectId]', { projectId: String(generation.project_id) }));
 	}
 </script>
