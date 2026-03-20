@@ -59,6 +59,12 @@ describe('Generations repository', () => {
 			expect(gen.error_message).toBeNull();
 		});
 
+		it('stores negative tags for regular generations', () => {
+			const gen = createGeneration(projectId, 'My Song', 'pop', 'la la la', false, 'harsh drums');
+
+			expect(gen.negative_tags).toBe('harsh drums');
+		});
+
 		it('sets extend fields to null for regular generations', () => {
 			const gen = createGeneration(projectId, 'Title', 'style', 'lyrics');
 			expect(gen.extends_generation_id).toBeNull();
@@ -103,6 +109,23 @@ describe('Generations repository', () => {
 			expect(ext.extends_stem_type).toBeNull();
 			expect(ext.extends_stem_url).toBeNull();
 			expect(ext.status).toBe('pending');
+		});
+
+		it('stores negative tags for extend generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const ext = createExtendGeneration(
+				projectId,
+				'Extended',
+				'pop',
+				'more lyrics',
+				parent.id,
+				'audio-123',
+				120.5,
+				false,
+				{ negativeTags: 'muddy low end' }
+			);
+
+			expect(ext.negative_tags).toBe('muddy low end');
 		});
 
 		it('stores optional stem metadata for stem-based extensions', () => {

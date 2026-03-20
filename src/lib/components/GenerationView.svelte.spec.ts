@@ -78,6 +78,19 @@ describe('GenerationView', () => {
 		expect(body).toContain('Technical details');
 		expect(body).toContain('You do not have permission to use negative tags.');
 	});
+
+	it('hides empty optional metadata fields', () => {
+		const generation = createGeneration({
+			style: '   ',
+			lyrics: '   ',
+			negative_tags: '   '
+		});
+		const { body } = render(GenerationView, { props: { generation } });
+
+		expect(body).not.toContain('Style Prompt');
+		expect(body).not.toContain('Lyrics');
+		expect(body).not.toContain('Negative Tags');
+	});
 });
 
 describe('GenerationView — retry generate button', () => {

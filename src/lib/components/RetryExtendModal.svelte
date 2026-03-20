@@ -26,6 +26,7 @@
 			title: string;
 			style: string;
 			lyrics: string;
+			negativeTags: string;
 			continueAt: number;
 			instrumental: boolean;
 		}) => void | Promise<void>;
@@ -57,6 +58,7 @@
 		title: string;
 		style: string;
 		lyrics: string;
+		negativeTags: string;
 		continueAt: number;
 		instrumental: boolean;
 	}) {

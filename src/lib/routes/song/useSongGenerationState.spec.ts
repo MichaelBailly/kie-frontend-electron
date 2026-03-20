@@ -70,6 +70,7 @@ describe('useSongGenerationState', () => {
 			title: 'Extended Song',
 			style: 'pop',
 			lyrics: 'new lyrics',
+			negativeTags: 'crowd noise',
 			continueAt: 42,
 			instrumental: false
 		});

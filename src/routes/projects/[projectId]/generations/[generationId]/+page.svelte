@@ -79,6 +79,7 @@
 		title: string;
 		style: string;
 		lyrics: string;
+		negativeTags: string;
 		continueAt: number;
 		instrumental: boolean;
 	}) {
@@ -94,6 +95,7 @@
 				title: retryData.title,
 				style: retryData.style,
 				lyrics: retryData.lyrics,
+				negativeTags: retryData.negativeTags,
 				extendsGenerationId: data.retryExtension.extendsGenerationId,
 				extendsAudioId: data.retryExtension.extendsAudioId,
 				continueAt: retryData.continueAt,

@@ -5,7 +5,9 @@ import { generateMusic } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asNonEmptyString,
+	asOptionalString,
 	asPositiveInt,
+	normalizeNegativeTags,
 	parseJsonBody,
 	requireProject,
 	startGenerationTask
@@ -18,10 +20,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const style = asNonEmptyString(body.style, 'style');
 	const instrumental = body.instrumental === true;
 	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
+	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
 	requireProject(projectId);
 
 	// Create generation record
-	const generation = createGeneration(projectId, title, style, lyrics, instrumental);
+	const generation = createGeneration(projectId, title, style, lyrics, instrumental, negativeTags);
 
 	// Start async generation process
 	startGenerationTask(generation.id, () =>
@@ -33,7 +36,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			instrumental,
 			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL,
-			negativeTags: ''
+			negativeTags: normalizeNegativeTags(negativeTags)
 		})
 	).catch((err) => console.error(`[AsyncTask] generation ${generation.id} failed to start:`, err));
 

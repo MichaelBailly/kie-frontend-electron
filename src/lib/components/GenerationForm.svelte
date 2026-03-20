@@ -7,14 +7,22 @@
 		title = $bindable(''),
 		style = $bindable(''),
 		lyrics = $bindable(''),
+		negativeTags = $bindable(''),
 		instrumental = $bindable(false),
 		onNewGeneration
 	}: {
 		title: string;
 		style: string;
 		lyrics: string;
+		negativeTags: string;
 		instrumental: boolean;
-		onNewGeneration: (title: string, style: string, lyrics: string, instrumental: boolean) => void;
+		onNewGeneration: (
+			title: string,
+			style: string,
+			lyrics: string,
+			negativeTags: string,
+			instrumental: boolean
+		) => void;
 	} = $props();
 
 	let isSubmitting = $state(false);
@@ -26,7 +34,7 @@
 
 		isSubmitting = true;
 		try {
-			onNewGeneration(title, style, lyrics, instrumental);
+			onNewGeneration(title, style, lyrics, negativeTags, instrumental);
 		} finally {
 			isSubmitting = false;
 		}
@@ -80,6 +88,26 @@
 					class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 				></textarea>
 				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{style.length}/1000 characters</p>
+			</div>
+
+			<div>
+				<label
+					for="negative-tags"
+					class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300"
+				>
+					Negative Tags
+				</label>
+				<textarea
+					id="negative-tags"
+					bind:value={negativeTags}
+					placeholder="heavy metal, harsh distortion"
+					rows="2"
+					maxlength="1000"
+					class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
+				></textarea>
+				<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+					{negativeTags.length}/1000 characters
+				</p>
 			</div>
 
 			<div>

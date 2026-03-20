@@ -117,6 +117,10 @@
 		})
 	);
 
+	const trimmedStyle = $derived(generation.style.trim());
+	const trimmedLyrics = $derived(generation.lyrics?.trim() ?? '');
+	const trimmedNegativeTags = $derived(generation.negative_tags?.trim() ?? '');
+
 	function handleStyleSaved() {
 		saveStyleSuccess = true;
 		setTimeout(() => (saveStyleSuccess = false), 3000);
@@ -451,77 +455,79 @@
 		<div class="space-y-5">
 			<ReadonlyMetadataField label="Title">{generation.title}</ReadonlyMetadataField>
 
-			<ReadonlyMetadataField
-				label={isInstrumentalGeneration ? 'Tags' : 'Style Prompt'}
-				valueClass="whitespace-pre-wrap"
-			>
-				{#snippet HeaderRight()}
-					<div class="flex items-center gap-2">
-						<button
-							onclick={() => copyStyle(generation.style)}
-							class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
-							title="Copy style"
-						>
-							{#if styleCopied}
-								<svg
-									class="h-4 w-4 text-green-500"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M5 13l4 4L19 7"
-									/>
-								</svg>
-							{:else}
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-									/>
-								</svg>
-							{/if}
-						</button>
-						{#if saveStyleSuccess}
-							<span
-								class="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
-							>
-								<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-									><path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2.5"
-										d="M5 13l4 4L19 7"
-									/></svg
-								>Saved!
-							</span>
-						{:else}
+			{#if trimmedStyle}
+				<ReadonlyMetadataField
+					label={isInstrumentalGeneration ? 'Tags' : 'Style Prompt'}
+					valueClass="whitespace-pre-wrap"
+				>
+					{#snippet HeaderRight()}
+						<div class="flex items-center gap-2">
 							<button
-								onclick={() => (showSaveStyleModal = true)}
-								class="flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
-								title="Save to style collection"
+								onclick={() => copyStyle(generation.style)}
+								class="shrink-0 cursor-pointer rounded-lg p-1.5 text-gray-500 transition-all hover:bg-gray-200 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+								title="Copy style"
 							>
-								<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-									><path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-									/></svg
-								>Save
+								{#if styleCopied}
+									<svg
+										class="h-4 w-4 text-green-500"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+								{:else}
+									<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+										/>
+									</svg>
+								{/if}
 							</button>
-						{/if}
-					</div>
-				{/snippet}
-				{generation.style.trim()}
-			</ReadonlyMetadataField>
+							{#if saveStyleSuccess}
+								<span
+									class="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400"
+								>
+									<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+										><path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2.5"
+											d="M5 13l4 4L19 7"
+										/></svg
+									>Saved!
+								</span>
+							{:else}
+								<button
+									onclick={() => (showSaveStyleModal = true)}
+									class="flex cursor-pointer items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-all hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-800/60 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50"
+									title="Save to style collection"
+								>
+									<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+										><path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+										/></svg
+									>Save
+								</button>
+							{/if}
+						</div>
+					{/snippet}
+					{trimmedStyle}
+				</ReadonlyMetadataField>
+			{/if}
 
-			{#if !isInstrumentalGeneration}
+			{#if trimmedLyrics}
 				<ReadonlyMetadataField label="Lyrics" valueClass="font-mono text-sm whitespace-pre-wrap">
 					{#snippet HeaderRight()}
 						<button
@@ -554,16 +560,16 @@
 							{/if}
 						</button>
 					{/snippet}
-					{generation.lyrics?.trim()}
+					{trimmedLyrics}
 				</ReadonlyMetadataField>
 			{/if}
 
-			{#if generation.negative_tags?.trim()}
+			{#if trimmedNegativeTags}
 				<ReadonlyMetadataField
 					label="Negative Tags"
 					valueClass="whitespace-pre-wrap text-rose-700 dark:text-rose-300"
 				>
-					{generation.negative_tags.trim()}
+					{trimmedNegativeTags}
 				</ReadonlyMetadataField>
 			{/if}
 

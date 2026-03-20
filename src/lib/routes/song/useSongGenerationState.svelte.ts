@@ -32,6 +32,7 @@ type ExtendData = {
 	title: string;
 	style: string;
 	lyrics: string;
+	negativeTags: string;
 	continueAt: number;
 	instrumental: boolean;
 };
@@ -219,6 +220,7 @@ export function useSongGenerationState(options: {
 				title: extendData.title,
 				style: extendData.style,
 				lyrics: extendData.lyrics,
+				negativeTags: extendData.negativeTags,
 				extendsGenerationId: generation.id,
 				extendsAudioId: song.id,
 				continueAt: extendData.continueAt,

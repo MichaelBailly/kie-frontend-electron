@@ -14,6 +14,7 @@
 	let title = $state('');
 	let style = $state('');
 	let lyrics = $state('');
+	let negativeTags = $state('');
 	let instrumental = $state(false);
 
 	// Track initialization to prevent saving during initial load
@@ -36,10 +37,11 @@
 			try {
 				const parsed = JSON.parse(saved);
 				// Only use saved state if it has actual content
-				if (parsed.title || parsed.style || parsed.lyrics) {
+				if (parsed.title || parsed.style || parsed.lyrics || parsed.negativeTags) {
 					title = parsed.title ?? '';
 					style = parsed.style ?? '';
 					lyrics = parsed.lyrics ?? '';
+					negativeTags = parsed.negativeTags ?? '';
 					instrumental = parsed.instrumental ?? false;
 					isInitializing = false;
 					return;
@@ -53,6 +55,7 @@
 		title = latestGeneration?.title || '';
 		style = latestGeneration?.style || '';
 		lyrics = latestGeneration?.lyrics || '';
+		negativeTags = latestGeneration?.negative_tags || '';
 		instrumental = !!latestGeneration?.instrumental;
 
 		isInitializing = false;
@@ -61,13 +64,17 @@
 	// Save form state to sessionStorage on every change (but not during initialization)
 	$effect(() => {
 		if (!browser || isInitializing) return;
-		sessionStorage.setItem(storageKey, JSON.stringify({ title, style, lyrics, instrumental }));
+		sessionStorage.setItem(
+			storageKey,
+			JSON.stringify({ title, style, lyrics, negativeTags, instrumental })
+		);
 	});
 
 	async function handleNewGeneration(
 		formTitle: string,
 		formStyle: string,
 		formLyrics: string,
+		formNegativeTags: string,
 		formInstrumental: boolean
 	) {
 		const response = await fetch('/api/generations', {
@@ -78,6 +85,7 @@
 				title: formTitle,
 				style: formStyle,
 				lyrics: formLyrics,
+				negativeTags: formNegativeTags,
 				instrumental: formInstrumental
 			})
 		});
@@ -98,6 +106,7 @@
 	bind:title
 	bind:style
 	bind:lyrics
+	bind:negativeTags
 	bind:instrumental
 	onNewGeneration={handleNewGeneration}
 />

@@ -150,7 +150,39 @@ describe('POST /api/generations', () => {
 			lyrics: expect.any(String),
 			status: expect.any(String)
 		});
-		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world', false);
+		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world', false, '');
+	});
+
+	it('passes trimmed negative tags to the repository and KIE API', async () => {
+		seedNewGenerationScenario();
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'My Song',
+				style: 'pop',
+				lyrics: 'Hello world',
+				negativeTags: '  harsh distortion, crowd noise  '
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(db.createGeneration).toHaveBeenCalledWith(
+			1,
+			'My Song',
+			'pop',
+			'Hello world',
+			false,
+			'harsh distortion, crowd noise'
+		);
+		expect(kieApi.generateMusic).toHaveBeenCalledWith(
+			expect.objectContaining({
+				negativeTags: 'harsh distortion, crowd noise'
+			})
+		);
 	});
 
 	it('calls KIE API generateMusic after creating the generation', async () => {
@@ -397,7 +429,46 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ stemType: undefined, stemUrl: undefined }
+			{ negativeTags: '', stemType: undefined, stemUrl: undefined }
+		);
+	});
+
+	it('passes trimmed negative tags through the extend flow', async () => {
+		seedExtendScenario();
+
+		const extendGen = createGeneration({ id: 20, project_id: 1 });
+		db.createExtendGeneration.mockReturnValue(extendGen);
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended',
+				style: 'rock',
+				lyrics: 'More lyrics',
+				negativeTags: '  crowd chants  ',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(db.createExtendGeneration).toHaveBeenCalledWith(
+			1,
+			'Extended',
+			'rock',
+			'More lyrics',
+			5,
+			'audio-5-1',
+			30,
+			false,
+			{ negativeTags: 'crowd chants', stemType: undefined, stemUrl: undefined }
+		);
+		expect(kieApi.extendMusic).toHaveBeenCalledWith(
+			expect.objectContaining({ negativeTags: 'crowd chants' })
 		);
 	});
 
@@ -547,7 +618,8 @@ describe('POST /api/generations/extend', () => {
 				title: 'Extended',
 				continueAt: 30,
 				model: 'V5',
-				callBackUrl: KIE_CALLBACK_URL
+				callBackUrl: KIE_CALLBACK_URL,
+				negativeTags: ''
 			})
 		);
 	});
@@ -584,7 +656,8 @@ describe('POST /api/generations/extend', () => {
 				title: 'Extended Stem',
 				continueAt: 30,
 				model: 'V5',
-				callBackUrl: KIE_CALLBACK_URL
+				callBackUrl: KIE_CALLBACK_URL,
+				negativeTags: ''
 			})
 		);
 		expect(kieApi.extendMusic).not.toHaveBeenCalled();
@@ -597,7 +670,11 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ stemType: 'vocal', stemUrl: 'https://example.com/stems/vocal.mp3' }
+			{
+				negativeTags: '',
+				stemType: 'vocal',
+				stemUrl: 'https://example.com/stems/vocal.mp3'
+			}
 		);
 	});
 });

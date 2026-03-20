@@ -6,14 +6,22 @@ export function createGeneration(
 	title: string,
 	style: string,
 	lyrics: string,
-	instrumental: boolean = false
+	instrumental: boolean = false,
+	negativeTags: string = ''
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental, generation_type)
-		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, 'generate')
+		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental, generation_type, negative_tags)
+		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, 'generate', ?)
 		RETURNING *
 	`);
-	const generation = stmt.get(projectId, title, style, lyrics, instrumental ? 1 : 0) as Generation;
+	const generation = stmt.get(
+		projectId,
+		title,
+		style,
+		lyrics,
+		instrumental ? 1 : 0,
+		negativeTags
+	) as Generation;
 
 	// Update project's updated_at
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -30,7 +38,7 @@ export function createExtendGeneration(
 	extendsAudioId: string,
 	continueAt: number,
 	instrumental: boolean = false,
-	options?: { stemType?: string; stemUrl?: string }
+	options?: { stemType?: string; stemUrl?: string; negativeTags?: string }
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -45,9 +53,10 @@ export function createExtendGeneration(
 			extends_stem_type,
 			extends_stem_url,
 			instrumental,
-			generation_type
+			generation_type,
+			negative_tags
 		)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 'extend')
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 'extend', ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -60,7 +69,8 @@ export function createExtendGeneration(
 		continueAt,
 		options?.stemType ?? null,
 		options?.stemUrl ?? null,
-		instrumental ? 1 : 0
+		instrumental ? 1 : 0,
+		options?.negativeTags ?? ''
 	) as Generation;
 
 	// Update project's updated_at

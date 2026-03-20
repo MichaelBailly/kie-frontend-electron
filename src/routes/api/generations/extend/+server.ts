@@ -6,7 +6,9 @@ import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asNonEmptyString,
 	asNonNegativeNumber,
+	asOptionalString,
 	asPositiveInt,
+	normalizeNegativeTags,
 	parseJsonBody,
 	requireProject,
 	requireGeneration,
@@ -20,6 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const style = asNonEmptyString(body.style, 'style');
 	const instrumental = body.instrumental === true;
 	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
+	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
 	const extendsGenerationId = asPositiveInt(body.extendsGenerationId, 'extendsGenerationId');
 	const extendsAudioId = asNonEmptyString(body.extendsAudioId, 'extendsAudioId');
 	const hasStemUrl = body.stemUrl !== undefined && body.stemUrl !== null && body.stemUrl !== '';
@@ -52,6 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		continueAt,
 		instrumental,
 		{
+			negativeTags,
 			stemType: stemType ?? undefined,
 			stemUrl: stemUrl ?? undefined
 		}
@@ -70,7 +74,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				instrumental,
 				model: 'V5',
 				callBackUrl: KIE_CALLBACK_URL,
-				negativeTags: ''
+				negativeTags: normalizeNegativeTags(negativeTags)
 			});
 		}
 
@@ -84,7 +88,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			instrumental,
 			model: 'V5',
 			callBackUrl: KIE_CALLBACK_URL,
-			negativeTags: ''
+			negativeTags: normalizeNegativeTags(negativeTags)
 		});
 	}).catch((err) =>
 		console.error(`[AsyncTask] extend generation ${generation.id} failed to start:`, err)
