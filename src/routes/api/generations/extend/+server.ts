@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createExtendGeneration } from '$lib/db.server';
+import { createExtendGeneration, getSunoModel } from '$lib/db.server';
 import { extendMusic, uploadExtendMusic } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
@@ -43,6 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	requireProject(projectId);
 	requireGeneration(extendsGenerationId, 'Parent generation');
+	const sunoModel = getSunoModel();
 
 	// Create extend generation record
 	const generation = createExtendGeneration(
@@ -72,7 +73,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				title,
 				continueAt,
 				instrumental,
-				model: 'V5',
+				model: sunoModel,
 				callBackUrl: KIE_CALLBACK_URL,
 				negativeTags: normalizeNegativeTags(negativeTags)
 			});
@@ -86,7 +87,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			continueAt,
 			instrumental,
-			model: 'V5',
+			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL,
 			negativeTags: normalizeNegativeTags(negativeTags)
 		});

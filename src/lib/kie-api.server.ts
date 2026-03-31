@@ -55,7 +55,7 @@ export interface GenerateMusicRequest {
 	title: string;
 	customMode: boolean;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5';
+	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
 	callBackUrl: string;
 	negativeTags?: string;
 }
@@ -68,7 +68,7 @@ export interface ExtendMusicRequest {
 	title: string;
 	continueAt: number;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5';
+	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
 	callBackUrl: string;
 	negativeTags?: string;
 }
@@ -81,7 +81,7 @@ export interface UploadExtendMusicRequest {
 	title: string;
 	continueAt: number;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5';
+	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
 	callBackUrl: string;
 	negativeTags?: string;
 }
@@ -91,7 +91,7 @@ export interface AddInstrumentalRequest {
 	title: string;
 	tags: string;
 	negativeTags: string;
-	model?: 'V5';
+	model?: 'V5' | 'V5_5';
 	callBackUrl: string;
 }
 
@@ -101,7 +101,7 @@ export interface AddVocalsRequest {
 	style: string;
 	title: string;
 	negativeTags: string;
-	model?: 'V4_5PLUS' | 'V5';
+	model?: 'V4_5PLUS' | 'V5' | 'V5_5';
 	callBackUrl: string;
 }
 

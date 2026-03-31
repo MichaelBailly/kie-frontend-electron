@@ -35,6 +35,7 @@ describe('GET /api/settings', () => {
 
 		expect(data.hasApiKey).toBe(false);
 		expect(data.apiKey).toBeNull();
+		expect(data.sunoModel).toBe('V5');
 	});
 
 	it('returns masked API key when key is set', async () => {
@@ -61,6 +62,17 @@ describe('GET /api/settings', () => {
 
 		expect(data.hasApiKey).toBe(true);
 		expect(data.apiKey).toBe('********');
+	});
+
+	it('returns configured SUNO model', async () => {
+		db.__setSettings({ suno_model: 'V5_5' });
+
+		const { GET } = await import('./+server');
+		const event = createRequestEvent({ method: 'GET' });
+		const response = await GET(event as never);
+		const data = await response.json();
+
+		expect(data.sunoModel).toBe('V5_5');
 	});
 });
 
@@ -130,6 +142,33 @@ describe('PUT /api/settings', () => {
 		expect(data.success).toBe(true);
 		expect(data.hasApiKey).toBe(true);
 		expect(db.setApiKey).toHaveBeenCalledWith('new-key-12345678');
+	});
+
+	it('sets the SUNO model', async () => {
+		const { PUT } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'PUT',
+			body: { sunoModel: 'V5_5' }
+		});
+		const response = await PUT(event as never);
+		const data = await response.json();
+
+		expect(data.success).toBe(true);
+		expect(data.sunoModel).toBe('V5_5');
+		expect(db.setSunoModel).toHaveBeenCalledWith('V5_5');
+	});
+
+	it('throws 400 when sunoModel has invalid value', async () => {
+		const { PUT } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'PUT',
+			body: { sunoModel: 'V4' }
+		});
+
+		await expect(PUT(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid sunoModel: must be one of V5, V5_5' }
+		});
 	});
 
 	it('clears the API key when set to empty string', async () => {

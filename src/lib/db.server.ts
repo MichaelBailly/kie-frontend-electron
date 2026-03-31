@@ -18,6 +18,7 @@
 export type {
 	Project,
 	Generation,
+	SunoModel,
 	StemSeparationType,
 	StemSeparation,
 	WavConversion,
@@ -130,7 +131,9 @@ export {
 	deleteSetting,
 	getAllSettings,
 	getApiKey,
-	setApiKey
+	setApiKey,
+	getSunoModel,
+	setSunoModel
 } from './db/settings.server';
 
 // Style collection operations

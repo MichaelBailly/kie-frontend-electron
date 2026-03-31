@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createGeneration } from '$lib/db.server';
+import { createGeneration, getSunoModel } from '$lib/db.server';
 import { generateMusic } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
@@ -22,6 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
 	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
 	requireProject(projectId);
+	const sunoModel = getSunoModel();
 
 	// Create generation record
 	const generation = createGeneration(projectId, title, style, lyrics, instrumental, negativeTags);
@@ -34,7 +35,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			customMode: true,
 			instrumental,
-			model: 'V5',
+			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL,
 			negativeTags: normalizeNegativeTags(negativeTags)
 		})

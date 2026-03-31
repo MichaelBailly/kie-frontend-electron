@@ -10,6 +10,7 @@ import {
 const {
 	mockCreateUploadVocalsGeneration,
 	mockGetGeneration,
+	mockGetSunoModel,
 	mockSetGenerationSourceAudioLocalUrl,
 	mockSetGenerationTaskStarted,
 	mockSetGenerationErrored,
@@ -34,6 +35,7 @@ const {
 } = vi.hoisted(() => ({
 	mockCreateUploadVocalsGeneration: vi.fn(),
 	mockGetGeneration: vi.fn(),
+	mockGetSunoModel: vi.fn(() => 'V5'),
 	mockSetGenerationSourceAudioLocalUrl: vi.fn(),
 	mockSetGenerationTaskStarted: vi.fn(),
 	mockSetGenerationErrored: vi.fn(),
@@ -60,6 +62,7 @@ const {
 vi.mock('$lib/db.server', () => ({
 	getProject: vi.fn(),
 	getGeneration: mockGetGeneration,
+	getSunoModel: mockGetSunoModel,
 	createUploadVocalsGeneration: mockCreateUploadVocalsGeneration,
 	setGenerationSourceAudioLocalUrl: mockSetGenerationSourceAudioLocalUrl,
 	setGenerationTaskStarted: mockSetGenerationTaskStarted,

@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { getApiKey } from '$lib/db.server';
+import { getApiKey, getSunoModel } from '$lib/db.server';
+import { SUNO_MODELS } from '$lib/types';
 import { maskApiKey } from '$lib/utils/mask-api-key';
 
 export const load: PageServerLoad = async () => {
@@ -7,6 +8,8 @@ export const load: PageServerLoad = async () => {
 
 	return {
 		hasApiKey: !!apiKey && apiKey.length > 0,
-		maskedApiKey: apiKey ? maskApiKey(apiKey) : null
+		maskedApiKey: apiKey ? maskApiKey(apiKey) : null,
+		sunoModel: getSunoModel(),
+		sunoModels: SUNO_MODELS
 	};
 };

@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import {
 	createProject,
 	createUploadInstrumentalGeneration,
+	getSunoModel,
 	setGenerationSourceAudioLocalUrl
 } from '$lib/db.server';
 import { addInstrumental } from '$lib/kie-api.server';
@@ -33,6 +34,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const projectNameRaw = asOptionalString(body.projectName, 'projectName').trim();
 	const projectName = projectNameRaw || buildProjectName(title);
 	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
+	const sunoModel = getSunoModel();
 
 	const project = createProject(projectName);
 	const generation = createUploadInstrumentalGeneration(project.id, title, tags, negativeTags);
@@ -55,7 +57,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			tags,
 			negativeTags: negativeTagsForApi,
-			model: 'V5',
+			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})
 	).catch((err) =>

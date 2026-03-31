@@ -1,5 +1,14 @@
 // Shared types between server and client
 
+export type SunoModel = 'V5' | 'V5_5';
+
+export const DEFAULT_SUNO_MODEL: SunoModel = 'V5';
+
+export const SUNO_MODELS: Array<{ value: SunoModel; label: string }> = [
+	{ value: 'V5', label: 'V5' },
+	{ value: 'V5_5', label: 'V5.5' }
+];
+
 export interface Project {
 	id: number;
 	name: string;

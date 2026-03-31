@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAddInstrumentalGeneration } from '$lib/db.server';
+import { createAddInstrumentalGeneration, getSunoModel } from '$lib/db.server';
 import { addInstrumental } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
@@ -28,6 +28,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');
+	const sunoModel = getSunoModel();
 
 	const generation = createAddInstrumentalGeneration(
 		projectId,
@@ -46,7 +47,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			tags,
 			negativeTags: negativeTagsForApi,
-			model: 'V5',
+			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})
 	).catch((err) =>

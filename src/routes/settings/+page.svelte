@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
+	import type { SunoModel } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -8,8 +9,10 @@
 	let apiKey = $state('');
 	let showApiKey = $state(false);
 	let isSaving = $state(false);
+	let isSavingModel = $state(false);
 	let isValidating = $state(false);
 	let saveMessage = $state<{ type: 'success' | 'error'; text: string } | null>(null);
+	let modelMessage = $state<{ type: 'success' | 'error'; text: string } | null>(null);
 	let validationResult = $state<{ valid: boolean; message?: string; error?: string } | null>(null);
 
 	// Derived state
@@ -21,6 +24,15 @@
 		if (saveMessage) {
 			const timeout = setTimeout(() => {
 				saveMessage = null;
+			}, 5000);
+			return () => clearTimeout(timeout);
+		}
+	});
+
+	$effect(() => {
+		if (modelMessage) {
+			const timeout = setTimeout(() => {
+				modelMessage = null;
 			}, 5000);
 			return () => clearTimeout(timeout);
 		}
@@ -107,6 +119,32 @@
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			saveApiKey();
+		}
+	}
+
+	async function saveSunoModel(event: Event) {
+		const nextModel = (event.currentTarget as HTMLSelectElement).value as SunoModel;
+		isSavingModel = true;
+		modelMessage = null;
+
+		try {
+			const response = await fetch('/api/settings', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sunoModel: nextModel })
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				data = { ...data, sunoModel: result.sunoModel };
+				modelMessage = { type: 'success', text: 'Generation model saved successfully' };
+			} else {
+				modelMessage = { type: 'error', text: 'Failed to save generation model' };
+			}
+		} catch {
+			modelMessage = { type: 'error', text: 'An error occurred while saving the model' };
+		} finally {
+			isSavingModel = false;
 		}
 	}
 </script>
@@ -458,6 +496,103 @@
 				<p class="text-xs text-gray-500">
 					Your API key is stored locally and never sent to any server except kie.ai. Keep it safe
 					and don't share it with others.
+				</p>
+			</div>
+		</section>
+
+		<section
+			class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm"
+		>
+			<div class="border-b border-white/10 bg-linear-to-r from-sky-500/10 to-cyan-500/10 px-6 py-5">
+				<div class="flex items-start gap-4">
+					<div
+						class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-sky-500 to-cyan-600 shadow-lg shadow-sky-500/25"
+					>
+						<svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9.75 3.104v5.714a2.143 2.143 0 01-2.143 2.143H1.893m7.857-7.857L14.5 8m-4.75-4.896c.608.111 1.197.406 1.664.873l4.609 4.609c.467.467.762 1.056.873 1.664M6.75 15.75h10.5m-10.5 4.5h6"
+							/>
+						</svg>
+					</div>
+					<div>
+						<h2 class="text-xl font-semibold text-white">Generation Model</h2>
+						<p class="mt-1 text-sm text-gray-400">
+							Choose which SUNO model is used for new generations and related generation tasks.
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="p-6">
+				<div class="space-y-4">
+					<label class="block">
+						<span class="mb-2 block text-sm font-medium text-gray-300">Model</span>
+						<select
+							value={data.sunoModel}
+							onchange={saveSunoModel}
+							disabled={isSavingModel}
+							class="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white transition-all focus:border-sky-500/50 focus:bg-white/10 focus:ring-2 focus:ring-sky-500/20 focus:outline-none"
+						>
+							{#each data.sunoModels as model (model.value)}
+								<option value={model.value} class="bg-gray-900 text-white">{model.label}</option>
+							{/each}
+						</select>
+					</label>
+
+					{#if modelMessage}
+						<div
+							class="flex items-center gap-3 rounded-xl border px-4 py-3 {modelMessage.type ===
+							'success'
+								? 'border-emerald-500/20 bg-emerald-500/10'
+								: 'border-red-500/20 bg-red-500/10'}"
+						>
+							{#if modelMessage.type === 'success'}
+								<svg
+									class="h-5 w-5 text-emerald-400"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+								<span class="text-sm text-emerald-300">{modelMessage.text}</span>
+							{:else}
+								<svg
+									class="h-5 w-5 text-red-400"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M6 18L18 6M6 6l12 12"
+									/>
+								</svg>
+								<span class="text-sm text-red-300">{modelMessage.text}</span>
+							{/if}
+						</div>
+					{/if}
+
+					{#if isSavingModel}
+						<p class="text-sm text-gray-400">Saving model preference...</p>
+					{/if}
+				</div>
+			</div>
+
+			<div class="border-t border-white/10 bg-white/2 px-6 py-4">
+				<p class="text-xs text-gray-500">
+					This setting is applied server-side for newly created generations, extensions, and
+					upload-based generation tasks.
 				</p>
 			</div>
 		</section>

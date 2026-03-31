@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { createAddVocalsGeneration } from '$lib/db.server';
+import { createAddVocalsGeneration, getSunoModel } from '$lib/db.server';
 import { addVocals } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
@@ -29,6 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');
+	const sunoModel = getSunoModel();
 
 	const generation = createAddVocalsGeneration(
 		projectId,
@@ -49,7 +50,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			prompt,
 			style,
 			negativeTags: negativeTagsForApi,
-			model: 'V5',
+			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})
 	).catch((err) =>

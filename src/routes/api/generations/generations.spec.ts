@@ -210,6 +210,25 @@ describe('POST /api/generations', () => {
 		);
 	});
 
+	it('uses the configured SUNO model for new generations', async () => {
+		seedNewGenerationScenario();
+		db.__setSettings({ suno_model: 'V5_5' });
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { projectId: 1, title: 'Song', style: 'rock', lyrics: 'Lyrics' }
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(kieApi.generateMusic).toHaveBeenCalledWith(
+			expect.objectContaining({
+				model: 'V5_5'
+			})
+		);
+	});
+
 	it('throws 400 when required fields are missing', async () => {
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({

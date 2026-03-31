@@ -2,12 +2,14 @@ import { vi } from 'vitest';
 import type {
 	Project,
 	Generation,
+	SunoModel,
 	StemSeparation,
 	WavConversion,
 	VariationAnnotation,
 	Setting,
 	StyleCollection
 } from '$lib/types';
+import { DEFAULT_SUNO_MODEL } from '$lib/types';
 import type { MockFn } from './types';
 
 export interface DbMock {
@@ -17,6 +19,8 @@ export interface DbMock {
 	getAllSettings: MockFn;
 	getApiKey: MockFn;
 	setApiKey: MockFn;
+	getSunoModel: MockFn;
+	setSunoModel: MockFn;
 	createProject: MockFn;
 	getProject: MockFn;
 	getAllProjects: MockFn;
@@ -134,6 +138,12 @@ export function createDbMock(): DbMock {
 		getApiKey: vi.fn(() => settings['kie_api_key'] ?? null),
 		setApiKey: vi.fn((apiKey: string) => {
 			settings['kie_api_key'] = apiKey;
+		}),
+		getSunoModel: vi.fn(
+			(): SunoModel => (settings['suno_model'] as SunoModel | undefined) ?? DEFAULT_SUNO_MODEL
+		),
+		setSunoModel: vi.fn((model: SunoModel) => {
+			settings['suno_model'] = model;
 		}),
 
 		createProject: vi.fn((name: string = 'New Project'): Project => {

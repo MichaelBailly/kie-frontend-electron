@@ -4,15 +4,17 @@ import { describe, it, expect, vi } from 'vitest';
 describe('Settings Page', () => {
 	describe('Initial State', () => {
 		it('should show warning when no API key is configured', () => {
-			const data = { hasApiKey: false, maskedApiKey: null };
+			const data = { hasApiKey: false, maskedApiKey: null, sunoModel: 'V5' };
 			expect(data.hasApiKey).toBe(false);
 			expect(data.maskedApiKey).toBeNull();
+			expect(data.sunoModel).toBe('V5');
 		});
 
 		it('should show success state when API key is configured', () => {
-			const data = { hasApiKey: true, maskedApiKey: '1234****5678' };
+			const data = { hasApiKey: true, maskedApiKey: '1234****5678', sunoModel: 'V5_5' };
 			expect(data.hasApiKey).toBe(true);
 			expect(data.maskedApiKey).toBe('1234****5678');
+			expect(data.sunoModel).toBe('V5_5');
 		});
 	});
 
@@ -76,6 +78,25 @@ describe('Settings Page', () => {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ apiKey: 'test-key' })
+			});
+		});
+
+		it('should call settings API with SUNO model payload', async () => {
+			const mockFetch = vi.fn().mockResolvedValue({
+				ok: true,
+				json: () => Promise.resolve({ sunoModel: 'V5_5', success: true })
+			});
+
+			await mockFetch('/api/settings', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sunoModel: 'V5_5' })
+			});
+
+			expect(mockFetch).toHaveBeenCalledWith('/api/settings', {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ sunoModel: 'V5_5' })
 			});
 		});
 	});

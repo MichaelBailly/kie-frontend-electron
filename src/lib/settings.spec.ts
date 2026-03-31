@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { DEFAULT_SUNO_MODEL } from '$lib/types';
 import { maskApiKey } from '$lib/utils/mask-api-key';
 
 type DbMockModule = typeof import('$lib/db.server') & {
@@ -29,6 +30,10 @@ vi.mock('$lib/db.server', () => {
 		getApiKey: vi.fn(() => mockSettings['kie_api_key'] ?? null),
 		setApiKey: vi.fn((apiKey: string) => {
 			mockSettings['kie_api_key'] = apiKey;
+		}),
+		getSunoModel: vi.fn(() => mockSettings['suno_model'] ?? DEFAULT_SUNO_MODEL),
+		setSunoModel: vi.fn((model: string) => {
+			mockSettings['suno_model'] = model;
 		}),
 		// Reset function for tests
 		__resetMock: () => {
@@ -78,6 +83,18 @@ describe('Settings Database Operations', () => {
 	it('should return null for non-existent settings', async () => {
 		const { getSetting } = await import('$lib/db.server');
 		expect(getSetting('non_existent')).toBeNull();
+	});
+
+	it('should return the default SUNO model when none is set', async () => {
+		const { getSunoModel } = await import('$lib/db.server');
+		expect(getSunoModel()).toBe(DEFAULT_SUNO_MODEL);
+	});
+
+	it('should store and retrieve the SUNO model', async () => {
+		const { getSunoModel, setSunoModel } = await import('$lib/db.server');
+
+		setSunoModel('V5_5');
+		expect(getSunoModel()).toBe('V5_5');
 	});
 });
 

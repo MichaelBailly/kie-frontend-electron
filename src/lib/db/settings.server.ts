@@ -1,5 +1,7 @@
-import type { Setting } from '$lib/types';
+import { DEFAULT_SUNO_MODEL, SUNO_MODELS, type Setting, type SunoModel } from '$lib/types';
 import { prepareStmt } from './database.server';
+
+const SUNO_MODEL_VALUES = SUNO_MODELS.map((model) => model.value);
 
 export function getSetting(key: string): string | null {
 	const stmt = prepareStmt('SELECT value FROM settings WHERE key = ?');
@@ -33,4 +35,15 @@ export function getApiKey(): string | null {
 
 export function setApiKey(apiKey: string): void {
 	setSetting('kie_api_key', apiKey);
+}
+
+export function getSunoModel(): SunoModel {
+	const value = getSetting('suno_model');
+	return value && SUNO_MODEL_VALUES.includes(value as SunoModel)
+		? (value as SunoModel)
+		: DEFAULT_SUNO_MODEL;
+}
+
+export function setSunoModel(model: SunoModel): void {
+	setSetting('suno_model', model);
 }
