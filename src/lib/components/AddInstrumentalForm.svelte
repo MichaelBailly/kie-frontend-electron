@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import StylePicker from './StylePicker.svelte';
+	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
@@ -11,6 +12,7 @@
 		song,
 		stemType,
 		stemUrl,
+		sunoModel,
 		onSubmit,
 		onCancel
 	}: {
@@ -22,6 +24,7 @@
 		};
 		stemType: string;
 		stemUrl: string;
+		sunoModel: SunoModel;
 		onSubmit: (data: { title: string; tags: string; negativeTags: string }) => Promise<void>;
 		onCancel: () => void;
 	} = $props();
@@ -87,6 +90,7 @@
 			<h3 class="font-semibold text-teal-900 dark:text-teal-100">
 				Add Instrumental from {stemDisplay.label} Stem
 			</h3>
+			<span class="ml-auto"><ModelBadge model={sunoModel} showLink /></span>
 		</div>
 		<p class="text-sm text-teal-700 dark:text-teal-300">
 			Generate a fresh instrumental accompaniment from this isolated stem while keeping full lineage

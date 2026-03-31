@@ -1,4 +1,5 @@
-import type { Generation } from '$lib/types';
+import type { Generation, SunoModel } from '$lib/types';
+import { DEFAULT_SUNO_MODEL } from '$lib/types';
 import { prepareStmt } from './database.server';
 
 export function createGeneration(
@@ -7,11 +8,12 @@ export function createGeneration(
 	style: string,
 	lyrics: string,
 	instrumental: boolean = false,
-	negativeTags: string = ''
+	negativeTags: string = '',
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
-		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental, generation_type, negative_tags)
-		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, 'generate', ?)
+		INSERT INTO generations (project_id, title, style, lyrics, status, extends_generation_id, extends_audio_id, continue_at, instrumental, generation_type, negative_tags, model)
+		VALUES (?, ?, ?, ?, 'pending', NULL, NULL, NULL, ?, 'generate', ?, ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -20,7 +22,8 @@ export function createGeneration(
 		style,
 		lyrics,
 		instrumental ? 1 : 0,
-		negativeTags
+		negativeTags,
+		model
 	) as Generation;
 
 	// Update project's updated_at
@@ -38,7 +41,7 @@ export function createExtendGeneration(
 	extendsAudioId: string,
 	continueAt: number,
 	instrumental: boolean = false,
-	options?: { stemType?: string; stemUrl?: string; negativeTags?: string }
+	options?: { stemType?: string; stemUrl?: string; negativeTags?: string; model?: SunoModel }
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -54,9 +57,10 @@ export function createExtendGeneration(
 			extends_stem_url,
 			instrumental,
 			generation_type,
-			negative_tags
+			negative_tags,
+			model
 		)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 'extend', ?)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, 'extend', ?, ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -70,7 +74,8 @@ export function createExtendGeneration(
 		options?.stemType ?? null,
 		options?.stemUrl ?? null,
 		instrumental ? 1 : 0,
-		options?.negativeTags ?? ''
+		options?.negativeTags ?? '',
+		options?.model ?? DEFAULT_SUNO_MODEL
 	) as Generation;
 
 	// Update project's updated_at
@@ -98,7 +103,8 @@ export function createAddVocalsGeneration(
 	sourceGenerationId: number,
 	sourceAudioId: string,
 	stemType: string,
-	stemUrl: string
+	stemUrl: string,
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -114,9 +120,10 @@ export function createAddVocalsGeneration(
 			extends_stem_url,
 			instrumental,
 			generation_type,
-			negative_tags
+			negative_tags,
+			model
 		)
-		VALUES (?, ?, ?, ?, 'pending', ?, ?, NULL, ?, ?, 0, 'add_vocals', ?)
+		VALUES (?, ?, ?, ?, 'pending', ?, ?, NULL, ?, ?, 0, 'add_vocals', ?, ?)
 		RETURNING *
 	`);
 
@@ -129,7 +136,8 @@ export function createAddVocalsGeneration(
 		sourceAudioId,
 		stemType,
 		stemUrl,
-		negativeTags
+		negativeTags,
+		model
 	) as Generation;
 
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -145,7 +153,8 @@ export function createAddInstrumentalGeneration(
 	sourceGenerationId: number,
 	sourceAudioId: string,
 	stemType: string,
-	stemUrl: string
+	stemUrl: string,
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -161,9 +170,10 @@ export function createAddInstrumentalGeneration(
 			extends_stem_url,
 			instrumental,
 			generation_type,
-			negative_tags
+			negative_tags,
+			model
 		)
-		VALUES (?, ?, ?, '', 'pending', ?, ?, NULL, ?, ?, 1, 'add_instrumental', ?)
+		VALUES (?, ?, ?, '', 'pending', ?, ?, NULL, ?, ?, 1, 'add_instrumental', ?, ?)
 		RETURNING *
 	`);
 
@@ -175,7 +185,8 @@ export function createAddInstrumentalGeneration(
 		sourceAudioId,
 		stemType,
 		stemUrl,
-		negativeTags
+		negativeTags,
+		model
 	) as Generation;
 
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -212,7 +223,8 @@ export function createUploadInstrumentalGeneration(
 	title: string,
 	tags: string,
 	negativeTags: string,
-	sourceAudioLocalUrl: string | null = null
+	sourceAudioLocalUrl: string | null = null,
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -224,9 +236,10 @@ export function createUploadInstrumentalGeneration(
 			instrumental,
 			generation_type,
 			negative_tags,
-			source_audio_local_url
+			source_audio_local_url,
+			model
 		)
-		VALUES (?, ?, ?, '', 'pending', 1, 'upload_instrumental', ?, ?)
+		VALUES (?, ?, ?, '', 'pending', 1, 'upload_instrumental', ?, ?, ?)
 		RETURNING *
 	`);
 
@@ -235,7 +248,8 @@ export function createUploadInstrumentalGeneration(
 		title,
 		tags,
 		negativeTags,
-		sourceAudioLocalUrl
+		sourceAudioLocalUrl,
+		model
 	) as Generation;
 
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -249,7 +263,8 @@ export function createUploadVocalsGeneration(
 	style: string,
 	prompt: string,
 	negativeTags: string,
-	sourceAudioLocalUrl: string | null = null
+	sourceAudioLocalUrl: string | null = null,
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
@@ -261,9 +276,10 @@ export function createUploadVocalsGeneration(
 			instrumental,
 			generation_type,
 			negative_tags,
-			source_audio_local_url
+			source_audio_local_url,
+			model
 		)
-		VALUES (?, ?, ?, ?, 'pending', 0, 'upload_vocals', ?, ?)
+		VALUES (?, ?, ?, ?, 'pending', 0, 'upload_vocals', ?, ?, ?)
 		RETURNING *
 	`);
 
@@ -273,7 +289,8 @@ export function createUploadVocalsGeneration(
 		style,
 		prompt,
 		negativeTags,
-		sourceAudioLocalUrl
+		sourceAudioLocalUrl,
+		model
 	) as Generation;
 
 	prepareStmt('UPDATE projects SET updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(projectId);
@@ -574,15 +591,16 @@ export function createImportedGeneration(
 		duration: number;
 		audioId: string;
 	},
-	responseData: string
+	responseData: string,
+	model: SunoModel = DEFAULT_SUNO_MODEL
 ): Generation {
 	const stmt = prepareStmt(`
 		INSERT INTO generations (
 			project_id, task_id, title, style, lyrics, status,
 			track1_stream_url, track1_audio_url, track1_image_url, track1_duration, track1_audio_id,
 			track2_stream_url, track2_audio_url, track2_image_url, track2_duration, track2_audio_id,
-			response_data, generation_type
-		) VALUES (?, ?, ?, ?, ?, 'success', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'generate')
+			response_data, generation_type, model
+		) VALUES (?, ?, ?, ?, ?, 'success', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'generate', ?)
 		RETURNING *
 	`);
 	const generation = stmt.get(
@@ -601,7 +619,8 @@ export function createImportedGeneration(
 		track2.imageUrl,
 		track2.duration,
 		track2.audioId,
-		responseData
+		responseData,
+		model
 	) as Generation;
 
 	// Update project's updated_at

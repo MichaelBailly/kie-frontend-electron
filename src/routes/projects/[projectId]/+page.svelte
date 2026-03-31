@@ -108,5 +108,6 @@
 	bind:lyrics
 	bind:negativeTags
 	bind:instrumental
+	sunoModel={data.sunoModel}
 	onNewGeneration={handleNewGeneration}
 />

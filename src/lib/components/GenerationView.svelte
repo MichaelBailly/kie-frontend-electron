@@ -15,6 +15,7 @@
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 	import { getPinnedGenerationTrack } from './generationStickyPlayer';
+	import ModelBadge from './ModelBadge.svelte';
 
 	let {
 		generation,
@@ -454,6 +455,15 @@
 		<!-- Song details (read-only) -->
 		<div class="space-y-5">
 			<ReadonlyMetadataField label="Title">{generation.title}</ReadonlyMetadataField>
+
+			<div class="flex items-center gap-3">
+				<ModelBadge model={generation.model} />
+				<span
+					class="rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+				>
+					{getGenerationTypeLabel(generation.generation_type)}
+				</span>
+			</div>
 
 			{#if trimmedStyle}
 				<ReadonlyMetadataField

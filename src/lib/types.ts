@@ -9,6 +9,10 @@ export const SUNO_MODELS: Array<{ value: SunoModel; label: string }> = [
 	{ value: 'V5_5', label: 'V5.5' }
 ];
 
+export function getModelLabel(model: SunoModel): string {
+	return SUNO_MODELS.find((m) => m.value === model)?.label ?? model;
+}
+
 export interface Project {
 	id: number;
 	name: string;
@@ -50,6 +54,7 @@ export interface Generation {
 	generation_type: string;
 	negative_tags: string | null;
 	source_audio_local_url?: string | null;
+	model: SunoModel;
 	created_at: string;
 	updated_at: string;
 }

@@ -319,6 +319,7 @@
 			sourceSong={retrySourceSong}
 			stemType={data.retryExtension.stemType}
 			stemUrl={data.retryExtension.stemUrl}
+			sunoModel={data.sunoModel}
 			onRetry={handleRetryAddInstrumental}
 		/>
 	{:else if isAddVocals && data.retryExtension.stemUrl && data.retryExtension.stemType}
@@ -329,6 +330,7 @@
 			sourceSong={retrySourceSong}
 			stemType={data.retryExtension.stemType}
 			stemUrl={data.retryExtension.stemUrl}
+			sunoModel={data.sunoModel}
 			onRetry={handleRetryAddVocals}
 		/>
 	{:else if !isAddInstrumental && !isAddVocals}
@@ -338,6 +340,7 @@
 			{generation}
 			sourceSong={retrySourceSong}
 			initialContinueAt={data.retryExtension.defaults.continueAt}
+			sunoModel={data.sunoModel}
 			onExtend={handleRetryExtend}
 		/>
 	{/if}
@@ -350,6 +353,7 @@
 			onClose={closeRetryUploadModal}
 			{generation}
 			sourceAudioLocalUrl={data.retryUpload.sourceAudioLocalUrl}
+			sunoModel={data.sunoModel}
 			onRetry={handleRetryUploadInstrumental}
 		/>
 	{:else if isGenerationTypeOneOf(generation.generation_type, ['upload_vocals'])}
@@ -358,6 +362,7 @@
 			onClose={closeRetryUploadModal}
 			{generation}
 			sourceAudioLocalUrl={data.retryUpload.sourceAudioLocalUrl}
+			sunoModel={data.sunoModel}
 			onRetry={handleRetryUploadVocals}
 		/>
 	{/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import StylePicker from './StylePicker.svelte';
+	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 	import { untrack } from 'svelte';
@@ -11,6 +12,7 @@
 		song,
 		stemType,
 		stemUrl,
+		sunoModel,
 		onSubmit,
 		onCancel
 	}: {
@@ -22,6 +24,7 @@
 		};
 		stemType: string;
 		stemUrl: string;
+		sunoModel: SunoModel;
 		onSubmit: (data: {
 			title: string;
 			prompt: string;
@@ -99,6 +102,7 @@
 					Add Vocals from {stemDisplay.label} Stem
 				{/if}
 			</h3>
+			<span class="ml-auto"><ModelBadge model={sunoModel} showLink /></span>
 		</div>
 		<p class="text-sm text-violet-700 dark:text-violet-300">
 			{#if isFullMixSource}

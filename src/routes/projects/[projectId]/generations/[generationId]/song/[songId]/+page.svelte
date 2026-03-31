@@ -546,6 +546,7 @@
 					song={generationState.song}
 					stemType={generationState.extendingStemType}
 					stemUrl={generationState.extendingStemUrl}
+					sunoModel={data.sunoModel}
 					onExtend={generationState.handleExtend}
 					onCancel={generationState.closeExtendForm}
 				/>
@@ -555,6 +556,7 @@
 					song={generationState.song}
 					stemType={generationState.addInstrumentalStemType}
 					stemUrl={generationState.addInstrumentalStemUrl}
+					sunoModel={data.sunoModel}
 					onSubmit={generationState.handleAddInstrumental}
 					onCancel={generationState.closeAddInstrumentalForm}
 				/>
@@ -564,6 +566,7 @@
 					song={generationState.song}
 					stemType={generationState.addVocalsStemType}
 					stemUrl={generationState.addVocalsStemUrl}
+					sunoModel={data.sunoModel}
 					onSubmit={generationState.handleAddVocals}
 					onCancel={generationState.closeAddVocalsForm}
 				/>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import AddInstrumentalForm from '$lib/components/AddInstrumentalForm.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 
@@ -15,6 +15,7 @@
 		song,
 		stemType = null,
 		stemUrl = null,
+		sunoModel,
 		onSubmit,
 		onCancel
 	}: {
@@ -23,6 +24,7 @@
 		song: SongInfo;
 		stemType?: string | null;
 		stemUrl?: string | null;
+		sunoModel: SunoModel;
 		onSubmit: (data: { title: string; tags: string; negativeTags: string }) => Promise<void>;
 		onCancel: () => void;
 	} = $props();
@@ -75,6 +77,7 @@
 						{song}
 						stemType={normalizedStemType as string}
 						stemUrl={stemUrl!}
+						{sunoModel}
 						{onSubmit}
 						{onCancel}
 					/>

@@ -40,7 +40,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		sourceGenerationId,
 		sourceAudioId,
 		stemType,
-		stemUrl
+		stemUrl,
+		sunoModel
 	);
 
 	startGenerationTask(generation.id, () =>

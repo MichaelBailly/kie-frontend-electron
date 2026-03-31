@@ -31,6 +31,7 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		negative_tags: null,
 		extends_stem_type: null,
 		extends_stem_url: null,
+		model: 'V5',
 		created_at: '2026-01-01T00:00:00.000Z',
 		updated_at: '2026-01-01T00:00:00.000Z',
 		...overrides

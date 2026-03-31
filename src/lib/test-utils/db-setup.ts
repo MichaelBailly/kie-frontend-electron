@@ -72,6 +72,7 @@ export const SCHEMA_DDL = `
 		generation_type TEXT NOT NULL DEFAULT 'generate',
 		negative_tags TEXT,
 		source_audio_local_url TEXT,
+		model TEXT NOT NULL DEFAULT 'V5',
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,

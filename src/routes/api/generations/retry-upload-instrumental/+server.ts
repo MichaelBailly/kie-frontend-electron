@@ -87,7 +87,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	// Create the new generation in the same project
-	const generation = createUploadInstrumentalGeneration(projectId, title, tags, negativeTags);
+	const generation = createUploadInstrumentalGeneration(
+		projectId,
+		title,
+		tags,
+		negativeTags,
+		null,
+		sunoModel
+	);
 
 	// Finalize the local file copy for the new generation
 	try {

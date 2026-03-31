@@ -38,7 +38,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	const sunoModel = getSunoModel();
 
 	const project = createProject(projectName);
-	const generation = createUploadVocalsGeneration(project.id, title, style, prompt, negativeTags);
+	const generation = createUploadVocalsGeneration(
+		project.id,
+		title,
+		style,
+		prompt,
+		negativeTags,
+		null,
+		sunoModel
+	);
 
 	try {
 		const sourceAudioLocalUrl = await finalizeTemporaryUploadedAudio(

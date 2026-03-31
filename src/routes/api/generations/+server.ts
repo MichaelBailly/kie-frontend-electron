@@ -25,7 +25,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	const sunoModel = getSunoModel();
 
 	// Create generation record
-	const generation = createGeneration(projectId, title, style, lyrics, instrumental, negativeTags);
+	const generation = createGeneration(
+		projectId,
+		title,
+		style,
+		lyrics,
+		instrumental,
+		negativeTags,
+		sunoModel
+	);
 
 	// Start async generation process
 	startGenerationTask(generation.id, () =>

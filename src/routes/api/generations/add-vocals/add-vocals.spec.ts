@@ -133,7 +133,8 @@ describe('POST /api/generations/add-vocals', () => {
 			5,
 			'audio-5-1',
 			'instrumental',
-			'https://example.com/stems/instrumental.mp3'
+			'https://example.com/stems/instrumental.mp3',
+			'V5'
 		);
 
 		await flushPromises();

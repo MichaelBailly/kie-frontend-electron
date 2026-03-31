@@ -60,6 +60,7 @@ export function createGeneration(overrides: Partial<Generation> = {}): Generatio
 		instrumental: 0,
 		generation_type: 'generate',
 		negative_tags: null,
+		model: 'V5',
 		created_at: fixtureTimestamp(),
 		updated_at: fixtureTimestamp(),
 		...overrides

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import AddInstrumentalForm from '$lib/components/AddInstrumentalForm.svelte';
 
 	let {
@@ -9,6 +9,7 @@
 		sourceSong,
 		stemType,
 		stemUrl,
+		sunoModel,
 		onRetry
 	}: {
 		isOpen: boolean;
@@ -21,6 +22,7 @@
 		};
 		stemType: string;
 		stemUrl: string;
+		sunoModel: SunoModel;
 		onRetry: (data: { title: string; tags: string; negativeTags: string }) => void | Promise<void>;
 	} = $props();
 
@@ -97,6 +99,7 @@
 					song={sourceSong}
 					{stemType}
 					{stemUrl}
+					{sunoModel}
 					onSubmit={handleSubmit}
 					onCancel={onClose}
 				/>

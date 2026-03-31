@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import AddInstrumentalForm from '$lib/components/AddInstrumentalForm.svelte';
 
 	let {
@@ -7,12 +7,14 @@
 		onClose,
 		generation,
 		sourceAudioLocalUrl,
+		sunoModel,
 		onRetry
 	}: {
 		isOpen: boolean;
 		onClose: () => void;
 		generation: Generation;
 		sourceAudioLocalUrl: string;
+		sunoModel: SunoModel;
 		onRetry: (data: { title: string; tags: string; negativeTags: string }) => void | Promise<void>;
 	} = $props();
 
@@ -93,6 +95,7 @@
 					}}
 					stemType="uploaded_audio"
 					stemUrl={sourceAudioLocalUrl}
+					{sunoModel}
 					onSubmit={handleSubmit}
 					onCancel={onClose}
 				/>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import ExtendSongForm from '$lib/components/ExtendSongForm.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
 
@@ -18,6 +18,7 @@
 		song,
 		stemType = null,
 		stemUrl = null,
+		sunoModel,
 		onExtend,
 		onCancel
 	}: {
@@ -26,6 +27,7 @@
 		song: SongInfo;
 		stemType?: string | null;
 		stemUrl?: string | null;
+		sunoModel: SunoModel;
 		onExtend: (data: {
 			title: string;
 			style: string;
@@ -113,6 +115,7 @@
 					song={normalizedSong}
 					{stemType}
 					{stemUrl}
+					{sunoModel}
 					onExtend={handleExtend}
 					{onCancel}
 				/>

@@ -58,7 +58,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		{
 			negativeTags,
 			stemType: stemType ?? undefined,
-			stemUrl: stemUrl ?? undefined
+			stemUrl: stemUrl ?? undefined,
+			model: sunoModel
 		}
 	);
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import ExtendSongForm from '$lib/components/ExtendSongForm.svelte';
 
 	let {
@@ -8,6 +8,7 @@
 		generation,
 		sourceSong,
 		initialContinueAt = null,
+		sunoModel,
 		onExtend
 	}: {
 		isOpen: boolean;
@@ -22,6 +23,7 @@
 			duration: number | null;
 		};
 		initialContinueAt?: number | null;
+		sunoModel: SunoModel;
 		onExtend: (data: {
 			title: string;
 			style: string;
@@ -111,6 +113,7 @@
 					{generation}
 					song={sourceSong}
 					{initialContinueAt}
+					{sunoModel}
 					stickyActions={true}
 					onExtend={handleExtend}
 					onCancel={onClose}

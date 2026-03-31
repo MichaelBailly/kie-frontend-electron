@@ -37,7 +37,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	const sunoModel = getSunoModel();
 
 	const project = createProject(projectName);
-	const generation = createUploadInstrumentalGeneration(project.id, title, tags, negativeTags);
+	const generation = createUploadInstrumentalGeneration(
+		project.id,
+		title,
+		tags,
+		negativeTags,
+		null,
+		sunoModel
+	);
 
 	try {
 		const sourceAudioLocalUrl = await finalizeTemporaryUploadedAudio(

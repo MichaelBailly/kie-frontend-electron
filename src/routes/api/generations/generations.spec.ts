@@ -150,7 +150,15 @@ describe('POST /api/generations', () => {
 			lyrics: expect.any(String),
 			status: expect.any(String)
 		});
-		expect(db.createGeneration).toHaveBeenCalledWith(1, 'My Song', 'pop', 'Hello world', false, '');
+		expect(db.createGeneration).toHaveBeenCalledWith(
+			1,
+			'My Song',
+			'pop',
+			'Hello world',
+			false,
+			'',
+			'V5'
+		);
 	});
 
 	it('passes trimmed negative tags to the repository and KIE API', async () => {
@@ -176,7 +184,8 @@ describe('POST /api/generations', () => {
 			'pop',
 			'Hello world',
 			false,
-			'harsh distortion, crowd noise'
+			'harsh distortion, crowd noise',
+			'V5'
 		);
 		expect(kieApi.generateMusic).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -448,7 +457,7 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ negativeTags: '', stemType: undefined, stemUrl: undefined }
+			{ negativeTags: '', stemType: undefined, stemUrl: undefined, model: 'V5' }
 		);
 	});
 
@@ -484,7 +493,7 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ negativeTags: 'crowd chants', stemType: undefined, stemUrl: undefined }
+			{ negativeTags: 'crowd chants', stemType: undefined, stemUrl: undefined, model: 'V5' }
 		);
 		expect(kieApi.extendMusic).toHaveBeenCalledWith(
 			expect.objectContaining({ negativeTags: 'crowd chants' })
@@ -692,7 +701,8 @@ describe('POST /api/generations/extend', () => {
 			{
 				negativeTags: '',
 				stemType: 'vocal',
-				stemUrl: 'https://example.com/stems/vocal.mp3'
+				stemUrl: 'https://example.com/stems/vocal.mp3',
+				model: 'V5'
 			}
 		);
 	});

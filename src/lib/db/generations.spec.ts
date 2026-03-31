@@ -731,4 +731,111 @@ describe('Generations repository', () => {
 			expect(projectNames).toContain('Project 2');
 		});
 	});
+
+	describe('model field', () => {
+		it('defaults to V5 when not specified', () => {
+			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics');
+			expect(gen.model).toBe('V5');
+		});
+
+		it('stores explicit V5_5 model', () => {
+			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V5_5');
+			expect(gen.model).toBe('V5_5');
+		});
+
+		it('persists model through getGeneration', () => {
+			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V5_5');
+			const fetched = getGeneration(gen.id);
+			expect(fetched!.model).toBe('V5_5');
+		});
+
+		it('stores model for extend generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const ext = createExtendGeneration(
+				projectId,
+				'Extended',
+				'pop',
+				'more lyrics',
+				parent.id,
+				'audio-123',
+				120.5,
+				false,
+				{ model: 'V5_5' }
+			);
+			expect(ext.model).toBe('V5_5');
+		});
+
+		it('stores model for add-instrumental generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const gen = createAddInstrumentalGeneration(
+				projectId,
+				'Instrumental',
+				'cinematic',
+				'',
+				parent.id,
+				'audio-123',
+				'vocal',
+				'https://example.com/stem.mp3',
+				'V5_5'
+			);
+			expect(gen.model).toBe('V5_5');
+		});
+
+		it('stores model for add-vocals generations', () => {
+			const parent = createGeneration(projectId, 'Parent', 'pop', 'lyrics');
+			const gen = createAddVocalsGeneration(
+				projectId,
+				'Vocals',
+				'synth pop',
+				'Verse one',
+				'',
+				parent.id,
+				'audio-123',
+				'instrumental',
+				'https://example.com/stem.mp3',
+				'V5_5'
+			);
+			expect(gen.model).toBe('V5_5');
+		});
+
+		it('stores model for upload-vocals generations', () => {
+			const gen = createUploadVocalsGeneration(
+				projectId,
+				'Upload Vocals',
+				'pop',
+				'lyrics',
+				'',
+				null,
+				'V5_5'
+			);
+			expect(gen.model).toBe('V5_5');
+		});
+
+		it('stores model for imported generations', () => {
+			const gen = createImportedGeneration(
+				projectId,
+				'task-123',
+				'Imported',
+				'electronic',
+				'lyrics',
+				{
+					streamUrl: 'http://s1',
+					audioUrl: 'http://a1',
+					imageUrl: 'http://i1',
+					duration: 120,
+					audioId: 'aid1'
+				},
+				{
+					streamUrl: 'http://s2',
+					audioUrl: 'http://a2',
+					imageUrl: 'http://i2',
+					duration: 120,
+					audioId: 'aid2'
+				},
+				'{}',
+				'V5_5'
+			);
+			expect(gen.model).toBe('V5_5');
+		});
+	});
 });

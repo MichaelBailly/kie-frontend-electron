@@ -163,7 +163,9 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 			'Retry Vocals',
 			'dream pop',
 			'[Verse] Bright lights',
-			'mumble rap'
+			'mumble rap',
+			null,
+			'V5'
 		);
 		expect(mockSetGenerationSourceAudioLocalUrl).toHaveBeenCalledWith(
 			55,
@@ -222,7 +224,9 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 			'Retry Vocals',
 			'dream pop',
 			'[Verse] Bright lights',
-			''
+			'',
+			null,
+			'V5'
 		);
 		expect(mockAddVocals).toHaveBeenCalledWith(expect.objectContaining({ negativeTags: '' }));
 	});

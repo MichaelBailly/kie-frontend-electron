@@ -1,8 +1,9 @@
 <script lang="ts">
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
 	import StylePicker from './StylePicker.svelte';
-	import type { StyleCollection } from '$lib/types';
+	import type { StyleCollection, SunoModel } from '$lib/types';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
+	import ModelBadge from './ModelBadge.svelte';
 
 	let {
 		title = $bindable(''),
@@ -10,6 +11,7 @@
 		lyrics = $bindable(''),
 		negativeTags = $bindable(''),
 		instrumental = $bindable(false),
+		sunoModel,
 		onNewGeneration
 	}: {
 		title: string;
@@ -17,6 +19,7 @@
 		lyrics: string;
 		negativeTags: string;
 		instrumental: boolean;
+		sunoModel: SunoModel;
 		onNewGeneration: (
 			title: string,
 			style: string,
@@ -45,7 +48,10 @@
 <div class="flex h-full flex-col">
 	<!-- Header -->
 	<div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-		<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Create New Song</h2>
+		<div class="flex items-center justify-between">
+			<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Create New Song</h2>
+			<ModelBadge model={sunoModel} showLink />
+		</div>
 	</div>
 
 	<div class="flex-1 overflow-y-auto p-6">

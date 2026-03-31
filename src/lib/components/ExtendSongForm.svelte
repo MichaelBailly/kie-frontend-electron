@@ -1,9 +1,10 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import StylePicker from './StylePicker.svelte';
 	import Waveform from './Waveform.svelte';
 	import InstrumentalToggle from './InstrumentalToggle.svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
+	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { formatTime } from '$lib/utils/format';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
@@ -16,6 +17,7 @@
 		stemUrl = null,
 		initialContinueAt = null,
 		stickyActions = false,
+		sunoModel,
 		onExtend,
 		onCancel
 	}: {
@@ -32,6 +34,7 @@
 		stemUrl?: string | null;
 		initialContinueAt?: number | null;
 		stickyActions?: boolean;
+		sunoModel: SunoModel;
 		onExtend: (data: {
 			title: string;
 			style: string;
@@ -143,6 +146,7 @@
 			{:else}
 				Extend This Song
 			{/if}
+			<span class="ml-auto"><ModelBadge model={sunoModel} showLink /></span>
 		</h3>
 		{#if isStemExtension}
 			<div

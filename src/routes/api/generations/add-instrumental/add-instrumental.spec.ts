@@ -129,7 +129,8 @@ describe('POST /api/generations/add-instrumental', () => {
 			5,
 			'audio-5-1',
 			'vocal',
-			'https://example.com/stems/vocal.mp3'
+			'https://example.com/stems/vocal.mp3',
+			'V5'
 		);
 
 		await flushPromises();
@@ -174,7 +175,8 @@ describe('POST /api/generations/add-instrumental', () => {
 			5,
 			'audio-5-1',
 			'vocal',
-			'https://example.com/stems/vocal.mp3'
+			'https://example.com/stems/vocal.mp3',
+			'V5'
 		);
 		expect(kieApi.addInstrumental).toHaveBeenCalledWith(
 			expect.objectContaining({ negativeTags: '' })

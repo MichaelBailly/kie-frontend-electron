@@ -88,7 +88,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	// Create the new generation in the same project
-	const generation = createUploadVocalsGeneration(projectId, title, style, prompt, negativeTags);
+	const generation = createUploadVocalsGeneration(
+		projectId,
+		title,
+		style,
+		prompt,
+		negativeTags,
+		null,
+		sunoModel
+	);
 
 	// Finalize the local file copy for the new generation
 	try {

@@ -5,7 +5,8 @@ import {
 	createProject,
 	getProject,
 	setProjectOpen,
-	getAnnotationsByProject
+	getAnnotationsByProject,
+	getSunoModel
 } from '$lib/db.server';
 import { error } from '@sveltejs/kit';
 import { queueTrackAssetCaching } from '$lib/server/assets-cache.server';
@@ -61,6 +62,7 @@ export const load: LayoutServerLoad = async ({ params }) => {
 	return {
 		projects: projectsWithGenerations,
 		activeProject,
-		annotations
+		annotations,
+		sunoModel: getSunoModel()
 	};
 };

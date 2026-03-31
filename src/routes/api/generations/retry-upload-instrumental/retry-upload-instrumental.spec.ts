@@ -161,7 +161,9 @@ describe('POST /api/generations/retry-upload-instrumental', () => {
 			1,
 			'Retry Instrumental',
 			'ambient, cinematic',
-			'crowd noise'
+			'crowd noise',
+			null,
+			'V5'
 		);
 		expect(mockSetGenerationSourceAudioLocalUrl).toHaveBeenCalledWith(
 			99,
@@ -217,7 +219,9 @@ describe('POST /api/generations/retry-upload-instrumental', () => {
 			1,
 			'Retry Instrumental',
 			'ambient',
-			''
+			'',
+			null,
+			'V5'
 		);
 		expect(mockAddInstrumental).toHaveBeenCalledWith(expect.objectContaining({ negativeTags: '' }));
 	});

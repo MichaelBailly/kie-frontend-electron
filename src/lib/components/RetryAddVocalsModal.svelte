@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Generation } from '$lib/types';
+	import type { Generation, SunoModel } from '$lib/types';
 	import AddVocalsForm from '$lib/components/AddVocalsForm.svelte';
 
 	let {
@@ -9,6 +9,7 @@
 		sourceSong,
 		stemType,
 		stemUrl,
+		sunoModel,
 		onRetry
 	}: {
 		isOpen: boolean;
@@ -21,6 +22,7 @@
 		};
 		stemType: string;
 		stemUrl: string;
+		sunoModel: SunoModel;
 		onRetry: (data: {
 			title: string;
 			prompt: string;
@@ -107,6 +109,7 @@
 					song={sourceSong}
 					{stemType}
 					{stemUrl}
+					{sunoModel}
 					onSubmit={handleSubmit}
 					onCancel={onClose}
 				/>

@@ -37,6 +37,7 @@ function createGeneration(overrides: Partial<Generation> = {}): Generation {
 		generation_type: 'generate',
 		negative_tags: null,
 		source_audio_local_url: null,
+		model: 'V5',
 		created_at: '2026-01-01T00:00:00.000Z',
 		updated_at: '2026-01-01T00:00:00.000Z',
 		...overrides
