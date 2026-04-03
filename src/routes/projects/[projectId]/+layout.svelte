@@ -3,12 +3,27 @@
 	import type { Snippet } from 'svelte';
 	import type { StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
+	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
 	import { setContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { useProjectState } from '$lib/routes/project/useProjectState.svelte';
 	import { useSSEConnection } from '$lib/routes/project/useSSEConnection.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	let showProjectsMenu = $state(false);
+
+	$effect(() => {
+		if (!showProjectsMenu) return;
+		function handleOutsideClick(e: MouseEvent) {
+			const menu = document.getElementById('projects-split-menu');
+			if (menu && !menu.contains(e.target as Node)) {
+				showProjectsMenu = false;
+			}
+		}
+		document.addEventListener('click', handleOutsideClick);
+		return () => document.removeEventListener('click', handleOutsideClick);
+	});
 
 	const projectState = useProjectState(() => data);
 	const sseConnection = useSSEConnection({
@@ -145,23 +160,6 @@
 			{/each}
 		</div>
 
-		<!-- Projects link -->
-		<a
-			href={resolve('/')}
-			class="flex h-full shrink-0 items-center gap-1.5 border-l border-gray-200 px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-			title="View all projects"
-		>
-			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-				/>
-			</svg>
-			<span class="hidden sm:inline">Projects</span>
-		</a>
-
 		<!-- Styles link -->
 		<a
 			href={resolve('/styles')}
@@ -179,16 +177,75 @@
 			<span class="hidden sm:inline">Styles</span>
 		</a>
 
-		<!-- New tab button -->
-		<button
-			onclick={createNewProject}
-			class="flex h-full shrink-0 items-center gap-1.5 border-l border-gray-200 px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+		<!-- Credits display -->
+		<CreditsDisplay variant="light" />
+
+		<!-- Projects split button: primary = Projects, menu = New Project -->
+		<div
+			id="projects-split-menu"
+			class="relative flex shrink-0 items-center border-l border-gray-200 dark:border-gray-700"
 		>
-			<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-			</svg>
-			<span class="hidden sm:inline">New Project</span>
-		</button>
+			<a
+				href={resolve('/')}
+				class="flex h-full items-center gap-1.5 px-4 py-3 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+				title="View all projects"
+			>
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+					/>
+				</svg>
+				<span class="hidden sm:inline">Projects</span>
+			</a>
+			<button
+				onclick={(e) => {
+					e.stopPropagation();
+					showProjectsMenu = !showProjectsMenu;
+				}}
+				class="flex h-full cursor-pointer items-center border-l border-gray-200 px-2 py-3 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+				aria-label="More project actions"
+			>
+				<svg
+					class="h-3.5 w-3.5 transition-transform {showProjectsMenu ? 'rotate-180' : ''}"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M19 9l-7 7-7-7"
+					/>
+				</svg>
+			</button>
+			{#if showProjectsMenu}
+				<div
+					class="absolute top-full right-0 z-50 mt-1 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+				>
+					<button
+						onclick={() => {
+							showProjectsMenu = false;
+							createNewProject();
+						}}
+						class="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
+					>
+						<svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 4v16m8-8H4"
+							/>
+						</svg>
+						New Project
+					</button>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Main content -->

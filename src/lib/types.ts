@@ -182,6 +182,10 @@ export interface SSEMessage {
 	audioId?: string;
 }
 
+export interface CreditInfo {
+	credits: number;
+}
+
 export type GenerationStatus =
 	'pending' | 'processing' | 'text_success' | 'first_success' | 'success' | 'error';
 

@@ -7,6 +7,7 @@
 	import UploadInstrumentalModal from '$lib/components/UploadInstrumentalModal.svelte';
 	import UploadVocalsModal from '$lib/components/UploadVocalsModal.svelte';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
+	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
 	import { formatDate, getTimeAgo } from '$lib/utils/format';
 
 	type ProjectWithStats = Project & {
@@ -196,6 +197,7 @@
 							/>
 						</svg>
 					</a>
+					<CreditsDisplay variant="dark" />
 					<!-- Split button: primary = New Project, dropdown = other actions -->
 					<div id="new-project-menu" class="relative">
 						<div class="flex">

@@ -6,6 +6,7 @@
 	import { resolve } from '$app/paths';
 	import { formatTime, getTimeAgo, formatDate } from '$lib/utils/format';
 	import ArtworkImage from '$lib/components/ArtworkImage.svelte';
+	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -113,6 +114,7 @@
 						<p class="mt-1 text-gray-400">Notable work across all projects</p>
 					</div>
 				</div>
+				<CreditsDisplay variant="dark" />
 			</div>
 		</div>
 	</header>

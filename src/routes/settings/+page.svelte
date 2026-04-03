@@ -2,6 +2,7 @@
 	import type { PageData } from './$types';
 	import { resolve } from '$app/paths';
 	import type { SunoModel } from '$lib/types';
+	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -175,10 +176,11 @@
 						/>
 					</svg>
 				</a>
-				<div>
+				<div class="flex-1">
 					<h1 class="text-3xl font-bold text-white">Settings</h1>
 					<p class="mt-1 text-gray-400">Configure your KIE Music application</p>
 				</div>
+				<CreditsDisplay variant="dark" />
 			</div>
 		</div>
 	</header>

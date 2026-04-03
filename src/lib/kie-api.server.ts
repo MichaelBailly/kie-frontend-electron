@@ -1,6 +1,7 @@
 import { getApiKey } from './db.server';
 import { KIE_API_BASE } from './constants';
 import { KIE_API_KEY } from './constants.server';
+import type { CreditInfo } from './types';
 
 export class KieApiError extends Error {
 	status: number;
@@ -347,4 +348,88 @@ export function isWavErrorStatus(status: string): boolean {
 
 export function isWavCompleteStatus(status: string): boolean {
 	return status === 'SUCCESS';
+}
+
+// Account / Credits API
+
+interface KieCreditResponse {
+	code: number;
+	msg: string;
+	data: number | { credit?: number; credits?: number; balance?: number } | null;
+}
+
+interface KieAccountInfoResponse {
+	code: number;
+	msg: string;
+	data: {
+		credit?: number;
+		credits?: number;
+		balance?: number;
+		[key: string]: unknown;
+	} | null;
+}
+
+function extractCredits(data: unknown): number | null {
+	if (typeof data === 'number') return data;
+	if (data && typeof data === 'object') {
+		const obj = data as Record<string, unknown>;
+		// Try common field names for credit balance
+		for (const key of ['credit', 'credits', 'balance', 'remaining', 'amount']) {
+			if (typeof obj[key] === 'number') return obj[key] as number;
+		}
+	}
+	return null;
+}
+
+export async function getCreditInfo(): Promise<CreditInfo> {
+	const apiKey = getEffectiveApiKey();
+	if (!apiKey) {
+		throw new Error('No API key configured');
+	}
+
+	const headers: Record<string, string> = {
+		Authorization: `Bearer ${apiKey}`
+	};
+
+	// Strategy 1: Try /chat/credit (documented in quickstart)
+	try {
+		const response = await fetch(`${KIE_API_BASE}/chat/credit`, {
+			method: 'GET',
+			headers
+		});
+
+		if (response.ok) {
+			const result = (await response.json()) as KieCreditResponse;
+			if (result.code === 200) {
+				const credits = extractCredits(result.data);
+				if (credits !== null) {
+					return { credits };
+				}
+			}
+		}
+	} catch {
+		// Fall through to next strategy
+	}
+
+	// Strategy 2: Try /account/info (used in validation, may contain credit info)
+	try {
+		const response = await fetch(`${KIE_API_BASE}/account/info`, {
+			method: 'GET',
+			headers
+		});
+
+		if (response.ok) {
+			const result = (await response.json()) as KieAccountInfoResponse;
+			if (result.code === 200 && result.data) {
+				const credits = extractCredits(result.data);
+				if (credits !== null) {
+					return { credits };
+				}
+			}
+		}
+	} catch {
+		// Fall through
+	}
+
+	throw new Error('Unable to retrieve credit information from KIE API');
 }

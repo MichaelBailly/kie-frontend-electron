@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import type { StyleCollection } from '$lib/types';
 	import { resolve } from '$app/paths';
+	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
 	import {
 		STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH,
 		STYLE_COLLECTION_NAME_MAX_LENGTH,
@@ -195,23 +196,26 @@
 					</div>
 				</div>
 
-				<button
-					onclick={() => {
-						showNewForm = true;
-						filterText = '';
-					}}
-					class="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/30 active:scale-95"
-				>
-					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 4v16m8-8H4"
-						/>
-					</svg>
-					New Style
-				</button>
+				<div class="flex items-center gap-3">
+					<CreditsDisplay variant="dark" />
+					<button
+						onclick={() => {
+							showNewForm = true;
+							filterText = '';
+						}}
+						class="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/30 active:scale-95"
+					>
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 4v16m8-8H4"
+							/>
+						</svg>
+						New Style
+					</button>
+				</div>
 			</div>
 
 			<!-- Search -->
