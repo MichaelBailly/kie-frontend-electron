@@ -13,6 +13,9 @@ function createSongPageData(options?: { annotation: ReturnType<typeof createAnno
 	const generation = createCompletedGeneration({
 		id: 18,
 		project_id: project.id,
+		style: 'warm analog synthwave with glassy arps',
+		lyrics: 'Line one\nLine two',
+		negative_tags: 'harsh cymbals',
 		track1_audio_id: 'a5420a86-e19a-4ab5-9268-6355a9ec59d5',
 		track1_audio_url: 'https://cdn.example.com/audio/18/track1.mp3',
 		track1_stream_url: 'https://cdn.example.com/stream/18/track1.mp3'
@@ -80,5 +83,15 @@ describe('song +page.svelte', () => {
 		const data = createSongPageData({ annotation: null });
 
 		expect(() => render(Page, { props: { data } })).not.toThrow();
+	});
+
+	it('renders extracted song page sections in SSR output', () => {
+		const data = createSongPageData();
+		const { body } = render(Page, { props: { data } });
+
+		expect(body).toContain('Add Vocal');
+		expect(body).toContain('Notes');
+		expect(body).toContain('Style');
+		expect(body).toContain('Stem Separation');
 	});
 });
