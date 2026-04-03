@@ -16,32 +16,24 @@
 	import { useSongPlaybackState } from '$lib/routes/song/useSongPlaybackState.svelte';
 	import { useStemSeparationState } from '$lib/routes/song/useStemSeparationState.svelte';
 	import { useWavConversionState } from '$lib/routes/song/useWavConversionState.svelte';
+	import {
+		getActiveProjectContext,
+		getAnnotationsContext,
+		getStemSeparationsContext,
+		getWavConversionsContext
+	} from '$lib/routes/project/context';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 	import { getStemDisplay } from '$lib/utils/stems';
 	import { ANNOTATION_COMMENT_MAX_LENGTH } from '$lib/constants';
-	import { getContext, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { resolve } from '$app/paths';
-	import type { Generation, StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 
 	let { data }: { data: PageData } = $props();
 
-	const stemSeparationsContext = getContext<{
-		updates: Map<number, Partial<StemSeparation>>;
-		set: (id: number, data: Partial<StemSeparation>) => void;
-	}>('stemSeparations');
-
-	const wavConversionsContext = getContext<{
-		updates: Map<number, Partial<WavConversion>>;
-		set: (id: number, data: Partial<WavConversion>) => void;
-	}>('wavConversions');
-
-	const activeProjectContext = getContext<{ current: { id: number; generations: Generation[] } }>(
-		'activeProject'
-	);
-
-	const annotationsContext = getContext<
-		{ get: (generationId: number, audioId: string) => VariationAnnotation | undefined } | undefined
-	>('annotations');
+	const stemSeparationsContext = getStemSeparationsContext();
+	const wavConversionsContext = getWavConversionsContext();
+	const activeProjectContext = getActiveProjectContext();
+	const annotationsContext = getAnnotationsContext();
 
 	const generationState = useSongGenerationState({
 		getData: () => data,

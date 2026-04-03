@@ -1,6 +1,6 @@
 <script lang="ts">
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
-	import { getContext } from 'svelte';
+	import { getAnnotationsContext } from '$lib/routes/project/context';
 
 	let {
 		generationId,
@@ -12,16 +12,7 @@
 		placeholder?: string;
 	} = $props();
 
-	const annotationsContext = getContext<
-		| {
-				get: (
-					generationId: number,
-					audioId: string
-				) => { labels?: string[]; comment?: string; starred?: number } | undefined;
-				isStarred: (generationId: number, audioId: string) => boolean;
-		  }
-		| undefined
-	>('annotations');
+	const annotationsContext = getAnnotationsContext();
 
 	let liveStarred = $derived(annotationsContext?.isStarred(generationId, audioId) ?? false);
 	let starredOverride = $state<boolean | null>(null);

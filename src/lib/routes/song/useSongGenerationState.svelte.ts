@@ -1,5 +1,6 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import type { ActiveProjectContext, AnnotationsContext } from '$lib/routes/project/context';
 import type { Generation, VariationAnnotation } from '$lib/types';
 
 type SongData = {
@@ -15,17 +16,6 @@ type SongPageStateData = {
 	generation: Generation;
 	song: SongData;
 	annotation: VariationAnnotation | null;
-};
-
-type ActiveProjectContext = {
-	current: {
-		id: number;
-		generations: Generation[];
-	};
-};
-
-type AnnotationsContext = {
-	get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
 };
 
 type ExtendData = {

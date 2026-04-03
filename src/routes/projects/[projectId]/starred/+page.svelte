@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { StarredVariation } from './+page.server';
-	import type { VariationAnnotation } from '$lib/types';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import LabelPicker from '$lib/components/LabelPicker.svelte';
-	import { getContext } from 'svelte';
+	import { getAnnotationsContext } from '$lib/routes/project/context';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { formatDate, formatTime, getTimeAgo } from '$lib/utils/format';
@@ -16,13 +15,7 @@
 	let filter = $state<'all' | 'starred' | 'notes'>('all');
 
 	// Get annotations context for live updates
-	const annotationsContext = getContext<
-		| {
-				get: (generationId: number, audioId: string) => VariationAnnotation | undefined;
-				isStarred: (generationId: number, audioId: string) => boolean;
-		  }
-		| undefined
-	>('annotations');
+	const annotationsContext = getAnnotationsContext();
 
 	let variations = $derived.by(() => {
 		let items = data.starredVariations as StarredVariation[];

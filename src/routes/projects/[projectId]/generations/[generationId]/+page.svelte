@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import type { Generation } from '$lib/types';
 	import GenerationView from '$lib/components/GenerationView.svelte';
 	import RetryExtendModal from '$lib/components/RetryExtendModal.svelte';
 	import RetryAddInstrumentalModal from '$lib/components/RetryAddInstrumentalModal.svelte';
@@ -9,16 +8,14 @@
 	import RetryUploadVocalsModal from '$lib/components/RetryUploadVocalsModal.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { getContext } from 'svelte';
 	import { isGenerationTypeOneOf } from '$lib/types';
 	import { createGenerationFormState } from '$lib/routes/project/generation-form';
+	import { getActiveProjectContext } from '$lib/routes/project/context';
 
 	let { data }: { data: PageData } = $props();
 
 	// Get live activeProject from parent layout context (SSE-updated)
-	const activeProjectContext = getContext<{ current: { id: number; generations: Generation[] } }>(
-		'activeProject'
-	);
+	const activeProjectContext = getActiveProjectContext();
 
 	// Use live generation from context which receives SSE updates
 	let generation = $derived.by(() => {

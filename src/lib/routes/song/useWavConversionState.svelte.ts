@@ -1,9 +1,5 @@
+import type { WavConversionsContext } from '$lib/routes/project/context';
 import type { WavConversion } from '$lib/types';
-
-type WavConversionsContext = {
-	updates: Map<number, Partial<WavConversion>>;
-	set: (id: number, data: Partial<WavConversion>) => void;
-};
 
 export function useWavConversionState(options: {
 	generationId: () => number;

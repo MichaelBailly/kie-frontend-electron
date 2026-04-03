@@ -1,13 +1,17 @@
 <script lang="ts">
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
-	import type { StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import CreditsDisplay from '$lib/components/CreditsDisplay.svelte';
-	import { setContext } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { useProjectState } from '$lib/routes/project/useProjectState.svelte';
 	import { useSSEConnection } from '$lib/routes/project/useSSEConnection.svelte';
+	import {
+		setActiveProjectContext,
+		setAnnotationsContext,
+		setStemSeparationsContext,
+		setWavConversionsContext
+	} from '$lib/routes/project/context';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -38,36 +42,36 @@
 	let annotationsMap = $derived(projectState.annotationsMap);
 
 	// Share live activeProject and stem separation updates via context
-	setContext('activeProject', {
+	setActiveProjectContext({
 		get current() {
 			return activeProject;
 		}
 	});
 
-	setContext('stemSeparations', {
+	setStemSeparationsContext({
 		get updates() {
 			return projectState.stemSeparationUpdates;
 		},
-		set: (id: number, data: Partial<StemSeparation>) => {
+		set: (id: number, data) => {
 			projectState.stemSeparationUpdates.set(id, data);
 		}
 	});
 
-	setContext('wavConversions', {
+	setWavConversionsContext({
 		get updates() {
 			return projectState.wavConversionUpdates;
 		},
-		set: (id: number, data: Partial<WavConversion>) => {
+		set: (id: number, data) => {
 			projectState.wavConversionUpdates.set(id, data);
 		}
 	});
 
 	// Share annotations via context for child components
-	setContext('annotations', {
+	setAnnotationsContext({
 		get map() {
 			return projectState.annotationsMap;
 		},
-		get: (generationId: number, audioId: string): VariationAnnotation | undefined => {
+		get: (generationId: number, audioId: string) => {
 			return projectState.annotationsMap.get(`${generationId}:${audioId}`);
 		},
 		isStarred: (generationId: number, audioId: string): boolean => {

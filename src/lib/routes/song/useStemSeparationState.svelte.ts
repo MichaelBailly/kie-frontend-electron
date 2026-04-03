@@ -1,9 +1,5 @@
+import type { StemSeparationsContext } from '$lib/routes/project/context';
 import type { StemSeparation, StemSeparationType } from '$lib/types';
-
-type StemSeparationsContext = {
-	updates: Map<number, Partial<StemSeparation>>;
-	set: (id: number, data: Partial<StemSeparation>) => void;
-};
 
 export function useStemSeparationState(options: {
 	generationId: () => number;
