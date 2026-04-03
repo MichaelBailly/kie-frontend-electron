@@ -40,6 +40,26 @@ type AddVocalsData = {
 	negativeTags: string;
 };
 
+type GenerationFormMode =
+	| {
+			kind: 'idle';
+	  }
+	| {
+			kind: 'extend';
+			stemType: string | null;
+			stemUrl: string | null;
+	  }
+	| {
+			kind: 'addInstrumental';
+			stemType: string;
+			stemUrl: string;
+	  }
+	| {
+			kind: 'addVocals';
+			stemType: string;
+			stemUrl: string;
+	  };
+
 export function useSongGenerationState(options: {
 	getData: () => SongPageStateData;
 	activeProjectContext: ActiveProjectContext | undefined;
@@ -47,15 +67,7 @@ export function useSongGenerationState(options: {
 }) {
 	const { getData, activeProjectContext, annotationsContext } = options;
 
-	let showExtendForm = $state(false);
-	let extendingStemType = $state<string | null>(null);
-	let extendingStemUrl = $state<string | null>(null);
-	let showAddInstrumentalForm = $state(false);
-	let addInstrumentalStemType = $state<string | null>(null);
-	let addInstrumentalStemUrl = $state<string | null>(null);
-	let showAddVocalsForm = $state(false);
-	let addVocalsStemType = $state<string | null>(null);
-	let addVocalsStemUrl = $state<string | null>(null);
+	let formMode = $state<GenerationFormMode>({ kind: 'idle' });
 	let starredOverride = $state<boolean | null>(null);
 	let starAnimClass = $state('');
 
@@ -135,77 +147,90 @@ export function useSongGenerationState(options: {
 		}
 	}
 
+	const showExtendForm = $derived(formMode.kind === 'extend');
+	const showAddInstrumentalForm = $derived(formMode.kind === 'addInstrumental');
+	const showAddVocalsForm = $derived(formMode.kind === 'addVocals');
+	const extendingStemType = $derived(formMode.kind === 'extend' ? formMode.stemType : null);
+	const extendingStemUrl = $derived(formMode.kind === 'extend' ? formMode.stemUrl : null);
+	const addInstrumentalStemType = $derived(
+		formMode.kind === 'addInstrumental' ? formMode.stemType : null
+	);
+	const addInstrumentalStemUrl = $derived(
+		formMode.kind === 'addInstrumental' ? formMode.stemUrl : null
+	);
+	const addVocalsStemType = $derived(formMode.kind === 'addVocals' ? formMode.stemType : null);
+	const addVocalsStemUrl = $derived(formMode.kind === 'addVocals' ? formMode.stemUrl : null);
+
+	function resetFormMode() {
+		formMode = { kind: 'idle' };
+	}
+
+	function openFormMode(nextMode: Exclude<GenerationFormMode, { kind: 'idle' }>) {
+		formMode = nextMode;
+	}
+
+	async function createGenerationAndNavigate(
+		url: string,
+		body: Record<string, unknown>,
+		errorMessage: string
+	): Promise<void> {
+		const response = await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body)
+		});
+
+		if (!response.ok) {
+			console.error(errorMessage);
+			return;
+		}
+
+		const newGeneration = await response.json();
+		resetFormMode();
+
+		await goto(
+			resolve('/projects/[projectId]/generations/[generationId]', {
+				projectId: String(generation.project_id),
+				generationId: String(newGeneration.id)
+			})
+		);
+	}
+
 	function toggleExtendForm() {
-		showAddInstrumentalForm = false;
-		addInstrumentalStemType = null;
-		addInstrumentalStemUrl = null;
-		showAddVocalsForm = false;
-		addVocalsStemType = null;
-		addVocalsStemUrl = null;
-		extendingStemType = null;
-		extendingStemUrl = null;
-		showExtendForm = !showExtendForm;
+		formMode =
+			formMode.kind === 'extend'
+				? { kind: 'idle' }
+				: { kind: 'extend', stemType: null, stemUrl: null };
 	}
 
 	function closeExtendForm() {
-		showExtendForm = false;
-		extendingStemType = null;
-		extendingStemUrl = null;
+		resetFormMode();
 	}
 
 	function openStemExtendForm(stemType: string, stemUrl: string) {
-		showAddInstrumentalForm = false;
-		addInstrumentalStemType = null;
-		addInstrumentalStemUrl = null;
-		showAddVocalsForm = false;
-		addVocalsStemType = null;
-		addVocalsStemUrl = null;
-		extendingStemType = stemType;
-		extendingStemUrl = stemUrl;
-		showExtendForm = true;
+		openFormMode({ kind: 'extend', stemType, stemUrl });
 	}
 
 	function closeAddInstrumentalForm() {
-		showAddInstrumentalForm = false;
-		addInstrumentalStemType = null;
-		addInstrumentalStemUrl = null;
+		resetFormMode();
 	}
 
 	function openAddInstrumentalForm(stemType: string, stemUrl: string) {
-		showExtendForm = false;
-		extendingStemType = null;
-		extendingStemUrl = null;
-		showAddVocalsForm = false;
-		addVocalsStemType = null;
-		addVocalsStemUrl = null;
-		addInstrumentalStemType = stemType;
-		addInstrumentalStemUrl = stemUrl;
-		showAddInstrumentalForm = true;
+		openFormMode({ kind: 'addInstrumental', stemType, stemUrl });
 	}
 
 	function closeAddVocalsForm() {
-		showAddVocalsForm = false;
-		addVocalsStemType = null;
-		addVocalsStemUrl = null;
+		resetFormMode();
 	}
 
 	function openAddVocalsForm(stemType: string, stemUrl: string) {
-		showExtendForm = false;
-		extendingStemType = null;
-		extendingStemUrl = null;
-		showAddInstrumentalForm = false;
-		addInstrumentalStemType = null;
-		addInstrumentalStemUrl = null;
-		addVocalsStemType = stemType;
-		addVocalsStemUrl = stemUrl;
-		showAddVocalsForm = true;
+		openFormMode({ kind: 'addVocals', stemType, stemUrl });
 	}
 
 	async function handleExtend(extendData: ExtendData) {
-		const response = await fetch('/api/generations/extend', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
+		await createGenerationAndNavigate(
+			'/api/generations/extend',
+			{
 				projectId: generation.project_id,
 				title: extendData.title,
 				style: extendData.style,
@@ -217,24 +242,8 @@ export function useSongGenerationState(options: {
 				instrumental: extendData.instrumental,
 				stemType: extendingStemType,
 				stemUrl: extendingStemUrl
-			})
-		});
-
-		if (!response.ok) {
-			console.error('Failed to create extend generation');
-			return;
-		}
-
-		const newGeneration = await response.json();
-		showExtendForm = false;
-		extendingStemType = null;
-		extendingStemUrl = null;
-
-		await goto(
-			resolve('/projects/[projectId]/generations/[generationId]', {
-				projectId: String(generation.project_id),
-				generationId: String(newGeneration.id)
-			})
+			},
+			'Failed to create extend generation'
 		);
 	}
 
@@ -244,10 +253,9 @@ export function useSongGenerationState(options: {
 			return;
 		}
 
-		const response = await fetch('/api/generations/add-instrumental', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
+		await createGenerationAndNavigate(
+			'/api/generations/add-instrumental',
+			{
 				projectId: generation.project_id,
 				sourceGenerationId: generation.id,
 				sourceAudioId: song.id,
@@ -256,24 +264,8 @@ export function useSongGenerationState(options: {
 				title: data.title,
 				tags: data.tags,
 				negativeTags: data.negativeTags
-			})
-		});
-
-		if (!response.ok) {
-			console.error('Failed to create add instrumental generation');
-			return;
-		}
-
-		const newGeneration = await response.json();
-		showAddInstrumentalForm = false;
-		addInstrumentalStemType = null;
-		addInstrumentalStemUrl = null;
-
-		await goto(
-			resolve('/projects/[projectId]/generations/[generationId]', {
-				projectId: String(generation.project_id),
-				generationId: String(newGeneration.id)
-			})
+			},
+			'Failed to create add instrumental generation'
 		);
 	}
 
@@ -283,10 +275,9 @@ export function useSongGenerationState(options: {
 			return;
 		}
 
-		const response = await fetch('/api/generations/add-vocals', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
+		await createGenerationAndNavigate(
+			'/api/generations/add-vocals',
+			{
 				projectId: generation.project_id,
 				sourceGenerationId: generation.id,
 				sourceAudioId: song.id,
@@ -296,24 +287,8 @@ export function useSongGenerationState(options: {
 				prompt: data.prompt,
 				style: data.style,
 				negativeTags: data.negativeTags
-			})
-		});
-
-		if (!response.ok) {
-			console.error('Failed to create add vocals generation');
-			return;
-		}
-
-		const newGeneration = await response.json();
-		showAddVocalsForm = false;
-		addVocalsStemType = null;
-		addVocalsStemUrl = null;
-
-		await goto(
-			resolve('/projects/[projectId]/generations/[generationId]', {
-				projectId: String(generation.project_id),
-				generationId: String(newGeneration.id)
-			})
+			},
+			'Failed to create add vocals generation'
 		);
 	}
 

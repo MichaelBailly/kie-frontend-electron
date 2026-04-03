@@ -182,4 +182,30 @@ describe('useSongGenerationState', () => {
 		);
 		expect(state.starred).toBe(false);
 	});
+
+	it('keeps only one generation form mode active at a time', () => {
+		const state = useSongGenerationState({
+			getData: () => createStateData(),
+			activeProjectContext: undefined,
+			annotationsContext: undefined
+		});
+
+		state.openStemExtendForm('vocal', 'https://example.com/stem-vocal.mp3');
+		expect(state.showExtendForm).toBe(true);
+		expect(state.showAddInstrumentalForm).toBe(false);
+
+		state.openAddInstrumentalForm('instrumental', 'https://example.com/instrumental.mp3');
+		expect(state.showExtendForm).toBe(false);
+		expect(state.showAddInstrumentalForm).toBe(true);
+		expect(state.addInstrumentalStemType).toBe('instrumental');
+
+		state.openAddVocalsForm('mp3', 'https://example.com/full-mix.mp3');
+		expect(state.showAddInstrumentalForm).toBe(false);
+		expect(state.showAddVocalsForm).toBe(true);
+		expect(state.addVocalsStemType).toBe('mp3');
+
+		state.closeAddVocalsForm();
+		expect(state.showAddVocalsForm).toBe(false);
+		expect(state.addVocalsStemType).toBeNull();
+	});
 });
