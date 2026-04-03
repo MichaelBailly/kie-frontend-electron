@@ -1,28 +1,19 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {
-	createProject,
-	createUploadVocalsGeneration,
-	getSunoModel,
-	setGenerationSourceAudioLocalUrl
-} from '$lib/db.server';
+import { createProject, createUploadVocalsGeneration, getSunoModel } from '$lib/db.server';
 import { addVocals } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
 	asNonEmptyString,
 	asOptionalString,
 	normalizeNegativeTags,
-	parseJsonBody,
-	startGenerationTask
+	parseJsonBody
 } from '$lib/api-helpers.server';
 import {
-	finalizeTemporaryUploadedAudio,
-	removeTemporaryUploadedAudio
-} from '$lib/server/assets-cache.server';
-
-function buildProjectName(title: string): string {
-	return `Vocals: ${title}`;
-}
+	buildUploadProjectName,
+	finalizeGenerationSourceUpload,
+	startLoggedUploadGenerationTask
+} from '../upload-generation.server';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await parseJsonBody(request);
@@ -32,8 +23,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	const remoteUrl = asNonEmptyString(body.remoteUrl, 'remoteUrl');
 	const temporaryFileName = asNonEmptyString(body.temporaryFileName, 'temporaryFileName');
 	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
-	const projectNameRaw = asOptionalString(body.projectName, 'projectName').trim();
-	const projectName = projectNameRaw || buildProjectName(title);
+	const projectName = buildUploadProjectName(
+		'Vocals',
+		title,
+		asOptionalString(body.projectName, 'projectName')
+	);
 	const sunoModel = getSunoModel();
 
 	const project = createProject(projectName);
@@ -47,19 +41,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		sunoModel
 	);
 
-	try {
-		const sourceAudioLocalUrl = await finalizeTemporaryUploadedAudio(
-			generation.id,
-			temporaryFileName
-		);
-		setGenerationSourceAudioLocalUrl(generation.id, sourceAudioLocalUrl);
-		generation.source_audio_local_url = sourceAudioLocalUrl;
-	} catch (err) {
-		await removeTemporaryUploadedAudio(temporaryFileName);
-		throw err;
-	}
+	await finalizeGenerationSourceUpload(generation, temporaryFileName);
 
-	startGenerationTask(generation.id, () =>
+	startLoggedUploadGenerationTask(generation.id, 'upload vocals', () =>
 		addVocals({
 			uploadUrl: remoteUrl,
 			title,
@@ -69,8 +53,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})
-	).catch((err) =>
-		console.error(`[AsyncTask] upload vocals generation ${generation.id} failed to start:`, err)
 	);
 
 	return json({

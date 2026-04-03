@@ -33,6 +33,7 @@ export interface DbMock {
 	createExtendGeneration: MockFn;
 	createAddInstrumentalGeneration: MockFn;
 	createAddVocalsGeneration: MockFn;
+	createUploadInstrumentalGeneration: MockFn;
 	createUploadVocalsGeneration: MockFn;
 	getExtendedGenerations: MockFn;
 	getAddInstrumentalGenerations: MockFn;
@@ -48,6 +49,7 @@ export interface DbMock {
 	updateGenerationTaskId: MockFn;
 	updateGenerationStatus: MockFn;
 	updateGenerationTracks: MockFn;
+	setGenerationSourceAudioLocalUrl: MockFn;
 	completeGeneration: MockFn;
 	deleteGeneration: MockFn;
 	getPendingGenerations: MockFn;
@@ -182,6 +184,7 @@ export function createDbMock(): DbMock {
 		createExtendGeneration: vi.fn(),
 		createAddInstrumentalGeneration: vi.fn(),
 		createAddVocalsGeneration: vi.fn(),
+		createUploadInstrumentalGeneration: vi.fn(),
 		createUploadVocalsGeneration: vi.fn(),
 		getExtendedGenerations: vi.fn((generationId: number, audioId: string) =>
 			generations.filter(
@@ -255,6 +258,12 @@ export function createDbMock(): DbMock {
 			mock.setGenerationStatus(id, status);
 		}),
 		updateGenerationTracks: vi.fn(),
+		setGenerationSourceAudioLocalUrl: vi.fn((id: number, url: string) => {
+			const generation = generations.find((item) => item.id === id);
+			if (generation) {
+				generation.source_audio_local_url = url;
+			}
+		}),
 		completeGeneration: vi.fn(
 			(id: number, _status: string, track1: unknown, track2: unknown, responseData: string) => {
 				mock.setGenerationCompleted(id, track1, track2, responseData);
