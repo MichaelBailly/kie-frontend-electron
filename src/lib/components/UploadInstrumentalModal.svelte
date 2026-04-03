@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
+	import {
+		GENERATION_STYLE_MAX_LENGTH,
+		GENERATION_TITLE_MAX_LENGTH,
+		NEGATIVE_TAGS_MAX_LENGTH
+	} from '$lib/constants';
 	import StylePicker from './StylePicker.svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
@@ -340,7 +344,7 @@
 							id="upload-title"
 							type="text"
 							bind:value={title}
-							maxlength="80"
+							maxlength={GENERATION_TITLE_MAX_LENGTH}
 							placeholder="My instrumental track"
 							class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 						/>
@@ -363,7 +367,7 @@
 							id="upload-tags"
 							label="Tags"
 							rows={3}
-							maxlength={1000}
+							maxlength={GENERATION_STYLE_MAX_LENGTH}
 							placeholder="cinematic, ambient, piano"
 							textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 						/>

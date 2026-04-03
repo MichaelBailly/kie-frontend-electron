@@ -1,15 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-
-const FORWARDED_REQUEST_HEADERS = ['accept', 'range'] as const;
-const FORWARDED_RESPONSE_HEADERS = [
-	'accept-ranges',
-	'content-length',
-	'content-range',
-	'content-type',
-	'etag',
-	'last-modified'
-] as const;
+import { FORWARDED_MEDIA_REQUEST_HEADERS, FORWARDED_MEDIA_RESPONSE_HEADERS } from '$lib/constants';
 
 function parseRemoteUrl(rawUrl: string | null): URL {
 	if (!rawUrl) {
@@ -33,7 +24,7 @@ function parseRemoteUrl(rawUrl: string | null): URL {
 function buildRequestHeaders(request: Request): Headers {
 	const headers = new Headers();
 
-	for (const headerName of FORWARDED_REQUEST_HEADERS) {
+	for (const headerName of FORWARDED_MEDIA_REQUEST_HEADERS) {
 		const value = request.headers.get(headerName);
 		if (value) {
 			headers.set(headerName, value);
@@ -46,7 +37,7 @@ function buildRequestHeaders(request: Request): Headers {
 function buildResponseHeaders(sourceHeaders: Headers): Headers {
 	const headers = new Headers();
 
-	for (const headerName of FORWARDED_RESPONSE_HEADERS) {
+	for (const headerName of FORWARDED_MEDIA_RESPONSE_HEADERS) {
 		const value = sourceHeaders.get(headerName);
 		if (value) {
 			headers.set(headerName, value);

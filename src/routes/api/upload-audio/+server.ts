@@ -1,10 +1,9 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { MAX_UPLOAD_AUDIO_BYTES } from '$lib/constants';
 import { createTemporaryUploadedAudio } from '$lib/server/assets-cache.server';
 import { uploadToTemporaryHost } from '$lib/server/file-upload.server';
 import path from 'node:path';
-
-const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 
 function sanitizeExtension(fileName: string): string {
 	const extension = path.extname(fileName).toLowerCase();
@@ -32,8 +31,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'Uploaded file is empty');
 	}
 
-	if (file.size > MAX_UPLOAD_BYTES) {
-		throw error(413, `File too large (max ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))}MB)`);
+	if (file.size > MAX_UPLOAD_AUDIO_BYTES) {
+		throw error(
+			413,
+			`File too large (max ${Math.round(MAX_UPLOAD_AUDIO_BYTES / (1024 * 1024))}MB)`
+		);
 	}
 
 	if (file.type && !file.type.startsWith('audio/')) {

@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { LABEL_QUERY_MAX_LENGTH } from '$lib/constants';
 import { getLabelSuggestions } from '$lib/db.server';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -11,8 +12,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'limit must be between 1 and 50');
 	}
 
-	if (query.trim().length > 128) {
-		throw error(400, 'query must be 128 characters or less');
+	if (query.trim().length > LABEL_QUERY_MAX_LENGTH) {
+		throw error(400, `query must be ${LABEL_QUERY_MAX_LENGTH} characters or less`);
 	}
 
 	const suggestions = getLabelSuggestions(query, limit);

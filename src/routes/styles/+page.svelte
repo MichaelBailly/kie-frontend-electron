@@ -3,6 +3,11 @@
 	import type { PageData } from './$types';
 	import type { StyleCollection } from '$lib/types';
 	import { resolve } from '$app/paths';
+	import {
+		STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH,
+		STYLE_COLLECTION_NAME_MAX_LENGTH,
+		STYLE_COLLECTION_STYLE_MAX_LENGTH
+	} from '$lib/constants';
 
 	let { data }: { data: PageData } = $props();
 
@@ -280,7 +285,7 @@
 							type="text"
 							bind:value={newName}
 							placeholder="Cinematic Orchestral"
-							maxlength="100"
+							maxlength={STYLE_COLLECTION_NAME_MAX_LENGTH}
 							required
 							class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors focus:border-indigo-500/60 focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 						/>
@@ -297,7 +302,7 @@
 							type="text"
 							bind:value={newDescription}
 							placeholder="When to use this style…"
-							maxlength="500"
+							maxlength={STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH}
 							class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors focus:border-indigo-500/60 focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 						/>
 					</div>
@@ -312,12 +317,14 @@
 							id="new-style"
 							bind:value={newStyle}
 							rows="3"
-							maxlength="2000"
+							maxlength={STYLE_COLLECTION_STYLE_MAX_LENGTH}
 							required
 							placeholder="Describe the musical style in detail…"
 							class="w-full resize-y rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 transition-colors focus:border-indigo-500/60 focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 						></textarea>
-						<p class="mt-1 text-right text-xs text-gray-600">{newStyle.length}/2000</p>
+						<p class="mt-1 text-right text-xs text-gray-600">
+							{newStyle.length}/{STYLE_COLLECTION_STYLE_MAX_LENGTH}
+						</p>
 					</div>
 					<div class="flex justify-end gap-3 sm:col-span-2">
 						<button
@@ -620,7 +627,7 @@
 								type="text"
 								bind:value={editName}
 								required
-								maxlength="100"
+								maxlength={STYLE_COLLECTION_NAME_MAX_LENGTH}
 								class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 							/>
 						</div>
@@ -635,7 +642,7 @@
 								id="edit-desc"
 								type="text"
 								bind:value={editDescription}
-								maxlength="500"
+								maxlength={STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH}
 								class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 							/>
 						</div>
@@ -652,11 +659,13 @@
 							id="edit-style"
 							bind:value={editStyle}
 							required
-							maxlength="2000"
+							maxlength={STYLE_COLLECTION_STYLE_MAX_LENGTH}
 							class="w-full flex-1 resize-y rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white transition-colors focus:border-indigo-500/60 focus:bg-black/60 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 						></textarea>
 						<div class="flex justify-end">
-							<span class="text-xs text-gray-500">{editStyle.length}/2000</span>
+							<span class="text-xs text-gray-500">
+								{editStyle.length}/{STYLE_COLLECTION_STYLE_MAX_LENGTH}
+							</span>
 						</div>
 					</div>
 				</div>

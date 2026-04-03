@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { getApiKey } from '$lib/db.server';
 import { asOptionalString, parseJsonBody } from '$lib/api-helpers.server';
-import { KIE_API_BASE } from '$lib/kie-api.server';
+import { KIE_API_BASE } from '$lib/constants';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await parseJsonBody(request);

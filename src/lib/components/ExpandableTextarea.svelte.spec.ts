@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
 import ExpandableTextarea from './ExpandableTextarea.svelte';
+import { GENERATION_LYRICS_MAX_LENGTH, NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
 
 describe('ExpandableTextarea', () => {
 	it('renders the textarea with provided value and placeholder', () => {
@@ -31,18 +32,18 @@ describe('ExpandableTextarea', () => {
 
 	it('renders with maxlength attribute when provided', () => {
 		const { body } = render(ExpandableTextarea, {
-			props: { value: '', label: 'Lyrics', maxlength: 5000 }
+			props: { value: '', label: 'Lyrics', maxlength: GENERATION_LYRICS_MAX_LENGTH }
 		});
 
-		expect(body).toContain('maxlength="5000"');
+		expect(body).toContain(`maxlength="${GENERATION_LYRICS_MAX_LENGTH}"`);
 	});
 
 	it('renders custom maxlength values', () => {
 		const { body } = render(ExpandableTextarea, {
-			props: { value: '', label: 'Notes', maxlength: 200 }
+			props: { value: '', label: 'Notes', maxlength: NEGATIVE_TAGS_MAX_LENGTH }
 		});
 
-		expect(body).toContain('maxlength="200"');
+		expect(body).toContain(`maxlength="${NEGATIVE_TAGS_MAX_LENGTH}"`);
 	});
 
 	it('renders with the provided id on the inline textarea', () => {

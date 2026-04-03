@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import { ANNOTATION_COMMENT_MAX_LENGTH, LABEL_MAX_LENGTH } from '$lib/constants';
 import { getAnnotation, setAnnotationLabels, toggleStar, updateComment } from '$lib/db.server';
 import { notifyAnnotationClients } from '$lib/sse.server';
 import {
@@ -58,14 +59,17 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 			if (typeof label !== 'string') {
 				throw error(400, 'labels must be strings');
 			}
-			if (label.trim().length > 128) {
-				throw error(400, 'labels must be 128 characters or less');
+			if (label.trim().length > LABEL_MAX_LENGTH) {
+				throw error(400, `labels must be ${LABEL_MAX_LENGTH} characters or less`);
 			}
 		}
 		annotation = setAnnotationLabels(generationId, audioId, labels as string[]);
 	} else if (comment !== undefined) {
 		if (typeof comment !== 'string') {
 			throw error(400, 'comment must be a string');
+		}
+		if (comment.length > ANNOTATION_COMMENT_MAX_LENGTH) {
+			throw error(400, `comment must be ${ANNOTATION_COMMENT_MAX_LENGTH} characters or less`);
 		}
 		annotation = updateComment(generationId, audioId, comment);
 	} else {

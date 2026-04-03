@@ -1,7 +1,6 @@
 import { getApiKey } from './db.server';
+import { KIE_API_BASE } from './constants';
 import { KIE_API_KEY } from './constants.server';
-
-export const KIE_API_BASE = 'https://api.kie.ai/api/v1';
 
 export class KieApiError extends Error {
 	status: number;

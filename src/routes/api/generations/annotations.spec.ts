@@ -346,6 +346,26 @@ describe('PATCH /api/generations/[id]/annotations — validation', () => {
 		});
 	});
 
+	it('throws 400 when comment exceeds 500 characters', async () => {
+		const gen = createCompletedGeneration({
+			id: 1,
+			track1_audio_id: 'audio-1-1'
+		});
+		db.__setGenerations([gen]);
+
+		const { PATCH } = await import('./[id]/annotations/+server');
+		const event = createRequestEvent({
+			method: 'PATCH',
+			params: { id: '1' },
+			body: { audioId: 'audio-1-1', comment: 'a'.repeat(501) }
+		});
+
+		await expect(PATCH(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'comment must be 500 characters or less' }
+		});
+	});
+
 	it('throws 400 when audioId does not belong to the generation', async () => {
 		const gen = createCompletedGeneration({
 			id: 1,

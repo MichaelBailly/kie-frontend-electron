@@ -4,7 +4,12 @@
 	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
-	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
+	import {
+		GENERATION_LYRICS_MAX_LENGTH,
+		GENERATION_STYLE_MAX_LENGTH,
+		GENERATION_TITLE_MAX_LENGTH,
+		NEGATIVE_TAGS_MAX_LENGTH
+	} from '$lib/constants';
 	import { untrack } from 'svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
@@ -160,7 +165,7 @@
 				type="text"
 				id="add-vocals-title"
 				bind:value={title}
-				maxlength="80"
+				maxlength={GENERATION_TITLE_MAX_LENGTH}
 				placeholder="Vocals title"
 				class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			/>
@@ -178,7 +183,7 @@
 				id="add-vocals-prompt"
 				label="Prompt / Lyrics"
 				rows={5}
-				maxlength={5000}
+				maxlength={GENERATION_LYRICS_MAX_LENGTH}
 				mono={true}
 				placeholder="[Verse] Neon rain on city streets..."
 				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
@@ -204,7 +209,7 @@
 				id="add-vocals-style"
 				label="Style"
 				rows={3}
-				maxlength={1000}
+				maxlength={GENERATION_STYLE_MAX_LENGTH}
 				placeholder="electro pop, moody, lush pads"
 				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			/>

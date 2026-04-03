@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
+	import {
+		STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH,
+		STYLE_COLLECTION_NAME_MAX_LENGTH,
+		STYLE_COLLECTION_STYLE_MAX_LENGTH
+	} from '$lib/constants';
 
 	let {
 		style,
@@ -141,7 +146,7 @@
 					type="text"
 					bind:value={name}
 					placeholder="e.g. Cinematic Orchestral, Dark Trap, Lo-Fi Chill…"
-					maxlength="100"
+					maxlength={STYLE_COLLECTION_NAME_MAX_LENGTH}
 					required
 					class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 				/>
@@ -160,7 +165,7 @@
 					type="text"
 					bind:value={description}
 					placeholder="Short note about when to use this style…"
-					maxlength="500"
+					maxlength={STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH}
 					class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 				/>
 			</div>
@@ -177,10 +182,12 @@
 					id="style-text"
 					label="Style Prompt"
 					rows={4}
-					maxlength={2000}
+					maxlength={STYLE_COLLECTION_STYLE_MAX_LENGTH}
 					textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
 				/>
-				<p class="mt-1 text-right text-xs text-gray-400">{editedStyle.length}/2000</p>
+				<p class="mt-1 text-right text-xs text-gray-400">
+					{editedStyle.length}/{STYLE_COLLECTION_STYLE_MAX_LENGTH}
+				</p>
 			</div>
 
 			<div class="flex justify-end gap-3 pt-2">

@@ -5,6 +5,7 @@ import {
 	getStemSeparationByType,
 	type StemSeparationType
 } from '$lib/db.server';
+import { STEM_SEPARATION_TYPES } from '$lib/constants';
 import { separateVocals } from '$lib/kie-api.server';
 import { KIE_CALLBACK_URL } from '$lib/constants.server';
 import {
@@ -15,9 +16,6 @@ import {
 	requireGeneration,
 	startStemSeparationTask
 } from '$lib/api-helpers.server';
-
-const STEM_SEPARATION_TYPES = ['separate_vocal', 'split_stem'] as const;
-
 export const POST: RequestHandler = async ({ request }) => {
 	const body = await parseJsonBody(request);
 	const generationId = asPositiveInt(body.generationId, 'generationId');

@@ -4,7 +4,11 @@
 	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
-	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
+	import {
+		GENERATION_STYLE_MAX_LENGTH,
+		GENERATION_TITLE_MAX_LENGTH,
+		NEGATIVE_TAGS_MAX_LENGTH
+	} from '$lib/constants';
 	import { untrack } from 'svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
@@ -141,7 +145,7 @@
 				type="text"
 				id="add-instrumental-title"
 				bind:value={title}
-				maxlength="80"
+				maxlength={GENERATION_TITLE_MAX_LENGTH}
 				placeholder="Instrumental title"
 				class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			/>
@@ -166,7 +170,7 @@
 				id="add-instrumental-tags"
 				label="Tags"
 				rows={3}
-				maxlength={1000}
+				maxlength={GENERATION_STYLE_MAX_LENGTH}
 				placeholder="relaxing, piano, cinematic"
 				textareaClass="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			/>

@@ -18,6 +18,7 @@
 	import { useWavConversionState } from '$lib/routes/song/useWavConversionState.svelte';
 	import { createCopyWithFeedback } from '$lib/utils/clipboard';
 	import { getStemDisplay } from '$lib/utils/stems';
+	import { ANNOTATION_COMMENT_MAX_LENGTH } from '$lib/constants';
 	import { getContext, tick } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { Generation, StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';
@@ -638,17 +639,17 @@
 							oninput={handleNotesInput}
 							onblur={saveNotes}
 							placeholder="Add notes about this variation — production notes, arrangement ideas, directions for future versions…"
-							maxlength="500"
+							maxlength={ANNOTATION_COMMENT_MAX_LENGTH}
 							class="min-h-0 w-full flex-1 resize-none rounded-xl border border-amber-200/60 bg-white px-4 py-3 text-sm leading-relaxed text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30 focus:outline-none dark:border-amber-800/40 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/30"
 						></textarea>
 						<div class="mt-3 flex items-center justify-between pt-3">
 							<p class="text-xs text-gray-500 dark:text-gray-400">Auto-saves as you type</p>
 							<span
-								class="text-xs font-medium {notesCharCount > 450
+								class="text-xs font-medium {notesCharCount > ANNOTATION_COMMENT_MAX_LENGTH * 0.9
 									? 'text-amber-600 dark:text-amber-400'
 									: 'text-gray-400 dark:text-gray-500'}"
 							>
-								{notesCharCount}/500
+								{notesCharCount}/{ANNOTATION_COMMENT_MAX_LENGTH}
 							</span>
 						</div>
 					</div>

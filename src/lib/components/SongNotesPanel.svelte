@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { VariationAnnotation } from '$lib/types';
 	import SectionBodyFrame from './SectionBodyFrame.svelte';
+	import { ANNOTATION_COMMENT_MAX_LENGTH } from '$lib/constants';
 
 	let {
 		generationId,
@@ -114,18 +115,18 @@
 				oninput={handleCommentInput}
 				onblur={saveComment}
 				placeholder="Add notes about this variation — what you like, what to change, ideas for next steps..."
-				maxlength="500"
+				maxlength={ANNOTATION_COMMENT_MAX_LENGTH}
 				rows="3"
 				class="w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-amber-500 dark:focus:ring-amber-500/20"
 			></textarea>
 			<div class="mt-1.5 flex items-center justify-between">
 				<p class="text-xs text-gray-400 dark:text-gray-500">Auto-saves as you type</p>
 				<span
-					class="text-xs {commentCharCount > 450
+					class="text-xs {commentCharCount > ANNOTATION_COMMENT_MAX_LENGTH * 0.9
 						? 'text-amber-500'
 						: 'text-gray-400'} dark:text-gray-500"
 				>
-					{commentCharCount}/500
+					{commentCharCount}/{ANNOTATION_COMMENT_MAX_LENGTH}
 				</span>
 			</div>
 		</SectionBodyFrame>

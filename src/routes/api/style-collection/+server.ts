@@ -1,5 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
+import {
+	STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH,
+	STYLE_COLLECTION_NAME_MAX_LENGTH,
+	STYLE_COLLECTION_QUERY_MAX_LENGTH,
+	STYLE_COLLECTION_STYLE_MAX_LENGTH
+} from '$lib/constants';
 import { getAllStyles, createStyle, searchStyles } from '$lib/db.server';
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -11,8 +17,8 @@ export const GET: RequestHandler = async ({ url }) => {
 		throw error(400, 'limit must be between 1 and 100');
 	}
 
-	if (query.trim().length > 256) {
-		throw error(400, 'query must be 256 characters or less');
+	if (query.trim().length > STYLE_COLLECTION_QUERY_MAX_LENGTH) {
+		throw error(400, `query must be ${STYLE_COLLECTION_QUERY_MAX_LENGTH} characters or less`);
 	}
 
 	const styles = query.trim() ? searchStyles(query.trim(), limit) : getAllStyles();
@@ -37,14 +43,17 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'description must be a string');
 	}
 
-	if (name.trim().length > 100) {
-		throw error(400, 'name must be 100 characters or less');
+	if (name.trim().length > STYLE_COLLECTION_NAME_MAX_LENGTH) {
+		throw error(400, `name must be ${STYLE_COLLECTION_NAME_MAX_LENGTH} characters or less`);
 	}
-	if (style.trim().length > 2000) {
-		throw error(400, 'style must be 2000 characters or less');
+	if (style.trim().length > STYLE_COLLECTION_STYLE_MAX_LENGTH) {
+		throw error(400, `style must be ${STYLE_COLLECTION_STYLE_MAX_LENGTH} characters or less`);
 	}
-	if (description.trim().length > 500) {
-		throw error(400, 'description must be 500 characters or less');
+	if (description.trim().length > STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH) {
+		throw error(
+			400,
+			`description must be ${STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH} characters or less`
+		);
 	}
 
 	const created = createStyle(name, style, description);

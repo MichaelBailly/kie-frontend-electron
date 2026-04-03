@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { LABEL_MAX_LENGTH } from '$lib/constants';
+
 	let {
 		labels = [],
 		generationId,
@@ -181,7 +183,7 @@
 
 	function addLabel(label: string) {
 		const normalized = normalizeLabel(label);
-		if (!normalized || normalized.length > 128) return;
+		if (!normalized || normalized.length > LABEL_MAX_LENGTH) return;
 		if (currentLabels.some((existing) => normalizeLabel(existing) === normalized)) {
 			inputValue = '';
 			highlightedIndex = -1;
@@ -386,7 +388,7 @@
 							placeholder="Search or add label"
 							aria-controls="label-suggestions"
 							class="w-full bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400 dark:text-gray-200"
-							maxlength="128"
+							maxlength={LABEL_MAX_LENGTH}
 						/>
 					</div>
 					<button
