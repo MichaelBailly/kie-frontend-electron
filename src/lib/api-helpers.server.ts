@@ -10,6 +10,7 @@
  */
 
 import { error } from '@sveltejs/kit';
+import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
 import {
 	getProject,
 	getGeneration,
@@ -158,7 +159,16 @@ export function asOptionalString(value: unknown, name: string): string {
 }
 
 export function normalizeNegativeTags(value: string | null | undefined): string {
-	return value?.trim() || '';
+	const normalizedValue = value?.trim() || '';
+
+	if (normalizedValue.length > NEGATIVE_TAGS_MAX_LENGTH) {
+		throw error(
+			400,
+			`Invalid negativeTags: must be at most ${NEGATIVE_TAGS_MAX_LENGTH} characters`
+		);
+	}
+
+	return normalizedValue;
 }
 
 // ============================================================================

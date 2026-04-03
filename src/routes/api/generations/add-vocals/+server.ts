@@ -24,8 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const title = asNonEmptyString(body.title, 'title');
 	const prompt = asNonEmptyString(body.prompt, 'prompt');
 	const style = asNonEmptyString(body.style, 'style');
-	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
-	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
+	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');
@@ -50,7 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			prompt,
 			style,
-			negativeTags: negativeTagsForApi,
+			negativeTags,
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})

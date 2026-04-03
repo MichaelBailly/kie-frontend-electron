@@ -20,7 +20,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const style = asNonEmptyString(body.style, 'style');
 	const instrumental = body.instrumental === true;
 	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
-	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
+	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
 	requireProject(projectId);
 	const sunoModel = getSunoModel();
 
@@ -45,7 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			instrumental,
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL,
-			negativeTags: normalizeNegativeTags(negativeTags)
+			negativeTags
 		})
 	).catch((err) => console.error(`[AsyncTask] generation ${generation.id} failed to start:`, err));
 

@@ -4,6 +4,7 @@
 	import ModelBadge from './ModelBadge.svelte';
 	import { audioStore, type AudioTrack } from '$lib/stores/audio.svelte';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
+	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
 	import { untrack } from 'svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
@@ -38,6 +39,7 @@
 	let tags = $state(untrack(() => generation.style ?? ''));
 	let negativeTags = $state(untrack(() => generation.negative_tags ?? ''));
 	let isSubmitting = $state(false);
+	let hasNegativeTagsOverflow = $derived(negativeTags.length > NEGATIVE_TAGS_MAX_LENGTH);
 
 	const previewTrackId = $derived(`${song.id}:${normalizedStemType}:add-instrumental-preview`);
 	const isCurrentTrack = $derived(audioStore.isCurrentTrack(previewTrackId));
@@ -67,6 +69,7 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (!title.trim() || !tags.trim()) return;
+		if (hasNegativeTagsOverflow) return;
 
 		isSubmitting = true;
 		try {
@@ -180,10 +183,15 @@
 				id="add-instrumental-negative-tags"
 				bind:value={negativeTags}
 				rows="2"
-				maxlength="1000"
+				maxlength={NEGATIVE_TAGS_MAX_LENGTH}
 				placeholder="heavy metal, harsh distortion"
 				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			></textarea>
+			<p
+				class={`mt-1 text-xs ${hasNegativeTagsOverflow ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}
+			>
+				{negativeTags.length}/{NEGATIVE_TAGS_MAX_LENGTH} characters
+			</p>
 		</div>
 
 		<div class="flex gap-3 pt-2">
@@ -197,7 +205,7 @@
 			</button>
 			<button
 				type="submit"
-				disabled={isSubmitting || !title.trim() || !tags.trim()}
+				disabled={isSubmitting || !title.trim() || !tags.trim() || hasNegativeTagsOverflow}
 				class="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-teal-600 to-emerald-600 px-6 py-3 font-semibold text-white shadow-lg shadow-teal-500/30 transition-all hover:from-teal-700 hover:to-emerald-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
 			>
 				{#if isSubmitting}

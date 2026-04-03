@@ -31,10 +31,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	const style = asNonEmptyString(body.style, 'style');
 	const remoteUrl = asNonEmptyString(body.remoteUrl, 'remoteUrl');
 	const temporaryFileName = asNonEmptyString(body.temporaryFileName, 'temporaryFileName');
-	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
+	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
 	const projectNameRaw = asOptionalString(body.projectName, 'projectName').trim();
 	const projectName = projectNameRaw || buildProjectName(title);
-	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
 	const sunoModel = getSunoModel();
 
 	const project = createProject(projectName);
@@ -66,7 +65,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			title,
 			prompt,
 			style,
-			negativeTags: negativeTagsForApi,
+			negativeTags,
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})

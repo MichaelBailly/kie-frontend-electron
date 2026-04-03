@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
 	import StylePicker from './StylePicker.svelte';
 	import ExpandableTextarea from './ExpandableTextarea.svelte';
 
@@ -26,6 +27,7 @@
 	let remoteUrl = $state('');
 	let temporaryFileName = $state('');
 	let fileInput: HTMLInputElement | undefined = $state();
+	let hasNegativeTagsOverflow = $derived(negativeTags.length > NEGATIVE_TAGS_MAX_LENGTH);
 
 	const canSubmit = $derived(
 		!!remoteUrl &&
@@ -33,6 +35,7 @@
 			!!title.trim() &&
 			!!prompt.trim() &&
 			!!style.trim() &&
+			!hasNegativeTagsOverflow &&
 			!isSubmitting &&
 			!isUploading
 	);
@@ -396,10 +399,15 @@
 							id="upload-vocals-negative-tags"
 							bind:value={negativeTags}
 							rows="2"
-							maxlength="1000"
+							maxlength={NEGATIVE_TAGS_MAX_LENGTH}
 							placeholder="screamo, distortion"
 							class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 						></textarea>
+						<p
+							class={`mt-1 text-xs ${hasNegativeTagsOverflow ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}
+						>
+							{negativeTags.length}/{NEGATIVE_TAGS_MAX_LENGTH} characters
+						</p>
 					</div>
 				</div>
 

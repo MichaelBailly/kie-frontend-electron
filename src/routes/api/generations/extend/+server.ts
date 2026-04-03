@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const style = asNonEmptyString(body.style, 'style');
 	const instrumental = body.instrumental === true;
 	const lyrics = instrumental ? String(body.lyrics ?? '') : asNonEmptyString(body.lyrics, 'lyrics');
-	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
+	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
 	const extendsGenerationId = asPositiveInt(body.extendsGenerationId, 'extendsGenerationId');
 	const extendsAudioId = asNonEmptyString(body.extendsAudioId, 'extendsAudioId');
 	const hasStemUrl = body.stemUrl !== undefined && body.stemUrl !== null && body.stemUrl !== '';
@@ -76,7 +76,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				instrumental,
 				model: sunoModel,
 				callBackUrl: KIE_CALLBACK_URL,
-				negativeTags: normalizeNegativeTags(negativeTags)
+				negativeTags
 			});
 		}
 
@@ -90,7 +90,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			instrumental,
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL,
-			negativeTags: normalizeNegativeTags(negativeTags)
+			negativeTags
 		});
 	}).catch((err) =>
 		console.error(`[AsyncTask] extend generation ${generation.id} failed to start:`, err)

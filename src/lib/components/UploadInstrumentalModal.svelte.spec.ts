@@ -15,4 +15,16 @@ describe('UploadInstrumentalModal', () => {
 		expect(body).toContain('My Styles');
 		expect(body).toContain('title="Pick from style collection"');
 	});
+
+	it('renders the 200 character limit for negative tags', () => {
+		const { body } = render(UploadInstrumentalModal, {
+			props: {
+				isOpen: true,
+				onClose: () => {}
+			}
+		});
+
+		expect(body).toContain('maxlength="200"');
+		expect(body).toContain('/200 characters');
+	});
 });

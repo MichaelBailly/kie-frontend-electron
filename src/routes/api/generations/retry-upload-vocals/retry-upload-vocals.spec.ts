@@ -125,6 +125,25 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 		});
 	});
 
+	it('rejects negative tags longer than 200 characters', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				sourceGenerationId: 8,
+				title: 'Retry Vocals',
+				prompt: '[Verse] Bright lights',
+				style: 'dream pop',
+				negativeTags: 'x'.repeat(201)
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid negativeTags: must be at most 200 characters' }
+		});
+	});
+
 	it('passes trimmed negative tags to the repository and KIE API', async () => {
 		const sourceGeneration = createGeneration({
 			id: 8,

@@ -37,6 +37,14 @@ describe('ExpandableTextarea', () => {
 		expect(body).toContain('maxlength="5000"');
 	});
 
+	it('renders custom maxlength values', () => {
+		const { body } = render(ExpandableTextarea, {
+			props: { value: '', label: 'Notes', maxlength: 200 }
+		});
+
+		expect(body).toContain('maxlength="200"');
+	});
+
 	it('renders with the provided id on the inline textarea', () => {
 		const { body } = render(ExpandableTextarea, {
 			props: { value: '', label: 'Style', id: 'style-input' }

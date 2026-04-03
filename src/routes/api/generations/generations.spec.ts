@@ -95,6 +95,24 @@ function seedExtendScenario(opts: { parentId?: number; audioId?: string } = {}) 
 // ---------------------------------------------------------------------------
 
 describe('POST /api/generations', () => {
+	it('throws 400 when negative tags exceed 200 characters', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'My Song',
+				style: 'pop',
+				lyrics: 'Hello world',
+				negativeTags: 'x'.repeat(201)
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid negativeTags: must be at most 200 characters' }
+		});
+	});
+
 	it('throws 400 for invalid JSON body', async () => {
 		const { POST } = await import('./+server');
 		const event = {
@@ -361,6 +379,27 @@ describe('POST /api/generations', () => {
 // ---------------------------------------------------------------------------
 
 describe('POST /api/generations/extend', () => {
+	it('throws 400 when negative tags exceed 200 characters', async () => {
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended',
+				style: 'rock',
+				lyrics: 'More lyrics',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30,
+				negativeTags: 'x'.repeat(201)
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid negativeTags: must be at most 200 characters' }
+		});
+	});
+
 	it('throws 400 for invalid JSON body', async () => {
 		const { POST } = await import('./extend/+server');
 		const event = {

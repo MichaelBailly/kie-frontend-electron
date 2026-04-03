@@ -23,8 +23,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const stemUrl = asNonEmptyString(body.stemUrl, 'stemUrl');
 	const title = asNonEmptyString(body.title, 'title');
 	const tags = asNonEmptyString(body.tags, 'tags');
-	const negativeTags = asOptionalString(body.negativeTags, 'negativeTags').trim();
-	const negativeTagsForApi = normalizeNegativeTags(negativeTags);
+	const negativeTags = normalizeNegativeTags(asOptionalString(body.negativeTags, 'negativeTags'));
 
 	requireProject(projectId);
 	requireGeneration(sourceGenerationId, 'Source generation');
@@ -47,7 +46,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			uploadUrl: stemUrl,
 			title,
 			tags,
-			negativeTags: negativeTagsForApi,
+			negativeTags,
 			model: sunoModel,
 			callBackUrl: KIE_CALLBACK_URL
 		})

@@ -1,0 +1,1 @@
+export const NEGATIVE_TAGS_MAX_LENGTH = 200;

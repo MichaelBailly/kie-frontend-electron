@@ -9,6 +9,7 @@
 	import { toPlayableAudioUrl } from '$lib/utils/audio';
 	import { formatTime } from '$lib/utils/format';
 	import { getStemDisplay, normalizeStemType } from '$lib/utils/stems';
+	import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
 	import { untrack } from 'svelte';
 
 	let {
@@ -79,6 +80,7 @@
 	let isPlaying = $derived(audioStore.isTrackPlaying(previewTrackId));
 	let playbackCurrentTime = $derived(isCurrentTrack ? audioStore.currentTime : 0);
 	let duration = $derived(song.duration || 0);
+	let hasNegativeTagsOverflow = $derived(negativeTags.length > NEGATIVE_TAGS_MAX_LENGTH);
 
 	function buildPreviewTrack(): AudioTrack {
 		const previewTrackTitle = isStemExtension
@@ -120,6 +122,7 @@
 		if (!title.trim() || !style.trim()) return;
 		if (!instrumental && !lyrics.trim()) return;
 		if (continueAt <= 0 || continueAt >= duration) return;
+		if (hasNegativeTagsOverflow) return;
 
 		isSubmitting = true;
 		try {
@@ -343,11 +346,13 @@
 				bind:value={negativeTags}
 				placeholder="heavy metal, harsh distortion"
 				rows="2"
-				maxlength="1000"
+				maxlength={NEGATIVE_TAGS_MAX_LENGTH}
 				class="w-full resize-y rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 placeholder-gray-500 transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400"
 			></textarea>
-			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-				{negativeTags.length}/1000 characters
+			<p
+				class={`mt-1 text-xs ${hasNegativeTagsOverflow ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}
+			>
+				{negativeTags.length}/{NEGATIVE_TAGS_MAX_LENGTH} characters
 			</p>
 		</div>
 
@@ -370,6 +375,7 @@
 					!title.trim() ||
 					!style.trim() ||
 					(!instrumental && !lyrics.trim()) ||
+					hasNegativeTagsOverflow ||
 					continueAt <= 0 ||
 					continueAt >= duration}
 				class="inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg shadow-indigo-500/30 transition-all hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"

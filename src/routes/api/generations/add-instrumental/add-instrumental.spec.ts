@@ -40,6 +40,27 @@ beforeEach(async () => {
 });
 
 describe('POST /api/generations/add-instrumental', () => {
+	it('rejects negative tags longer than 200 characters', async () => {
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				sourceGenerationId: 5,
+				sourceAudioId: 'audio-5-1',
+				stemType: 'vocal',
+				stemUrl: 'https://example.com/stems/vocal.mp3',
+				title: 'Too Long',
+				tags: 'ambient',
+				negativeTags: 'x'.repeat(201)
+			}
+		});
+
+		await expect(POST(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid negativeTags: must be at most 200 characters' }
+		});
+	});
+
 	function seedScenario() {
 		const project = createProject({ id: 1 });
 		const sourceGeneration = createCompletedGeneration({
