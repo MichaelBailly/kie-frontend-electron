@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 import type {
 	Project,
 	Generation,
+	GenerationStatus,
 	SunoModel,
 	StemSeparation,
 	WavConversion,
@@ -228,7 +229,7 @@ export function createDbMock(): DbMock {
 				generation.status = 'processing';
 			}
 		}),
-		setGenerationStatus: vi.fn((id: number, status: string) => {
+		setGenerationStatus: vi.fn((id: number, status: GenerationStatus) => {
 			const generation = generations.find((item) => item.id === id);
 			if (generation) {
 				generation.status = status;

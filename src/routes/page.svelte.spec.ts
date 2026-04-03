@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { render } from 'svelte/server';
+import type { GenerationStatus } from '$lib/types';
 import Page from './+page.svelte';
+
+function status(value: GenerationStatus): GenerationStatus {
+	return value;
+}
 
 describe('/+page.svelte', () => {
 	it('should render h1', async () => {
@@ -19,7 +24,7 @@ describe('/+page.svelte', () => {
 					generationCount: 1,
 					lastGenerationId: 10,
 					lastGenerationTitle: 'Song A',
-					lastGenerationStatus: 'success',
+					lastGenerationStatus: status('success'),
 					lastGenerationImageUrl: 'https://example.com/broken-or-valid.jpg'
 				}
 			],
@@ -42,7 +47,7 @@ describe('/+page.svelte', () => {
 					generationCount: 1,
 					lastGenerationId: 10,
 					lastGenerationTitle: 'Song A',
-					lastGenerationStatus: 'success',
+					lastGenerationStatus: status('success'),
 					lastGenerationImageUrl: null
 				}
 			],
@@ -88,7 +93,7 @@ describe('/+page.svelte', () => {
 					generationCount: 1,
 					lastGenerationId: 100,
 					lastGenerationTitle: 'Alpha Song',
-					lastGenerationStatus: 'success',
+					lastGenerationStatus: status('success'),
 					lastGenerationImageUrl: null
 				},
 				{
@@ -100,7 +105,7 @@ describe('/+page.svelte', () => {
 					generationCount: 1,
 					lastGenerationId: 101,
 					lastGenerationTitle: 'Beta Song',
-					lastGenerationStatus: 'processing',
+					lastGenerationStatus: status('processing'),
 					lastGenerationImageUrl: null
 				}
 			],

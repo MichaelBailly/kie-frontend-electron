@@ -10,7 +10,13 @@
  */
 
 import { error } from '@sveltejs/kit';
-import { NEGATIVE_TAGS_MAX_LENGTH } from '$lib/constants';
+import {
+	NEGATIVE_TAGS_MAX_LENGTH,
+	STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH,
+	STYLE_COLLECTION_NAME_MAX_LENGTH,
+	STYLE_COLLECTION_QUERY_MAX_LENGTH,
+	STYLE_COLLECTION_STYLE_MAX_LENGTH
+} from '$lib/constants';
 import {
 	getProject,
 	getGeneration,
@@ -39,6 +45,12 @@ import {
 import type { Project, Generation } from '$lib/types';
 
 type JsonRecord = Record<string, unknown>;
+
+interface StyleCollectionPayload {
+	name: string;
+	style: string;
+	description: string;
+}
 
 export function isRecord(value: unknown): value is JsonRecord {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -213,6 +225,119 @@ export function parseIntParam(value: string, name = 'id'): number {
 		throw error(400, `Invalid ${name}: must be an integer`);
 	}
 	return parsed;
+}
+
+export function parsePositiveIntParam(value: string, name = 'id'): number {
+	const parsed = Number(value);
+	if (!Number.isInteger(parsed) || parsed < 1) {
+		throw error(400, `Invalid ${name}: must be a positive integer`);
+	}
+	return parsed;
+}
+
+export function parseLimitedQuery(value: string | null, name: string, maxLength: number): string {
+	const normalizedValue = value?.trim() ?? '';
+
+	if (normalizedValue.length > maxLength) {
+		throw error(400, `${name} must be ${maxLength} characters or less`);
+	}
+
+	return normalizedValue;
+}
+
+export function parseStyleCollectionQuery(value: string | null): string {
+	return parseLimitedQuery(value, 'query', STYLE_COLLECTION_QUERY_MAX_LENGTH);
+}
+
+export function parseStyleCollectionLimit(value: string | null): number {
+	if (value === null) {
+		return 20;
+	}
+
+	const limit = Number(value);
+	if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+		throw error(400, 'limit must be between 1 and 100');
+	}
+
+	return limit;
+}
+
+function validateStyleCollectionTextField(
+	value: unknown,
+	name: 'name' | 'style' | 'description',
+	options: {
+		required?: boolean;
+		maxLength: number;
+	}
+): string | undefined {
+	if (value === undefined) {
+		if (options.required) {
+			throw error(400, `${name} is required`);
+		}
+		return undefined;
+	}
+
+	if (typeof value !== 'string') {
+		if (name === 'description') {
+			throw error(400, 'description must be a string');
+		}
+		throw error(400, `${name} must be a string`);
+	}
+
+	const normalizedValue = name === 'description' ? value.trim() : value.trim();
+	if (name !== 'description' && normalizedValue.length === 0) {
+		throw error(400, options.required ? `${name} is required` : `${name} cannot be empty`);
+	}
+
+	if (normalizedValue.length > options.maxLength) {
+		throw error(400, `${name} must be ${options.maxLength} characters or less`);
+	}
+
+	return normalizedValue;
+}
+
+export function parseStyleCollectionBody(body: JsonRecord): StyleCollectionPayload {
+	return {
+		name: validateStyleCollectionTextField(body.name, 'name', {
+			required: true,
+			maxLength: STYLE_COLLECTION_NAME_MAX_LENGTH
+		})!,
+		style: validateStyleCollectionTextField(body.style, 'style', {
+			required: true,
+			maxLength: STYLE_COLLECTION_STYLE_MAX_LENGTH
+		})!,
+		description:
+			validateStyleCollectionTextField(body.description ?? '', 'description', {
+				maxLength: STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH
+			}) ?? ''
+	};
+}
+
+export function parseStyleCollectionPatchBody(body: JsonRecord): Partial<StyleCollectionPayload> {
+	const fields: Partial<StyleCollectionPayload> = {};
+
+	const name = validateStyleCollectionTextField(body.name, 'name', {
+		maxLength: STYLE_COLLECTION_NAME_MAX_LENGTH
+	});
+	if (name !== undefined) {
+		fields.name = name;
+	}
+
+	const style = validateStyleCollectionTextField(body.style, 'style', {
+		maxLength: STYLE_COLLECTION_STYLE_MAX_LENGTH
+	});
+	if (style !== undefined) {
+		fields.style = style;
+	}
+
+	const description = validateStyleCollectionTextField(body.description, 'description', {
+		maxLength: STYLE_COLLECTION_DESCRIPTION_MAX_LENGTH
+	});
+	if (description !== undefined) {
+		fields.description = description;
+	}
+
+	return fields;
 }
 
 // ============================================================================

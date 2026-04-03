@@ -173,6 +173,16 @@ describe('GET /api/projects/[id]', () => {
 			body: { message: 'Invalid id: must be an integer' }
 		});
 	});
+
+	it('accepts zero id at parsing layer and returns 404 from project lookup', async () => {
+		const { GET } = await import('./[id]/+server');
+		const event = createRequestEvent({ method: 'GET', params: { id: '0' } });
+
+		await expect(GET(event as never)).rejects.toMatchObject({
+			status: 404,
+			body: { message: 'Project not found' }
+		});
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -255,5 +265,39 @@ describe('PATCH /api/projects/[id]', () => {
 		await PATCH(event as never);
 
 		expect(db.updateProjectName).not.toHaveBeenCalled();
+	});
+
+	it('throws 400 when patch name is not a string', async () => {
+		const project = createProject({ id: 1 });
+		db.__setProjects([project]);
+
+		const { PATCH } = await import('./[id]/+server');
+		const event = createRequestEvent({
+			body: { name: 123 },
+			params: { id: '1' },
+			method: 'PATCH'
+		});
+
+		await expect(PATCH(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid name: must be a string' }
+		});
+	});
+
+	it('throws 400 when patch is_open is not a boolean', async () => {
+		const project = createProject({ id: 1 });
+		db.__setProjects([project]);
+
+		const { PATCH } = await import('./[id]/+server');
+		const event = createRequestEvent({
+			body: { is_open: 'yes' },
+			params: { id: '1' },
+			method: 'PATCH'
+		});
+
+		await expect(PATCH(event as never)).rejects.toMatchObject({
+			status: 400,
+			body: { message: 'Invalid is_open: must be a boolean' }
+		});
 	});
 });

@@ -51,7 +51,7 @@ export interface Generation {
 	title: string;
 	style: string;
 	lyrics: string;
-	status: string;
+	status: GenerationStatus;
 	error_message: string | null;
 	track1_stream_url: string | null;
 	track1_audio_url: string | null;
@@ -74,7 +74,7 @@ export interface Generation {
 	extends_stem_type: string | null;
 	extends_stem_url: string | null;
 	instrumental: number;
-	generation_type: string;
+	generation_type: GenerationType;
 	negative_tags: string | null;
 	source_audio_local_url?: string | null;
 	model: SunoModel;

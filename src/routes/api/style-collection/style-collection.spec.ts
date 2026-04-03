@@ -115,6 +115,19 @@ describe('GET /api/style-collection', () => {
 
 		await expect(GET(event as never)).rejects.toMatchObject({ status: 400 });
 	});
+
+	it('trims query before calling searchStyles', async () => {
+		db.searchStyles.mockReturnValue([]);
+
+		const { GET } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'GET',
+			url: 'http://localhost/api/style-collection?q=%20trap%20'
+		});
+		await GET(event as never);
+
+		expect(db.searchStyles).toHaveBeenCalledWith('trap', 20);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -250,5 +263,25 @@ describe('POST /api/style-collection', () => {
 		});
 
 		await expect(POST(event as never)).rejects.toMatchObject({ status: 400 });
+	});
+
+	it('trims values before persisting', async () => {
+		db.createStyle.mockReturnValue({
+			id: 1,
+			name: 'Cinematic',
+			style: 'epic strings',
+			description: 'big sound',
+			created_at: '2026-01-01',
+			updated_at: '2026-01-01'
+		});
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'POST',
+			body: { name: '  Cinematic ', style: ' epic strings ', description: ' big sound ' }
+		});
+		await POST(event as never);
+
+		expect(db.createStyle).toHaveBeenCalledWith('Cinematic', 'epic strings', 'big sound');
 	});
 });

@@ -1,4 +1,5 @@
 import type { MusicDetailsResponse } from '$lib/kie-api.server';
+import type { GenerationStatus } from '$lib/types';
 
 export interface GenerationTrackData {
 	streamUrl: string;
@@ -35,12 +36,12 @@ export interface GenerationCompletionMapping {
 }
 
 export interface GenerationProgressMapping {
-	status: string;
+	status: GenerationStatus;
 	trackUpdate?: {
 		track1: GenerationTrackUpdate;
 		track2: GenerationTrackUpdate;
 		ssePayload: {
-			status: string;
+			status: GenerationStatus;
 			track1_stream_url?: string;
 			track1_image_url?: string;
 			track2_stream_url?: string;
@@ -48,7 +49,7 @@ export interface GenerationProgressMapping {
 		};
 	};
 	ssePayload: {
-		status: string;
+		status: GenerationStatus;
 	};
 }
 
@@ -102,7 +103,7 @@ export function mapGenerationCompletion(
 
 export function mapGenerationProgress(details: MusicDetailsResponse): GenerationProgressMapping {
 	const status = details.data.status;
-	const statusMap: Record<string, string> = {
+	const statusMap: Record<string, GenerationStatus> = {
 		PENDING: 'processing',
 		TEXT_SUCCESS: 'text_success',
 		FIRST_SUCCESS: 'first_success'

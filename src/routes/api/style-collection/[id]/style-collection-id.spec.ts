@@ -120,6 +120,24 @@ describe('PATCH /api/style-collection/[id]', () => {
 		expect(data.description).toBe('new desc');
 	});
 
+	it('trims patch values before persisting', async () => {
+		db.getStyle.mockReturnValue(STYLE_FIXTURE);
+		db.updateStyle.mockReturnValue(STYLE_FIXTURE);
+
+		const { PATCH } = await import('./+server');
+		const event = createRequestEvent({
+			method: 'PATCH',
+			params: { id: '1' },
+			body: { name: '  New Name ', description: '  new desc ' }
+		});
+		await PATCH(event as never);
+
+		expect(db.updateStyle).toHaveBeenCalledWith(1, {
+			name: 'New Name',
+			description: 'new desc'
+		});
+	});
+
 	it('throws 404 when style does not exist', async () => {
 		db.getStyle.mockReturnValue(undefined);
 
