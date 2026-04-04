@@ -1,4 +1,5 @@
 import { buildTerminalErrorLog, emitPollLog } from './logging.server';
+import { POLLING_INTERVAL_MS, POLLING_MAX_ATTEMPTS } from '$lib/constants';
 
 export interface PollLoopController {
 	cancel: () => void;
@@ -25,8 +26,8 @@ export interface PollConfig<TDetails extends { code: number; msg: string }> {
 export function runPollLoop<TDetails extends { code: number; msg: string }>(
 	config: PollConfig<TDetails>
 ): PollLoopController {
-	const maxAttempts = config.maxAttempts ?? 120;
-	const intervalMs = config.intervalMs ?? 5000;
+	const maxAttempts = config.maxAttempts ?? POLLING_MAX_ATTEMPTS;
+	const intervalMs = config.intervalMs ?? POLLING_INTERVAL_MS;
 	const timeoutMessage = config.timeoutMessage ?? `${config.label} timed out`;
 	let attempts = 0;
 	let cancelled = false;

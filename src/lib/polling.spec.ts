@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { POLLING_INTERVAL_MS } from '$lib/constants';
 import type { MusicDetailsResponse } from '$lib/kie-api.server';
 import {
 	createMusicDetailsResponse,
@@ -329,7 +330,7 @@ describe('pollForResults', () => {
 		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
 		// Second poll after 5s (SUCCESS)
-		await vi.advanceTimersByTimeAsync(5000);
+		await vi.advanceTimersByTimeAsync(POLLING_INTERVAL_MS);
 
 		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
@@ -348,7 +349,7 @@ describe('pollForResults', () => {
 		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
 		// Retry after 5s
-		await vi.advanceTimersByTimeAsync(5000);
+		await vi.advanceTimersByTimeAsync(POLLING_INTERVAL_MS);
 
 		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
@@ -367,7 +368,7 @@ describe('pollForResults', () => {
 		// onComplete returned false (only 1 track), should keep polling
 		expect(setGenerationCompleted).not.toHaveBeenCalled();
 
-		await vi.advanceTimersByTimeAsync(5000);
+		await vi.advanceTimersByTimeAsync(POLLING_INTERVAL_MS);
 		expect(setGenerationCompleted).toHaveBeenCalledTimes(1);
 	});
 
@@ -396,7 +397,7 @@ describe('pollForResults', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(cancelGenerationPoll('task-cancel')).toBe(true);
-		await vi.advanceTimersByTimeAsync(5000);
+		await vi.advanceTimersByTimeAsync(POLLING_INTERVAL_MS);
 
 		expect(getMusicDetails).toHaveBeenCalledTimes(1);
 		expect(cancelGenerationPoll('task-cancel')).toBe(false);
@@ -508,7 +509,7 @@ describe('pollForStemSeparationResults', () => {
 		await vi.advanceTimersByTimeAsync(0);
 
 		expect(cancelStemSeparationPoll('stem-cancel')).toBe(true);
-		await vi.advanceTimersByTimeAsync(5000);
+		await vi.advanceTimersByTimeAsync(POLLING_INTERVAL_MS);
 
 		expect(getStemSeparationDetails).toHaveBeenCalledTimes(1);
 		expect(cancelStemSeparationPoll('stem-cancel')).toBe(false);

@@ -5,6 +5,7 @@
 	 * - 'dark': For dark-themed standalone pages (home, settings, styles, highlights)
 	 * - 'light': For the project workspace tab bar (light/dark mode aware)
 	 */
+	import { CREDITS_REFRESH_INTERVAL_MS } from '$lib/constants';
 
 	type Variant = 'dark' | 'light';
 
@@ -13,8 +14,6 @@
 	let credits = $state<number | null>(null);
 	let loading = $state(true);
 	let hasError = $state(false);
-
-	const REFRESH_INTERVAL_MS = 60_000; // Refresh every 60 seconds
 
 	function formatCredits(value: number): string {
 		return new Intl.NumberFormat('en-US', {
@@ -45,7 +44,7 @@
 
 	$effect(() => {
 		fetchCredits();
-		const interval = setInterval(fetchCredits, REFRESH_INTERVAL_MS);
+		const interval = setInterval(fetchCredits, CREDITS_REFRESH_INTERVAL_MS);
 		return () => clearInterval(interval);
 	});
 

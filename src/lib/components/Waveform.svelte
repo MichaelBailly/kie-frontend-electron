@@ -26,10 +26,15 @@
 	} = $props();
 
 	let container: HTMLDivElement | undefined = $state();
+	let overlay: HTMLDivElement | undefined = $state();
 	let waveformData: number[] = $state([]);
 	let isLoading = $state(true);
 	let error = $state<string | null>(null);
 	let resolvedAudioUrl = $derived(toPlayableAudioUrl(audioUrl) || '');
+
+	// Hover state for scrub tooltip
+	let hoverX = $state<number | null>(null);
+	let hoverTime = $state<number>(0);
 
 	async function loadWaveform(sourceUrl: string = resolvedAudioUrl) {
 		try {
@@ -91,7 +96,7 @@
 			.append('svg')
 			.attr('width', containerWidth)
 			.attr('height', height)
-			.attr('class', 'cursor-pointer rounded-lg overflow-hidden');
+			.attr('class', 'rounded-lg overflow-hidden');
 
 		const defs = svg.append('defs');
 
@@ -141,30 +146,93 @@
 		const glowFilter = defs
 			.append('filter')
 			.attr('id', 'playhead-glow')
-			.attr('x', '-100%')
-			.attr('y', '-100%')
-			.attr('width', '300%')
-			.attr('height', '300%');
+			.attr('x', '-200%')
+			.attr('y', '-50%')
+			.attr('width', '500%')
+			.attr('height', '200%');
 
-		glowFilter.append('feGaussianBlur').attr('stdDeviation', '3').attr('result', 'coloredBlur');
+		glowFilter.append('feGaussianBlur').attr('stdDeviation', '4').attr('result', 'coloredBlur');
 
 		const feMerge = glowFilter.append('feMerge');
 		feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+		feMerge.append('feMergeNode').attr('in', 'coloredBlur');
 		feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-		// --- Fill gradient: purple → magenta → blue (horizontal) ---
-		const fillGradient = defs
+		// --- Soft glow filter for played region overlay ---
+		const playedGlow = defs
+			.append('filter')
+			.attr('id', 'played-glow')
+			.attr('x', '-5%')
+			.attr('y', '-50%')
+			.attr('width', '110%')
+			.attr('height', '200%');
+		playedGlow.append('feGaussianBlur').attr('stdDeviation', '2').attr('result', 'blur');
+		const playedMerge = playedGlow.append('feMerge');
+		playedMerge.append('feMergeNode').attr('in', 'blur');
+		playedMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+		// --- Fill gradient: blue → magenta → purple (horizontal, full width) ---
+		const fillGradientUnplayed = defs
 			.append('linearGradient')
-			.attr('id', 'wf-fill')
+			.attr('id', 'wf-fill-unplayed')
 			.attr('gradientUnits', 'userSpaceOnUse')
 			.attr('x1', paddingH)
 			.attr('y1', 0)
 			.attr('x2', paddingH + innerWidth)
 			.attr('y2', 0);
 
-		fillGradient.append('stop').attr('offset', '0%').attr('stop-color', '#0284c7');
-		fillGradient.append('stop').attr('offset', '55%').attr('stop-color', '#c026d3');
-		fillGradient.append('stop').attr('offset', '100%').attr('stop-color', '#7c00c8');
+		fillGradientUnplayed
+			.append('stop')
+			.attr('offset', '0%')
+			.attr('stop-color', '#0369a1')
+			.attr('stop-opacity', '0.55');
+		fillGradientUnplayed
+			.append('stop')
+			.attr('offset', '55%')
+			.attr('stop-color', '#a21caf')
+			.attr('stop-opacity', '0.55');
+		fillGradientUnplayed
+			.append('stop')
+			.attr('offset', '100%')
+			.attr('stop-color', '#6b21a8')
+			.attr('stop-opacity', '0.55');
+
+		// --- Fill gradient: played region — brighter, more saturated ---
+		const fillGradientPlayed = defs
+			.append('linearGradient')
+			.attr('id', 'wf-fill-played')
+			.attr('gradientUnits', 'userSpaceOnUse')
+			.attr('x1', paddingH)
+			.attr('y1', 0)
+			.attr('x2', paddingH + innerWidth)
+			.attr('y2', 0);
+
+		fillGradientPlayed.append('stop').attr('offset', '0%').attr('stop-color', '#38bdf8');
+		fillGradientPlayed.append('stop').attr('offset', '55%').attr('stop-color', '#e879f9');
+		fillGradientPlayed.append('stop').attr('offset', '100%').attr('stop-color', '#a855f7');
+
+		const progress = duration > 0 ? currentTime / duration : 0;
+		const progressX = progress * innerWidth;
+
+		// --- Clip path: played region (left of playhead) ---
+		defs
+			.append('clipPath')
+			.attr('id', 'clip-played')
+			.append('rect')
+			.attr('x', 0)
+			.attr('y', 0)
+			.attr('width', progressX)
+			.attr('height', innerHeight + paddingTop + paddingBottom);
+
+		// --- Clip path: unplayed region (right of playhead) ---
+		defs
+			.append('clipPath')
+			.attr('id', 'clip-unplayed')
+			.append('rect')
+			.attr('x', progressX)
+			.attr('y', 0)
+			.attr('width', innerWidth - progressX + paddingH * 2)
+			.attr('height', innerHeight + paddingTop + paddingBottom);
 
 		// Background
 		svg
@@ -172,6 +240,17 @@
 			.attr('width', containerWidth)
 			.attr('height', height)
 			.attr('fill', 'url(#circuit-bg)');
+
+		// Subtle played-region background tint
+		if (progressX > 0) {
+			svg
+				.append('rect')
+				.attr('x', paddingH)
+				.attr('y', 0)
+				.attr('width', progressX)
+				.attr('height', height - paddingBottom)
+				.attr('fill', 'rgba(56,189,248,0.04)');
+		}
 
 		const g = svg.append('g').attr('transform', `translate(${paddingH},${paddingTop})`);
 
@@ -183,14 +262,7 @@
 
 		const yScale = lib.scaleLinear().domain([0, 1]).range([midY, 0]);
 
-		const progress = duration > 0 ? currentTime / duration : 0;
-		const progressX = progress * innerWidth;
-
-		// Piecewise contrast function:
-		// - d in [0, 0.6]: linear (identity) — quiet/mid sections keep their exact shape
-		// - d in [0.6, 1.0]: quadratic squeeze — spreads visual differences in the loud 0.8–1.0 band
-		// This prevents heavily-mastered audio from looking like a flat tube while still
-		// showing the waveform shape at lower amplitudes.
+		// Piecewise contrast function
 		const displayData = waveformData.map((d) => {
 			if (d <= 0.6) return d;
 			const t = (d - 0.6) / 0.4;
@@ -225,7 +297,7 @@
 			.y((d: number) => midY + (midY - yScale(d)))
 			.curve(lib.curveBasis);
 
-		// Inner outline lines (slightly reduced amplitude → inside the outer lines)
+		// Inner outline lines (slightly reduced amplitude)
 		const upperLineInner = lib
 			.line<number>()
 			.x((_: number, i: number) => xScale(i))
@@ -238,61 +310,152 @@
 			.y((d: number) => midY + (midY - yScale(d * 0.86)))
 			.curve(lib.curveBasis);
 
-		// Upper fill
-		g.append('path')
+		// ── UNPLAYED region (dim) ──────────────────────────────────────────
+		const gUnplayed = g.append('g').attr('clip-path', 'url(#clip-unplayed)');
+
+		gUnplayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', upperArea)
-			.attr('fill', 'url(#wf-fill)')
-			.attr('opacity', 0.85);
+			.attr('fill', 'url(#wf-fill-unplayed)')
+			.attr('opacity', 0.9);
 
-		// Lower fill (reflection — dimmer)
-		g.append('path')
+		gUnplayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', lowerArea)
-			.attr('fill', 'url(#wf-fill)')
+			.attr('fill', 'url(#wf-fill-unplayed)')
 			.attr('opacity', 0.35);
 
-		// Outer stroke — cyan
-		g.append('path')
+		gUnplayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', upperLine)
+			.attr('fill', 'none')
+			.attr('stroke', '#22d3ee')
+			.attr('stroke-width', 1.5)
+			.attr('opacity', 0.5);
+
+		gUnplayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', lowerLine)
+			.attr('fill', 'none')
+			.attr('stroke', '#22d3ee')
+			.attr('stroke-width', 1.5)
+			.attr('opacity', 0.25);
+
+		gUnplayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', upperLineInner)
+			.attr('fill', 'none')
+			.attr('stroke', '#c026d3')
+			.attr('stroke-width', 1)
+			.attr('opacity', 0.4);
+
+		gUnplayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', lowerLineInner)
+			.attr('fill', 'none')
+			.attr('stroke', '#c026d3')
+			.attr('stroke-width', 1)
+			.attr('opacity', 0.25);
+
+		// ── PLAYED region (bright, fully saturated) ───────────────────────
+		const gPlayed = g.append('g').attr('clip-path', 'url(#clip-played)');
+
+		gPlayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', upperArea)
+			.attr('fill', 'url(#wf-fill-played)')
+			.attr('opacity', 0.92);
+
+		gPlayed
+			.append('path')
+			.datum(displayData)
+			.attr('d', lowerArea)
+			.attr('fill', 'url(#wf-fill-played)')
+			.attr('opacity', 0.4);
+
+		gPlayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', upperLine)
 			.attr('fill', 'none')
 			.attr('stroke', '#00e5ff')
 			.attr('stroke-width', 1.5);
 
-		g.append('path')
+		gPlayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', lowerLine)
 			.attr('fill', 'none')
 			.attr('stroke', '#00e5ff')
 			.attr('stroke-width', 1.5)
-			.attr('opacity', 0.65);
+			.attr('opacity', 0.6);
 
-		// Inner stroke — magenta
-		g.append('path')
+		gPlayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', upperLineInner)
 			.attr('fill', 'none')
 			.attr('stroke', '#e040fb')
 			.attr('stroke-width', 1);
 
-		g.append('path')
+		gPlayed
+			.append('path')
 			.datum(displayData)
 			.attr('d', lowerLineInner)
 			.attr('fill', 'none')
 			.attr('stroke', '#e040fb')
 			.attr('stroke-width', 1)
-			.attr('opacity', 0.65);
+			.attr('opacity', 0.6);
 
-		// Playhead
-		g.append('line')
-			.attr('x1', progressX)
-			.attr('x2', progressX)
-			.attr('y1', 0)
-			.attr('y2', innerHeight)
-			.attr('stroke', '#00e5ff')
-			.attr('stroke-width', 2)
-			.attr('filter', 'url(#playhead-glow)');
+		// ── PLAYHEAD ──────────────────────────────────────────────────────
+		if (duration > 0) {
+			// Playhead glow halo
+			g.append('line')
+				.attr('x1', progressX)
+				.attr('x2', progressX)
+				.attr('y1', 0)
+				.attr('y2', innerHeight)
+				.attr('stroke', '#00e5ff')
+				.attr('stroke-width', 6)
+				.attr('opacity', 0.18)
+				.attr('filter', 'url(#playhead-glow)');
+
+			// Playhead main line
+			g.append('line')
+				.attr('x1', progressX)
+				.attr('x2', progressX)
+				.attr('y1', 0)
+				.attr('y2', innerHeight)
+				.attr('stroke', '#ffffff')
+				.attr('stroke-width', 1.5)
+				.attr('filter', 'url(#playhead-glow)');
+
+			// Playhead diamond handle at midpoint
+			const handleSize = 5;
+			g.append('polygon')
+				.attr(
+					'points',
+					[
+						[progressX, midY - handleSize],
+						[progressX + handleSize, midY],
+						[progressX, midY + handleSize],
+						[progressX - handleSize, midY]
+					]
+						.map((p) => p.join(','))
+						.join(' ')
+				)
+				.attr('fill', '#00e5ff')
+				.attr('stroke', '#ffffff')
+				.attr('stroke-width', 1)
+				.attr('filter', 'url(#playhead-glow)');
+		}
 
 		// Marker line
 		if (markerTime !== undefined && duration > 0) {
@@ -307,22 +470,40 @@
 				.attr('opacity', 0.9);
 		}
 
-		// Time labels
+		// ── TIME LABELS ───────────────────────────────────────────────────
 		const formatTime = (secs: number) => {
 			const m = Math.floor(secs / 60);
 			const s = Math.floor(secs % 60);
 			return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 		};
 
-		svg
-			.append('text')
-			.attr('x', paddingH + 2)
-			.attr('y', height - 6)
-			.attr('fill', '#00e5ff')
-			.attr('font-family', 'monospace')
-			.attr('font-size', '11')
-			.text(formatTime(currentTime));
+		// Current time — floated near playhead, clamped to not overflow edges
+		if (duration > 0) {
+			const labelX = Math.max(
+				paddingH + 2,
+				Math.min(containerWidth - paddingH - 36, paddingH + progressX - 14)
+			);
+			svg
+				.append('text')
+				.attr('x', labelX)
+				.attr('y', height - 6)
+				.attr('fill', '#00e5ff')
+				.attr('font-family', 'monospace')
+				.attr('font-size', '11')
+				.attr('font-weight', 'bold')
+				.text(formatTime(currentTime));
+		} else {
+			svg
+				.append('text')
+				.attr('x', paddingH + 2)
+				.attr('y', height - 6)
+				.attr('fill', '#00e5ff')
+				.attr('font-family', 'monospace')
+				.attr('font-size', '11')
+				.text(formatTime(currentTime));
+		}
 
+		// Total duration — fixed to right
 		svg
 			.append('text')
 			.attr('x', containerWidth - paddingH - 2)
@@ -332,24 +513,47 @@
 			.attr('font-size', '11')
 			.attr('text-anchor', 'end')
 			.text(formatTime(duration));
-
-		// Click handler for seeking
-		svg.on('click', function (event: MouseEvent) {
-			if (duration === 0) return;
-			const [x] = lib.pointer(event);
-			const seekProgress = Math.max(0, Math.min(1, (x - paddingH) / innerWidth));
-			onSeek?.(seekProgress * duration);
-		});
-
-		// Hover effect
-		svg
-			.on('mouseenter', function (this: SVGSVGElement) {
-				lib.select(this).style('opacity', 0.9);
-			})
-			.on('mouseleave', function (this: SVGSVGElement) {
-				lib.select(this).style('opacity', 1);
-			});
 	}
+
+	// ── Event helpers (stable, not recreated on redraw) ───────────────────────
+	function getSeekTime(clientX: number): number {
+		if (!container || duration === 0) return 0;
+		const svgEl = container.querySelector('svg');
+		if (!svgEl) return 0;
+		const rect = svgEl.getBoundingClientRect();
+		const paddingH = 8;
+		const innerWidth = rect.width - paddingH * 2;
+		const x = clientX - rect.left - paddingH;
+		const ratio = Math.max(0, Math.min(1, x / innerWidth));
+		return ratio * duration;
+	}
+
+	function handleOverlayClick(event: MouseEvent) {
+		if (duration === 0) return;
+		onSeek?.(getSeekTime(event.clientX));
+	}
+
+	function handleOverlayMouseMove(event: MouseEvent) {
+		if (!container) return;
+		const svgEl = container.querySelector('svg');
+		if (!svgEl) return;
+		const rect = svgEl.getBoundingClientRect();
+		const paddingH = 8;
+		const innerWidth = rect.width - paddingH * 2;
+		const x = event.clientX - rect.left - paddingH;
+		hoverX = Math.max(0, Math.min(innerWidth, x)) + paddingH;
+		hoverTime = getSeekTime(event.clientX);
+	}
+
+	function handleOverlayMouseLeave() {
+		hoverX = null;
+	}
+
+	const formatHoverTime = (secs: number) => {
+		const m = Math.floor(secs / 60);
+		const s = Math.floor(secs % 60);
+		return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+	};
 
 	$effect(() => {
 		let cancelled = false;
@@ -420,5 +624,40 @@
 		</div>
 	</div>
 {:else}
-	<div bind:this={container} class="w-full" style="height: {height}px;"></div>
+	<div class="relative w-full" style="height: {height}px;">
+		<!-- SVG is rendered here by D3 -->
+		<div bind:this={container} class="w-full" style="height: {height}px;"></div>
+
+		<!-- Stable transparent overlay for reliable pointer events (fixes seek-on-click bug) -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<div
+			bind:this={overlay}
+			class="absolute inset-0 cursor-pointer"
+			onclick={handleOverlayClick}
+			onmousemove={handleOverlayMouseMove}
+			onmouseleave={handleOverlayMouseLeave}
+		></div>
+
+		<!-- Hover scrub tooltip -->
+		{#if hoverX !== null}
+			<div
+				class="pointer-events-none absolute top-0 flex flex-col items-center"
+				style="left: {hoverX}px; transform: translateX(-50%);"
+			>
+				<!-- Vertical hairline -->
+				<div
+					class="w-px opacity-60"
+					style="height: {height - 22}px; background: rgba(255,255,255,0.35);"
+				></div>
+				<!-- Time badge -->
+				<div
+					class="mt-0.5 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white"
+					style="background: rgba(10,10,30,0.82); border: 1px solid rgba(0,229,255,0.35); backdrop-filter: blur(4px);"
+				>
+					{formatHoverTime(hoverTime)}
+				</div>
+			</div>
+		{/if}
+	</div>
 {/if}
