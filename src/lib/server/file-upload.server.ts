@@ -82,7 +82,8 @@ export async function uploadToTemporaryHost(
 			return await uploadToTmpfiles(fileBuffer, fileName, contentType);
 		} catch (tmpfilesError) {
 			throw new Error(
-				`Temporary upload failed (litterbox: ${litterboxError instanceof Error ? litterboxError.message : String(litterboxError)}; tmpfiles: ${tmpfilesError instanceof Error ? tmpfilesError.message : String(tmpfilesError)})`
+				`Temporary upload failed (litterbox: ${litterboxError instanceof Error ? litterboxError.message : String(litterboxError)}; tmpfiles: ${tmpfilesError instanceof Error ? tmpfilesError.message : String(tmpfilesError)})`,
+				{ cause: tmpfilesError }
 			);
 		}
 	}

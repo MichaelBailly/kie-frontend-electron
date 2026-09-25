@@ -183,12 +183,7 @@ export interface SSEMessage {
 }
 
 export type GenerationStatus =
-	| 'pending'
-	| 'processing'
-	| 'text_success'
-	| 'first_success'
-	| 'success'
-	| 'error';
+	'pending' | 'processing' | 'text_success' | 'first_success' | 'success' | 'error';
 
 export type GenerationType =
 	| 'generate'

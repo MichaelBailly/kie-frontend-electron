@@ -71,7 +71,8 @@ try {
 		[
 			'rebuild',
 			`--target=${electronVersion}`,
-			'--arch=x64',
+			`--arch=${arch}`,
+			'--force_build=1',
 			'--dist-url=https://electronjs.org/headers'
 		],
 		{

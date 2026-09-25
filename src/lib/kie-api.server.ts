@@ -50,15 +50,7 @@ async function kieRequest<T>(path: string, options: KieRequestOptions = {}): Pro
 
 // V6 family is current; older values are discontinued by KIE but still part of the API enum.
 export type KieMusicModel =
-	| 'V4'
-	| 'V4_5'
-	| 'V4_5PLUS'
-	| 'V4_5ALL'
-	| 'V5'
-	| 'V5_5'
-	| 'V6'
-	| 'V6_MINI'
-	| 'V6_WILD';
+	'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5' | 'V6' | 'V6_MINI' | 'V6_WILD';
 
 export type KieAddAudioModel = 'V4_5PLUS' | 'V5' | 'V5_5' | 'V6' | 'V6_MINI' | 'V6_WILD';
 
@@ -272,11 +264,7 @@ export interface StemSeparationDetailsResponse {
 			woodwindsUrl: string | null;
 		} | null;
 		successFlag:
-			| 'PENDING'
-			| 'SUCCESS'
-			| 'CREATE_TASK_FAILED'
-			| 'GENERATE_AUDIO_FAILED'
-			| 'CALLBACK_EXCEPTION';
+			'PENDING' | 'SUCCESS' | 'CREATE_TASK_FAILED' | 'GENERATE_AUDIO_FAILED' | 'CALLBACK_EXCEPTION';
 		createTime: number;
 		errorCode: number | null;
 		errorMessage: string | null;
@@ -335,11 +323,7 @@ export interface WavDetailsResponse {
 			audioWavUrl: string;
 		} | null;
 		successFlag:
-			| 'PENDING'
-			| 'SUCCESS'
-			| 'CREATE_TASK_FAILED'
-			| 'GENERATE_WAV_FAILED'
-			| 'CALLBACK_EXCEPTION';
+			'PENDING' | 'SUCCESS' | 'CREATE_TASK_FAILED' | 'GENERATE_WAV_FAILED' | 'CALLBACK_EXCEPTION';
 		createTime: string;
 		errorCode: number | null;
 		errorMessage: string | null;

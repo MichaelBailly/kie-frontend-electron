@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable svelte/no-navigation-without-resolve */
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
 	import type { StemSeparation, VariationAnnotation, WavConversion } from '$lib/types';

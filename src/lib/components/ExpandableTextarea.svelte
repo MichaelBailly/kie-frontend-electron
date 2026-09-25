@@ -65,8 +65,7 @@
 		{placeholder}
 		{rows}
 		{maxlength}
-		class={textareaClass}
-	></textarea>
+		class={textareaClass}></textarea>
 
 	<!-- Expand button — top-right corner, subtle until hover -->
 	<button
@@ -175,8 +174,7 @@
 					{maxlength}
 					class="min-h-0 flex-1 resize-none rounded-xl border border-gray-200 bg-gray-50/50 px-5 py-4 text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:outline-none dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-100 dark:placeholder-gray-600 dark:focus:border-indigo-600 dark:focus:bg-gray-800{mono
 						? ' font-mono text-sm'
-						: ''}"
-				></textarea>
+						: ''}"></textarea>
 			</div>
 		</div>
 	</div>
