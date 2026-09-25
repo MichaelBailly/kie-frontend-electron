@@ -61,7 +61,7 @@ function createSongPageData(options?: { annotation: ReturnType<typeof createAnno
 		parentGeneration: null,
 		parentSong: null,
 		continueAt: null,
-		sunoModel: 'V5' as const
+		sunoModel: 'V6' as const
 	};
 }
 

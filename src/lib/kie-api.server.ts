@@ -48,39 +48,54 @@ async function kieRequest<T>(path: string, options: KieRequestOptions = {}): Pro
 	return response.json() as Promise<T>;
 }
 
+// V6 family is current; older values are discontinued by KIE but still part of the API enum.
+export type KieMusicModel =
+	| 'V4'
+	| 'V4_5'
+	| 'V4_5PLUS'
+	| 'V4_5ALL'
+	| 'V5'
+	| 'V5_5'
+	| 'V6'
+	| 'V6_MINI'
+	| 'V6_WILD';
+
+export type KieAddAudioModel = 'V4_5PLUS' | 'V5' | 'V5_5' | 'V6' | 'V6_MINI' | 'V6_WILD';
+
 export interface GenerateMusicRequest {
-	prompt: string;
+	// Used as lyrics in custom mode; omit for instrumental tracks.
+	prompt?: string;
 	style: string;
 	title: string;
 	customMode: boolean;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
+	model: KieMusicModel;
 	callBackUrl: string;
 	negativeTags?: string;
 }
 
 export interface ExtendMusicRequest {
-	defaultParamFlag: boolean;
 	audioId: string;
-	prompt: string;
+	// Used as lyrics; must be omitted when instrumental is true.
+	prompt?: string;
 	style: string;
 	title: string;
 	continueAt: number;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
+	model: KieMusicModel;
 	callBackUrl: string;
 	negativeTags?: string;
 }
 
 export interface UploadExtendMusicRequest {
-	defaultParamFlag: boolean;
 	uploadUrl: string;
-	prompt: string;
+	// Used as lyrics; must be omitted when instrumental is true.
+	prompt?: string;
 	style: string;
 	title: string;
 	continueAt: number;
 	instrumental: boolean;
-	model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5' | 'V5_5';
+	model: KieMusicModel;
 	callBackUrl: string;
 	negativeTags?: string;
 }
@@ -90,7 +105,7 @@ export interface AddInstrumentalRequest {
 	title: string;
 	tags: string;
 	negativeTags: string;
-	model?: 'V5' | 'V5_5';
+	model?: KieAddAudioModel;
 	callBackUrl: string;
 }
 
@@ -100,7 +115,7 @@ export interface AddVocalsRequest {
 	style: string;
 	title: string;
 	negativeTags: string;
-	model?: 'V4_5PLUS' | 'V5' | 'V5_5';
+	model?: KieAddAudioModel;
 	callBackUrl: string;
 }
 

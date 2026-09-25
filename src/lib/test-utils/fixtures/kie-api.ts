@@ -22,7 +22,7 @@ export function createGenerateMusicRequest(
 		title: 'Summer Vibes',
 		customMode: true,
 		instrumental: false,
-		model: 'V4_5',
+		model: 'V6',
 		callBackUrl: 'https://example.com/callback',
 		...overrides
 	};
@@ -32,14 +32,13 @@ export function createExtendMusicRequest(
 	overrides: Partial<ExtendMusicRequest> = {}
 ): ExtendMusicRequest {
 	return {
-		defaultParamFlag: false,
 		audioId: 'audio-1-1',
 		prompt: 'Continue the melody',
 		style: 'pop, upbeat',
 		title: 'Summer Vibes (Extended)',
 		continueAt: 180,
 		instrumental: false,
-		model: 'V4_5',
+		model: 'V6',
 		callBackUrl: 'https://example.com/callback',
 		...overrides
 	};

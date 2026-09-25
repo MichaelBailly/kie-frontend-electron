@@ -93,8 +93,8 @@ describe('Settings Database Operations', () => {
 	it('should store and retrieve the SUNO model', async () => {
 		const { getSunoModel, setSunoModel } = await import('$lib/db.server');
 
-		setSunoModel('V5_5');
-		expect(getSunoModel()).toBe('V5_5');
+		setSunoModel('V6_MINI');
+		expect(getSunoModel()).toBe('V6_MINI');
 	});
 });
 

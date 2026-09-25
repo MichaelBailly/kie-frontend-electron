@@ -15,7 +15,9 @@ import {
 	deleteSetting,
 	getAllSettings,
 	getApiKey,
-	setApiKey
+	setApiKey,
+	getSunoModel,
+	setSunoModel
 } from './settings.server';
 
 beforeEach(() => {
@@ -111,6 +113,28 @@ describe('Settings repository', () => {
 		it('uses kie_api_key as the settings key', () => {
 			setApiKey('my-key');
 			expect(getSetting('kie_api_key')).toBe('my-key');
+		});
+	});
+
+	describe('getSunoModel / setSunoModel', () => {
+		it('defaults to V6 when no model is set', () => {
+			expect(getSunoModel()).toBe('V6');
+		});
+
+		it.each(['V6', 'V6_MINI', 'V6_WILD'] as const)('stores and retrieves %s', (model) => {
+			setSunoModel(model);
+			expect(getSunoModel()).toBe(model);
+			expect(getSetting('suno_model')).toBe(model);
+		});
+
+		it.each(['V5', 'V5_5'])('falls back to V6 when discontinued model %s is stored', (model) => {
+			setSetting('suno_model', model);
+			expect(getSunoModel()).toBe('V6');
+		});
+
+		it('falls back to V6 when an unknown model is stored', () => {
+			setSetting('suno_model', 'V99');
+			expect(getSunoModel()).toBe('V6');
 		});
 	});
 });

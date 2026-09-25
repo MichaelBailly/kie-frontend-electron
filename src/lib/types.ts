@@ -1,16 +1,39 @@
 // Shared types between server and client
 
-export type SunoModel = 'V5' | 'V5_5';
+// V5 and V5_5 are discontinued by KIE; they remain here so historical generations keep their label.
+export type SunoModel = 'V5' | 'V5_5' | 'V6' | 'V6_MINI' | 'V6_WILD';
 
-export const DEFAULT_SUNO_MODEL: SunoModel = 'V5';
+export const DEFAULT_SUNO_MODEL: SunoModel = 'V6';
 
-export const SUNO_MODELS: Array<{ value: SunoModel; label: string }> = [
-	{ value: 'V5', label: 'V5' },
-	{ value: 'V5_5', label: 'V5.5' }
+const SUNO_MODEL_LABELS: Record<SunoModel, string> = {
+	V5: 'V5',
+	V5_5: 'V5.5',
+	V6: 'V6',
+	V6_MINI: 'V6 Mini',
+	V6_WILD: 'V6 Wild'
+};
+
+// Models currently accepted by KIE for new generations.
+export const SUNO_MODELS: Array<{ value: SunoModel; label: string; description: string }> = [
+	{
+		value: 'V6',
+		label: SUNO_MODEL_LABELS.V6,
+		description: 'Greater musical expression with more natural vocals and richer details.'
+	},
+	{
+		value: 'V6_MINI',
+		label: SUNO_MODEL_LABELS.V6_MINI,
+		description: 'Lightweight and fast, balancing quality and speed.'
+	},
+	{
+		value: 'V6_WILD',
+		label: SUNO_MODEL_LABELS.V6_WILD,
+		description: 'Pushes creative boundaries for bolder, more distinctive musical expression.'
+	}
 ];
 
 export function getModelLabel(model: SunoModel): string {
-	return SUNO_MODELS.find((m) => m.value === model)?.label ?? model;
+	return SUNO_MODEL_LABELS[model] ?? model;
 }
 
 export interface Project {

@@ -268,7 +268,7 @@ describe('KIE API request/response factories', () => {
 		expect(req.prompt).toBeTruthy();
 		expect(req.style).toBeTruthy();
 		expect(req.title).toBeTruthy();
-		expect(req.model).toBe('V4_5');
+		expect(req.model).toBe('V6');
 		expect(req.customMode).toBe(true);
 	});
 

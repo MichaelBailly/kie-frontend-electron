@@ -733,20 +733,20 @@ describe('Generations repository', () => {
 	});
 
 	describe('model field', () => {
-		it('defaults to V5 when not specified', () => {
+		it('defaults to V6 when not specified', () => {
 			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics');
-			expect(gen.model).toBe('V5');
+			expect(gen.model).toBe('V6');
 		});
 
-		it('stores explicit V5_5 model', () => {
-			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V5_5');
-			expect(gen.model).toBe('V5_5');
+		it('stores explicit V6_WILD model', () => {
+			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V6_WILD');
+			expect(gen.model).toBe('V6_WILD');
 		});
 
 		it('persists model through getGeneration', () => {
-			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V5_5');
+			const gen = createGeneration(projectId, 'Song', 'pop', 'lyrics', false, '', 'V6_WILD');
 			const fetched = getGeneration(gen.id);
-			expect(fetched!.model).toBe('V5_5');
+			expect(fetched!.model).toBe('V6_WILD');
 		});
 
 		it('stores model for extend generations', () => {
@@ -760,9 +760,9 @@ describe('Generations repository', () => {
 				'audio-123',
 				120.5,
 				false,
-				{ model: 'V5_5' }
+				{ model: 'V6_WILD' }
 			);
-			expect(ext.model).toBe('V5_5');
+			expect(ext.model).toBe('V6_WILD');
 		});
 
 		it('stores model for add-instrumental generations', () => {
@@ -776,9 +776,9 @@ describe('Generations repository', () => {
 				'audio-123',
 				'vocal',
 				'https://example.com/stem.mp3',
-				'V5_5'
+				'V6_WILD'
 			);
-			expect(gen.model).toBe('V5_5');
+			expect(gen.model).toBe('V6_WILD');
 		});
 
 		it('stores model for add-vocals generations', () => {
@@ -793,9 +793,9 @@ describe('Generations repository', () => {
 				'audio-123',
 				'instrumental',
 				'https://example.com/stem.mp3',
-				'V5_5'
+				'V6_WILD'
 			);
-			expect(gen.model).toBe('V5_5');
+			expect(gen.model).toBe('V6_WILD');
 		});
 
 		it('stores model for upload-vocals generations', () => {
@@ -806,9 +806,9 @@ describe('Generations repository', () => {
 				'lyrics',
 				'',
 				null,
-				'V5_5'
+				'V6_WILD'
 			);
-			expect(gen.model).toBe('V5_5');
+			expect(gen.model).toBe('V6_WILD');
 		});
 
 		it('stores model for imported generations', () => {
@@ -833,9 +833,9 @@ describe('Generations repository', () => {
 					audioId: 'aid2'
 				},
 				'{}',
-				'V5_5'
+				'V6_WILD'
 			);
-			expect(gen.model).toBe('V5_5');
+			expect(gen.model).toBe('V6_WILD');
 		});
 	});
 });

@@ -21,12 +21,12 @@ API key is read in order:
 POST https://api.kie.ai/api/v1/generate
 
 {
-  prompt: string;        // Lyrics or description
+  prompt?: string;       // Lyrics in custom mode (omitted for instrumental tracks)
   style: string;         // Musical style tags
   title: string;         // Track title
-  customMode: boolean;   // Custom vs simple mode
+  customMode: boolean;   // Custom vs simple mode (the app always uses custom mode)
   instrumental: boolean; // No vocals
-  model: 'V4' | 'V4_5' | 'V4_5PLUS' | 'V4_5ALL' | 'V5';
+  model: 'V6' | 'V6_MINI' | 'V6_WILD'; // V4–V5_5 are discontinued by KIE
   callBackUrl: string;   // Webhook URL (optional)
   negativeTags?: string; // Styles to avoid
 }
@@ -34,21 +34,44 @@ POST https://api.kie.ai/api/v1/generate
 Response: { code: number, msg: string, data: { taskId: string } }
 ```
 
+#### Models
+
+The generation model is chosen in Settings and stored under the `suno_model` setting (default `V6`).
+
+| Model     | Description                                                                 |
+| --------- | --------------------------------------------------------------------------- |
+| `V6`      | Greater musical expression with more natural vocals and richer details.     |
+| `V6_MINI` | Lightweight and fast, balancing quality and speed.                          |
+| `V6_WILD` | Pushes creative boundaries for bolder, more distinctive musical expression. |
+
+`V4`, `V4_5`, `V4_5PLUS`, `V4_5ALL`, `V5` and `V5_5` are discontinued by KIE. Existing generations keep their recorded model label; a stored `V5`/`V5_5` setting automatically falls back to `V6`.
+
+KIE also exposes the same Suno features through its unified Market endpoint (`POST /api/v1/jobs/createTask` with `model: "ai-music-api/generate"` and snake_case `input` fields). The app keeps using the `/api/v1/generate*` endpoints, which remain documented and accept the V6 models.
+
 #### Extend Music
 
 ```typescript
 POST https://api.kie.ai/api/v1/generate/extend
 
 {
-  defaultParamFlag: boolean;
   audioId: string;       // ID of track to extend
-  prompt: string;
-  style: string;
-  title: string;
+  prompt?: string;       // Lyrics (must be omitted when instrumental is true)
+  style?: string;
+  title?: string;
   continueAt: number;    // Timestamp in seconds
-  model: string;
+  instrumental: boolean;
+  model: 'V6' | 'V6_MINI' | 'V6_WILD';
   callBackUrl: string;
+  negativeTags?: string;
 }
+```
+
+`defaultParamFlag` was removed from the KIE extend and upload-extend endpoints: `audioId` (or `uploadUrl`) alone is enough, and `prompt`, `style` and `title` are optional overrides. KIE notes that the model should match the source audio's model version.
+
+```typescript
+POST https://api.kie.ai/api/v1/generate/upload-extend
+
+// Same body as Extend Music, with `uploadUrl` instead of `audioId`
 ```
 
 #### Get Generation Status
@@ -183,13 +206,15 @@ Start a new generation.
 ```json
 {
 	"projectId": 1,
-	"prompt": "A peaceful morning melody",
+	"lyrics": "A peaceful morning melody",
 	"style": "ambient, piano",
 	"title": "Morning Light",
-	"model": "V5",
-	"instrumental": false
+	"instrumental": false,
+	"negativeTags": "heavy metal"
 }
 ```
+
+The model is not part of the request body; it is read from the `suno_model` setting.
 
 #### GET /api/generations/{id}
 

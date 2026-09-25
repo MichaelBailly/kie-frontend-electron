@@ -35,7 +35,7 @@ const {
 } = vi.hoisted(() => ({
 	mockCreateUploadVocalsGeneration: vi.fn(),
 	mockGetGeneration: vi.fn(),
-	mockGetSunoModel: vi.fn(() => 'V5'),
+	mockGetSunoModel: vi.fn(() => 'V6'),
 	mockSetGenerationSourceAudioLocalUrl: vi.fn(),
 	mockSetGenerationTaskStarted: vi.fn(),
 	mockSetGenerationErrored: vi.fn(),
@@ -184,7 +184,7 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 			'[Verse] Bright lights',
 			'mumble rap',
 			null,
-			'V5'
+			'V6'
 		);
 		expect(mockSetGenerationSourceAudioLocalUrl).toHaveBeenCalledWith(
 			55,
@@ -199,7 +199,7 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 			prompt: '[Verse] Bright lights',
 			style: 'dream pop',
 			negativeTags: 'mumble rap',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(mockSetGenerationTaskStarted).toHaveBeenCalledWith(55, 'task-retry-upload-vocals');
@@ -245,7 +245,7 @@ describe('POST /api/generations/retry-upload-vocals', () => {
 			'[Verse] Bright lights',
 			'',
 			null,
-			'V5'
+			'V6'
 		);
 		expect(mockAddVocals).toHaveBeenCalledWith(expect.objectContaining({ negativeTags: '' }));
 	});

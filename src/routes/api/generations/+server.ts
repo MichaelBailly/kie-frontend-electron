@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Start async generation process
 	startGenerationTask(generation.id, () =>
 		generateMusic({
-			prompt: lyrics,
+			prompt: instrumental ? undefined : lyrics,
 			style,
 			title,
 			customMode: true,

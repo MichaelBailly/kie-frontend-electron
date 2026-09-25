@@ -18,6 +18,9 @@
 	// Derived state
 	let hasExistingKey = $derived(data.hasApiKey);
 	let maskedKey = $derived(data.maskedApiKey);
+	let selectedModelDescription = $derived(
+		data.sunoModels.find((model) => model.value === data.sunoModel)?.description ?? null
+	);
 
 	// Clear messages after delay
 	$effect(() => {
@@ -541,6 +544,10 @@
 							{/each}
 						</select>
 					</label>
+
+					{#if selectedModelDescription}
+						<p class="text-sm text-gray-400">{selectedModelDescription}</p>
+					{/if}
 
 					{#if modelMessage}
 						<div

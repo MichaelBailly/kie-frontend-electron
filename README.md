@@ -6,7 +6,7 @@ KIE Music provides a streamlined interface to the [KIE.ai](https://kie.ai) API, 
 
 ## Features
 
-- **Music Generation** - Create original tracks using text prompts, styles, and multiple AI models (V4, V4.5, V5)
+- **Music Generation** - Create original tracks using text prompts, styles, and the latest Suno models (V6, V6 Mini, V6 Wild)
 - **Project Organization** - Manage generations in projects with metadata, favorites, and search
 - **Song Extension** - Extend existing tracks to create longer compositions
 - **Stem Separation** - Extract vocals, drums, bass, and other instruments from any track

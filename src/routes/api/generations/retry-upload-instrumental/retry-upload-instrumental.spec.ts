@@ -35,7 +35,7 @@ const {
 } = vi.hoisted(() => ({
 	mockCreateUploadInstrumentalGeneration: vi.fn(),
 	mockGetGeneration: vi.fn(),
-	mockGetSunoModel: vi.fn(() => 'V5'),
+	mockGetSunoModel: vi.fn(() => 'V6'),
 	mockSetGenerationSourceAudioLocalUrl: vi.fn(),
 	mockSetGenerationTaskStarted: vi.fn(),
 	mockSetGenerationErrored: vi.fn(),
@@ -181,7 +181,7 @@ describe('POST /api/generations/retry-upload-instrumental', () => {
 			'ambient, cinematic',
 			'crowd noise',
 			null,
-			'V5'
+			'V6'
 		);
 		expect(mockSetGenerationSourceAudioLocalUrl).toHaveBeenCalledWith(
 			99,
@@ -195,7 +195,7 @@ describe('POST /api/generations/retry-upload-instrumental', () => {
 			title: 'Retry Instrumental',
 			tags: 'ambient, cinematic',
 			negativeTags: 'crowd noise',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(mockSetGenerationTaskStarted).toHaveBeenCalledWith(99, 'task-retry-upload-instrumental');
@@ -239,7 +239,7 @@ describe('POST /api/generations/retry-upload-instrumental', () => {
 			'ambient',
 			'',
 			null,
-			'V5'
+			'V6'
 		);
 		expect(mockAddInstrumental).toHaveBeenCalledWith(expect.objectContaining({ negativeTags: '' }));
 	});

@@ -175,7 +175,7 @@ describe('POST /api/generations', () => {
 			'Hello world',
 			false,
 			'',
-			'V5'
+			'V6'
 		);
 	});
 
@@ -203,7 +203,7 @@ describe('POST /api/generations', () => {
 			'Hello world',
 			false,
 			'harsh distortion, crowd noise',
-			'V5'
+			'V6'
 		);
 		expect(kieApi.generateMusic).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -230,7 +230,7 @@ describe('POST /api/generations', () => {
 				title: 'Song',
 				customMode: true,
 				instrumental: false,
-				model: 'V5',
+				model: 'V6',
 				callBackUrl: KIE_CALLBACK_URL,
 				negativeTags: ''
 			})
@@ -239,7 +239,7 @@ describe('POST /api/generations', () => {
 
 	it('uses the configured SUNO model for new generations', async () => {
 		seedNewGenerationScenario();
-		db.__setSettings({ suno_model: 'V5_5' });
+		db.__setSettings({ suno_model: 'V6_WILD' });
 
 		const { POST } = await import('./+server');
 		const event = createRequestEvent({
@@ -251,9 +251,25 @@ describe('POST /api/generations', () => {
 
 		expect(kieApi.generateMusic).toHaveBeenCalledWith(
 			expect.objectContaining({
-				model: 'V5_5'
+				model: 'V6_WILD'
 			})
 		);
+	});
+
+	it('omits the prompt when generating an instrumental track', async () => {
+		seedNewGenerationScenario();
+
+		const { POST } = await import('./+server');
+		const event = createRequestEvent({
+			body: { projectId: 1, title: 'Song', style: 'ambient', instrumental: true }
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		const request = kieApi.generateMusic.mock.calls[0][0];
+		expect(request).toMatchObject({ instrumental: true, customMode: true, model: 'V6' });
+		expect(request.prompt).toBeUndefined();
 	});
 
 	it('throws 400 when required fields are missing', async () => {
@@ -496,7 +512,7 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ negativeTags: '', stemType: undefined, stemUrl: undefined, model: 'V5' }
+			{ negativeTags: '', stemType: undefined, stemUrl: undefined, model: 'V6' }
 		);
 	});
 
@@ -532,7 +548,7 @@ describe('POST /api/generations/extend', () => {
 			'audio-5-1',
 			30,
 			false,
-			{ negativeTags: 'crowd chants', stemType: undefined, stemUrl: undefined, model: 'V5' }
+			{ negativeTags: 'crowd chants', stemType: undefined, stemUrl: undefined, model: 'V6' }
 		);
 		expect(kieApi.extendMusic).toHaveBeenCalledWith(
 			expect.objectContaining({ negativeTags: 'crowd chants' })
@@ -684,7 +700,7 @@ describe('POST /api/generations/extend', () => {
 				style: 'rock',
 				title: 'Extended',
 				continueAt: 30,
-				model: 'V5',
+				model: 'V6',
 				callBackUrl: KIE_CALLBACK_URL,
 				negativeTags: ''
 			})
@@ -722,7 +738,7 @@ describe('POST /api/generations/extend', () => {
 				style: 'rock',
 				title: 'Extended Stem',
 				continueAt: 30,
-				model: 'V5',
+				model: 'V6',
 				callBackUrl: KIE_CALLBACK_URL,
 				negativeTags: ''
 			})
@@ -741,9 +757,87 @@ describe('POST /api/generations/extend', () => {
 				negativeTags: '',
 				stemType: 'vocal',
 				stemUrl: 'https://example.com/stems/vocal.mp3',
-				model: 'V5'
+				model: 'V6'
 			}
 		);
+	});
+	it('does not send the removed defaultParamFlag to the KIE API', async () => {
+		seedExtendScenario();
+		db.createExtendGeneration.mockReturnValue(createGeneration({ id: 20, project_id: 1 }));
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended',
+				style: 'rock',
+				lyrics: 'More',
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		expect(kieApi.extendMusic.mock.calls[0][0]).not.toHaveProperty('defaultParamFlag');
+	});
+
+	it('omits the prompt for instrumental extensions', async () => {
+		seedExtendScenario();
+		db.createExtendGeneration.mockReturnValue(createGeneration({ id: 20, project_id: 1 }));
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended',
+				style: 'rock',
+				instrumental: true,
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		const request = kieApi.extendMusic.mock.calls[0][0];
+		expect(request).toMatchObject({ instrumental: true, audioId: 'audio-5-1', model: 'V6' });
+		expect(request.prompt).toBeUndefined();
+	});
+
+	it('omits the prompt for instrumental stem extensions', async () => {
+		seedExtendScenario();
+		db.createExtendGeneration.mockReturnValue(createGeneration({ id: 20, project_id: 1 }));
+
+		const { POST } = await import('./extend/+server');
+		const event = createRequestEvent({
+			body: {
+				projectId: 1,
+				title: 'Extended Stem',
+				style: 'rock',
+				instrumental: true,
+				extendsGenerationId: 5,
+				extendsAudioId: 'audio-5-1',
+				continueAt: 30,
+				stemType: 'instrumental',
+				stemUrl: 'https://example.com/stems/instrumental.mp3'
+			}
+		});
+
+		await POST(event as never);
+		await flushPromises();
+
+		const request = kieApi.uploadExtendMusic.mock.calls[0][0];
+		expect(request).toMatchObject({
+			instrumental: true,
+			uploadUrl: 'https://example.com/stems/instrumental.mp3'
+		});
+		expect(request).not.toHaveProperty('defaultParamFlag');
+		expect(request.prompt).toBeUndefined();
 	});
 });
 
@@ -790,7 +884,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			title: 'Instrumental Version',
 			tags: 'ambient',
 			negativeTags: 'heavy metal',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(30, 'task-mock-004');

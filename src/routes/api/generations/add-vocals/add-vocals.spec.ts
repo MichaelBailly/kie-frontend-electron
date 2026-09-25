@@ -156,7 +156,7 @@ describe('POST /api/generations/add-vocals', () => {
 			'audio-5-1',
 			'instrumental',
 			'https://example.com/stems/instrumental.mp3',
-			'V5'
+			'V6'
 		);
 
 		await flushPromises();
@@ -167,7 +167,7 @@ describe('POST /api/generations/add-vocals', () => {
 			prompt: '[Verse] City in bloom',
 			style: 'dream pop',
 			negativeTags: 'screamo',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(created.id, 'task-mock-005');

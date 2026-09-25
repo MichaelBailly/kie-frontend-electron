@@ -40,7 +40,7 @@ describe('kie-api.server', () => {
 			title: 'title',
 			customMode: true,
 			instrumental: false,
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: 'https://example.com/callback',
 			negativeTags: ''
 		});
@@ -101,14 +101,13 @@ describe('kie-api.server', () => {
 		} as Response);
 
 		const call = extendMusic({
-			defaultParamFlag: true,
 			audioId: 'audio-1',
 			prompt: 'prompt',
 			style: 'style',
 			title: 'title',
 			continueAt: 10,
 			instrumental: false,
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: 'https://example.com/callback',
 			negativeTags: ''
 		});
@@ -117,14 +116,13 @@ describe('kie-api.server', () => {
 		await expect(call).rejects.toMatchObject({ status: 502 });
 		await expect(
 			extendMusic({
-				defaultParamFlag: true,
 				audioId: 'audio-1',
 				prompt: 'prompt',
 				style: 'style',
 				title: 'title',
 				continueAt: 10,
 				instrumental: false,
-				model: 'V5',
+				model: 'V6',
 				callBackUrl: 'https://example.com/callback',
 				negativeTags: ''
 			})
@@ -139,14 +137,13 @@ describe('kie-api.server', () => {
 		);
 
 		await uploadExtendMusic({
-			defaultParamFlag: true,
 			uploadUrl: 'https://example.com/stems/vocal.mp3',
 			prompt: 'prompt',
 			style: 'style',
 			title: 'title',
 			continueAt: 10,
 			instrumental: false,
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: 'https://example.com/callback',
 			negativeTags: ''
 		});
@@ -199,7 +196,7 @@ describe('kie-api.server', () => {
 			title: 'Instrumental Version',
 			tags: 'ambient, cinematic',
 			negativeTags: 'heavy metal',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: 'https://example.com/callback'
 		});
 
@@ -222,7 +219,7 @@ describe('kie-api.server', () => {
 			prompt: '[Verse] Midnight lights',
 			style: 'synth pop',
 			negativeTags: 'screamo',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: 'https://example.com/callback'
 		});
 

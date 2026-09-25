@@ -151,7 +151,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			'audio-5-1',
 			'vocal',
 			'https://example.com/stems/vocal.mp3',
-			'V5'
+			'V6'
 		);
 
 		await flushPromises();
@@ -161,7 +161,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			title: 'Vocal Instrumental',
 			tags: 'ambient, cinematic',
 			negativeTags: 'heavy metal',
-			model: 'V5',
+			model: 'V6',
 			callBackUrl: KIE_CALLBACK_URL
 		});
 		expect(db.setGenerationTaskStarted).toHaveBeenCalledWith(created.id, 'task-mock-004');
@@ -197,7 +197,7 @@ describe('POST /api/generations/add-instrumental', () => {
 			'audio-5-1',
 			'vocal',
 			'https://example.com/stems/vocal.mp3',
-			'V5'
+			'V6'
 		);
 		expect(kieApi.addInstrumental).toHaveBeenCalledWith(
 			expect.objectContaining({ negativeTags: '' })

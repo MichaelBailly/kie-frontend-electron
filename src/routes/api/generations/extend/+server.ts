@@ -63,13 +63,15 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 	);
 
+	// KIE rejects lyrics (prompt) for instrumental extensions
+	const prompt = instrumental ? undefined : lyrics;
+
 	// Start async extend generation process
 	startGenerationTask(generation.id, () => {
 		if (stemUrl) {
 			return uploadExtendMusic({
-				defaultParamFlag: true,
 				uploadUrl: stemUrl,
-				prompt: lyrics,
+				prompt,
 				style,
 				title,
 				continueAt,
@@ -81,9 +83,8 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 
 		return extendMusic({
-			defaultParamFlag: true,
 			audioId: extendsAudioId,
-			prompt: lyrics,
+			prompt,
 			style,
 			title,
 			continueAt,
